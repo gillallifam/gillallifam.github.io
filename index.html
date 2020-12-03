@@ -16,9 +16,6 @@
     <script type="module">
         import { html, render } from 'https://unpkg.com/htm/preact/index.mjs?module'
       
-        // Initialize htm with Preact
-        const html = htm.bind(h);
-      
         function App (props) {
           return html`<h1>Hello ${props.name}!</h1>`;
         }
