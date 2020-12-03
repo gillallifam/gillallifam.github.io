@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My git page</title>
     <script src="/hello.js"></script>
+    <script src="/dist/tp.js"></script>
 </head>
 
 <body>
@@ -19,9 +20,8 @@
         function App (props) {
           return html`<h1>Hello ${props.name}!</h1>`;
         }
-      
-        render(html`<${App} name="World" />`, document.getElementById("app"));
-      </script
+        render(html`<${App} name="Preact" />`, document.getElementById("app"));
+    </script>
 </body>
 
 </html>
