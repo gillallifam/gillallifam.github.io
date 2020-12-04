@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My git page</title>
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?">
-    <script src="/hello.js"></script>
-    <script src="/dist/tp.js"></script>
+
 </head>
 
 <body>
@@ -16,26 +15,41 @@
     <p>The start page</p>
     <a href="/other">other</a>
     <script type="module">
-        import { html, render } from 'https://unpkg.com/htm/preact/index.mjs?module'
-        //import { useState } from '/hooks.mjs'
+        import { h, render } from '/preact.module.js'
+        import { useState } from '/hooks.module.js'
+        // nothing imports these modules so you can version them if you like:
+        import { html } from 'https://unpkg.com/htm@3.0.4/preact/index.module.js?module'
+        import { styled, setPragma } from 'https://unpkg.com/goober@1.8.0/dist/goober.module.js'
 
         function App(props) {
+            useState(0)
             return html`<h1>Hello ${props.name}!</h1>`;
         }
-        render(html`<${App} name="Preact" />`, document.getElementById("app"));
+
+        const Counter = () => {
+            const [count, setCount] = useState(0);
+            const increment = () => setCount(count + 1);
+            // You can also pass a callback to the setter
+            const decrement = () => setCount((currentCount) => currentCount - 1);
+
+            return (
+                html`<div>
+                    <p>Count: ${count}</p>
+                    <button onClick=${increment}>Increment</button>
+                    <button onClick=${decrement}>Decrement</button>
+                </div>`
+            )
+        }
 
 
 
-        /* var getDaysArray = function (start, end) {
-            for (var arr = [], dt = new Date(start); dt <= end; dt.setDate(dt.getDate() + 1)) {
-                arr.push(new Date(dt));
-            }
-            return arr;
-        }; */
+
+
+        render(html`<${Counter} name="Preact" />`, document.getElementById("app"));
 
         var getDaysArray = function (s, e) { for (var a = [], d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) { a.push(new Date(d)); } return a; };
 
-        var daylist = getDaysArray(new Date("2020-01-01"), new Date("2020-12-04"));
+        var daylist = getDaysArray(new Date("2020-12-01"), new Date("2020-12-04"));
         daylist.forEach((d) => {
             console.log(d.toISOString().slice(0, 10));
         })
