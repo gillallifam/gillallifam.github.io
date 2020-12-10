@@ -16,13 +16,6 @@
             width: 49%;
             height: 300px;
         }
-
-        button{
-            background-color: aqua;
-        }
-        button:hover{
-            background-color: blueviolet;
-        }
     </style>
 </head>
 
@@ -45,59 +38,72 @@
                 things.</p>
             <p>With this you can transform scss like obj into css.</p>
             <textarea name="ocsstext" id="ocsstext">
-"--main-color": "green",
-"--color1": "orange",
+"--main-color": "#963232",
+"--color1": "#333",
 "#mainDiv": {
-    "--scopedvar1": "white",
-    "--scopedvar2": "blue",
+    "--scopedvar1": "gold",
+    "--scopedvar2": "brown",
     "background-color": "var(--main-color)",
     "text-align": "center",
+    "span":{
+        "color":"whitesmoke"
+    },
     "p":{
-        "color": "orange"
+        "color": "#333"
     },
     "h1":{
-        "color": "orange"
+        "color": "#333"
     },
     "button": {
         "background-color": "var(--scopedvar1)",
-        "color": "var(--scopedvar2)"
+        "color": "var(--scopedvar2)",
+        ":hover":{
+            "background-color": "gray"
+        }
     }
 },
 "#subDiv": {
+    "--scopedvar1": "gold",
+    "--scopedvar2": "brown",
     "background-color": "var(--color1)",
     "text-align": "right",
+    "span":{
+        "color":"white"
+    },
     "p":{
-        "color": "green"
+        "color": "#963232"
     },
     "h1":{
-        "color": "green"
+        "color": "#963232"
     },
     "button": {
-        "background-color": "blue",
-        "color": "white"
+        "background-color": "var(--scopedvar2)",
+        "color": "var(--scopedvar1)",
+        ":hover":{
+            "background-color": "gray"
+        }
     }
 },
-".btn": {
+"button": {
     ":hover":{
         "width":"50px",
         "background-color": "black",
-        "color": "red",
+        "color": "white",
         "cursor": "pointer"
     }
 }
-
             </textarea>
-            <textarea name="ocssoutput" id="ocssoutput"></textarea>
+            <textarea name="ocssoutput" id="ocssoutput" readonly></textarea>
         </div>
     </div>
     <div id="mainDiv" class="mydivs">
-        <span>main</span>
+        <span>Main</span>
         <h1>Title</h1>
         <p>Paragraph</p>
         <button class="btn">ok</button>
     </div>
     <div id="subDiv" class="mydivs">
-        <span>other</span>
+        <span>Sub</span>
         <h1>Title</h1>
         <p>Paragraph</p>
         <button class="btn">ok</button>
@@ -120,15 +126,15 @@
         let ocsstext = document.getElementById("ocsstext")
         let ocssoutput = document.getElementById("ocssoutput")
         let parsed = JSON.parse("{" + ocsstext.innerHTML + "}")
-        parsed["--color2"] = "orange"
+        parsed["--color2"] = "orange//added in code"
         ocssoutput.innerHTML = ocss(parsed)
-        appendStyle(ocss(parsed), "myocsstyles")
+        appendStyle(ocss(parsed), "myexstyles")
 
         ocsstext.addEventListener('input', function () {
             let json = JSON.parse("{" + ocsstext.value + "}")
             let parsed = ocss(json)
             ocssoutput.innerHTML = parsed
-            appendStyle(parsed, "myocsstyles")
+            appendStyle(parsed, "myexstyles")
         }, false);
 
 
