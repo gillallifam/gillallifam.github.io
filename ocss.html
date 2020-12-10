@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="YIixEsfSCFpRlGZCr0BGVdwQqE-lV8yK4TjbwVfD_KM" />
     <title>ocss</title>
     <link rel="stylesheet" href="/css/stl-ocss.css">
     <style>
@@ -14,6 +15,13 @@
         textarea {
             width: 49%;
             height: 300px;
+        }
+
+        button{
+            background-color: aqua;
+        }
+        button:hover{
+            background-color: blueviolet;
         }
     </style>
 </head>
@@ -33,7 +41,7 @@
             <h1>OCSS - Object Cascading Style Sheet</h1>
         </div>
         <div id="content-body">
-            <p>OCSS is a way to use scss diretcly in browser, is in primary stage of development, but can do some cool
+            <p>OCSS is a way to use scss directly in browser, very experimental, but can do some cool
                 things.</p>
             <p>With this you can transform scss like obj into css.</p>
             <textarea name="ocsstext" id="ocsstext">
@@ -56,8 +64,6 @@
     }
 },
 "#subDiv": {
-    "--scopedvar1": "blue",
-    "--scopedvar2": "white",
     "background-color": "var(--color1)",
     "text-align": "right",
     "p":{
@@ -67,15 +73,19 @@
         "color": "green"
     },
     "button": {
-        "background-color": "var(--scopedvar1)",
-        "color": "var(--scopedvar2)"
+        "background-color": "blue",
+        "color": "white"
     }
 },
-"button":{
+".btn": {
     ":hover":{
+        "width":"50px",
+        "background-color": "black",
+        "color": "red",
         "cursor": "pointer"
     }
 }
+
             </textarea>
             <textarea name="ocssoutput" id="ocssoutput"></textarea>
         </div>
@@ -84,29 +94,17 @@
         <span>main</span>
         <h1>Title</h1>
         <p>Paragraph</p>
-        <button>ok</button>
+        <button class="btn">ok</button>
     </div>
     <div id="subDiv" class="mydivs">
         <span>other</span>
         <h1>Title</h1>
         <p>Paragraph</p>
-        <button>ok</button>
+        <button class="btn">ok</button>
     </div>
-
+    <p>Other elements</p>
+    <button>button</button>
     <script>
-        let ocsstext = document.getElementById("ocsstext")
-        let ocssoutput = document.getElementById("ocssoutput")
-        let parsed = JSON.parse("{" + ocsstext.innerHTML + "}")
-        //parsed["--color1"] = "orange"
-        ocssoutput.innerHTML = ocss(parsed)
-        appendStyle(ocss(parsed), "myocsstyles")
-
-        ocsstext.addEventListener('input', function () {
-            let json = JSON.parse("{" + ocsstext.value + "}")
-            let parsed = ocss(json)
-            ocssoutput.innerHTML = parsed
-            appendStyle(parsed, "myocsstyles")
-        }, false);
 
         let topnav = document.getElementById("myTopnav");
         let menuicon = document.getElementById("menuicon");
@@ -118,6 +116,21 @@
                 topnav.className = "topnav";
             }
         }
+
+        let ocsstext = document.getElementById("ocsstext")
+        let ocssoutput = document.getElementById("ocssoutput")
+        let parsed = JSON.parse("{" + ocsstext.innerHTML + "}")
+        parsed["--color2"] = "orange"
+        ocssoutput.innerHTML = ocss(parsed)
+        appendStyle(ocss(parsed), "myocsstyles")
+
+        ocsstext.addEventListener('input', function () {
+            let json = JSON.parse("{" + ocsstext.value + "}")
+            let parsed = ocss(json)
+            ocssoutput.innerHTML = parsed
+            appendStyle(parsed, "myocsstyles")
+        }, false);
+
 
         function appendStyle(str, id = "rootocss") {
             let e = document.getElementById(id)
@@ -143,10 +156,9 @@
                         vars += `${k}:${v};\n`
                         return
                     }
-                    if (i === 0) { entry += `${path} {${k}:${v};` } else entry += ` ${k}:${v};`
-                    if (i === (a.length - 1)) entry += "}"
+                    entry += `${k}:${v};`
                 });
-                if (entry) gCss += entry + "\n"
+                if (entry) gCss += `${path} {${entry}}\n`
                 nested.forEach(([k, v]) => {
                     k.charAt(0) === ":" ? g(path + k, v) : g(`${path} ${k}`, v)
                 })
@@ -154,6 +166,18 @@
             if (vars) vars += "}"
             return vars + "\n" + gCss;
         }
+
+        /* let seed = `{"msg":"/F(function () {console.log('working');})/f"}`
+        var sprout = JSON.parse(seed, function (key, value) {
+            if (typeof value === "string" &&
+                value.startsWith("/F(") &&
+                value.endsWith(")/f")) {
+                value = value.substring(3, value.length - 3);
+                return (0, eval)("(" + value + ")");
+            }
+            return value;
+        });
+        sprout.msg() */
 
     </script>
 </body>
