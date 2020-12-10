@@ -13,7 +13,7 @@
         }
 
         textarea {
-            width: 49%;
+            width: 45%;
             height: 300px;
         }
     </style>
@@ -40,6 +40,8 @@
             <textarea name="ocsstext" id="ocsstext">
 "--main-color": "#963232",
 "--color1": "#333",
+"--injson": "function () {return Math.abs(-10.15245251);}/f",
+"--injson2": "function fromWindow/e",
 "#mainDiv": {
     "--scopedvar1": "gold",
     "--scopedvar2": "brown",
@@ -123,9 +125,33 @@
             }
         }
 
+        function fromWindow() {
+            return "from window"
+        }
+        function executeFunctionByName(functionName, context /*, args */) {
+            var args = Array.prototype.slice.call(arguments, 2);
+            var namespaces = functionName.split(".");
+            var func = namespaces.pop();
+            for (var i = 0; i < namespaces.length; i++) {
+                context = context[namespaces[i]];
+            }
+            return context[func].apply(context, args);
+        }
+
+        let JSONF = (str) => {
+            return JSON.parse(str, function (key, value) {
+                if (typeof value === "string" && value.startsWith("function")) {
+                    value = value.substring(0, value.length - 2);
+                    if (value.endsWith("/f")) return (0, eval)("(" + value + ")");
+                    if (value.endsWith("/e")) return window[value.split(" ")[1]]
+                }
+                return value;
+            });
+        }
+
         let ocsstext = document.getElementById("ocsstext")
         let ocssoutput = document.getElementById("ocssoutput")
-        let parsed = JSON.parse("{" + ocsstext.innerHTML + "}")
+        let parsed = JSONF("{" + ocsstext.innerHTML + "}")
         parsed["--color2"] = "orange//added in code"
         ocssoutput.innerHTML = ocss(parsed)
         appendStyle(ocss(parsed), "myexstyles")
@@ -139,8 +165,8 @@
 
 
         function appendStyle(str, id = "rootocss") {
-            let e = document.getElementById(id)
-            e && e.remove()
+            document.getElementById(id) && e.remove()
+
             const style = document.createElement('style');
             style.id = id
             style.textContent = str;
@@ -172,19 +198,6 @@
             if (vars) vars += "}"
             return vars + "\n" + gCss;
         }
-
-        /* let seed = `{"msg":"/F(function () {console.log('working');})/f"}`
-        var sprout = JSON.parse(seed, function (key, value) {
-            if (typeof value === "string" &&
-                value.startsWith("/F(") &&
-                value.endsWith(")/f")) {
-                value = value.substring(3, value.length - 3);
-                return (0, eval)("(" + value + ")");
-            }
-            return value;
-        });
-        sprout.msg() */
-
     </script>
 </body>
 
