@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ocss</title>
+    <link rel="stylesheet" href="/css/stl-ocss.css">
+    <style>
+        .content {
+            width: 100%;
+        }
+
+        textarea {
+            width: 49%;
+            height: 300px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topnav" id="myTopnav">
+        <a href="#ocss" class="active">OCSS</a>
+        <a href="#about">Functions</a>
+        <a href="#about">About</a>
+        <a href="javascript:void(0);" class="icon" id="menuicon" onclick="toggleMenu()">
+            &darr;
+        </a>
+    </div>
+
+    <div class="content">
+        <div id="title">
+            <h1>OCSS - Object Cascading Style Sheet</h1>
+        </div>
+        <div id="content-body">
+            <p>OCSS is a way to use scss diretcly in browser, is in primary stage of development, but can do some cool
+                things.</p>
+            <p>With this you can transform scss like obj into css.</p>
+            <textarea name="ocsstext" id="ocsstext">
+"--main-color": "green",
+"--color1": "orange",
+"#mainDiv": {
+    "--scopedvar1": "white",
+    "--scopedvar2": "blue",
+    "background-color": "var(--main-color)",
+    "text-align": "center",
+    "p":{
+        "color": "orange"
+    },
+    "h1":{
+        "color": "orange"
+    },
+    "button": {
+        "background-color": "var(--scopedvar1)",
+        "color": "var(--scopedvar2)"
+    }
+},
+"#subDiv": {
+    "--scopedvar1": "blue",
+    "--scopedvar2": "white",
+    "background-color": "var(--color1)",
+    "text-align": "right",
+    "p":{
+        "color": "green"
+    },
+    "h1":{
+        "color": "green"
+    },
+    "button": {
+        "background-color": "var(--scopedvar1)",
+        "color": "var(--scopedvar2)"
+    }
+},
+"button":{
+    ":hover":{
+        "cursor": "pointer"
+    }
+}
+            </textarea>
+            <textarea name="ocssoutput" id="ocssoutput"></textarea>
+        </div>
+    </div>
+    <div id="mainDiv" class="mydivs">
+        <span>main</span>
+        <h1>Title</h1>
+        <p>Paragraph</p>
+        <button>ok</button>
+    </div>
+    <div id="subDiv" class="mydivs">
+        <span>other</span>
+        <h1>Title</h1>
+        <p>Paragraph</p>
+        <button>ok</button>
+    </div>
+
+    <script>
+        let ocsstext = document.getElementById("ocsstext")
+        let ocssoutput = document.getElementById("ocssoutput")
+        let parsed = JSON.parse("{" + ocsstext.innerHTML + "}")
+        //parsed["--color1"] = "orange"
+        ocssoutput.innerHTML = ocss(parsed)
+        appendStyle(ocss(parsed), "myocsstyles")
+
+        ocsstext.addEventListener('input', function () {
+            let json = JSON.parse("{" + ocsstext.value + "}")
+            let parsed = ocss(json)
+            ocssoutput.innerHTML = parsed
+            appendStyle(parsed, "myocsstyles")
+        }, false);
+
+        let topnav = document.getElementById("myTopnav");
+        let menuicon = document.getElementById("menuicon");
+
+        function toggleMenu() {
+            if (topnav.className === "topnav") {
+                topnav.className += " responsive";
+            } else {
+                topnav.className = "topnav";
+            }
+        }
+
+        function appendStyle(str, id = "rootocss") {
+            let e = document.getElementById(id)
+            e && e.remove()
+            const style = document.createElement('style');
+            style.id = id
+            style.textContent = str;
+            document.head.append(style);
+        }
+
+        function ocss(obj, opt) {
+            let vars = "";
+            let gCss = "";
+            (function g(path, o) {
+                let entry = "", props = [], nested = []
+                Object.entries(o).forEach((e) => {
+                    if (typeof e[1] === 'object' && e[1] !== null) { nested.push(e) } else props.push(e)
+                })
+                props.forEach(([k, v], i, a) => {
+                    if (typeof v === "function") v = v()
+                    if (k.startsWith("--") && !path) {
+                        if (!vars) vars += ":root {\n"
+                        vars += `${k}:${v};\n`
+                        return
+                    }
+                    if (i === 0) { entry += `${path} {${k}:${v};` } else entry += ` ${k}:${v};`
+                    if (i === (a.length - 1)) entry += "}"
+                });
+                if (entry) gCss += entry + "\n"
+                nested.forEach(([k, v]) => {
+                    k.charAt(0) === ":" ? g(path + k, v) : g(`${path} ${k}`, v)
+                })
+            })("", obj);
+            if (vars) vars += "}"
+            return vars + "\n" + gCss;
+        }
+
+    </script>
+</body>
+
+</html>
