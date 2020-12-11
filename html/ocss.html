@@ -34,8 +34,7 @@
             <h1>OCSS - Object Cascading Style Sheet</h1>
         </div>
         <div id="content-body">
-            <p>OCSS is a way to use scss directly in browser, very experimental, but can do some cool
-                things.</p>
+            <p>OCSS is a way to use scss like in browser, very experimental, but can do some cool things.</p>
             <p>With this you can transform scss like obj into css.</p>
             <textarea name="ocsstext" id="ocsstext">
 "--main-color": "#963232",
@@ -153,12 +152,12 @@
         let ocssoutput = document.getElementById("ocssoutput")
         let parsed = JSONF("{" + ocsstext.innerHTML + "}")
         parsed["--color2"] = "orange//added in code"
-        ocssoutput.innerHTML = ocss(parsed)
-        appendStyle(ocss(parsed), "myexstyles")
+        ocssoutput.innerHTML = ocss("#ldldldl", parsed)
+        appendStyle(ocss("", parsed), "myexstyles")
 
         ocsstext.addEventListener('input', function () {
             let json = JSON.parse("{" + ocsstext.value + "}")
-            let parsed = ocss(json)
+            let parsed = ocss("", json)
             ocssoutput.innerHTML = parsed
             appendStyle(parsed, "myexstyles")
         }, false);
@@ -173,7 +172,7 @@
             document.head.append(style);
         }
 
-        function ocss(obj, opt) {
+        function ocss(target, obj, opt) {
             let vars = "";
             let gCss = "";
             (function g(path, o) {
@@ -194,7 +193,7 @@
                 nested.forEach(([k, v]) => {
                     k.charAt(0) === ":" ? g(path + k, v) : g(`${path} ${k}`, v)
                 })
-            })("", obj);
+            })(target, obj);
             if (vars) vars += "}"
             return vars + "\n" + gCss;
         }
