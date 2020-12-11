@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <!DOCTYPE html>
+    <html>
+
+    <head>
+        <meta charset="UTF-8" />
+        <title>Hello World</title>
+        <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+
+        <!-- Don't use this in production: -->
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    </head>
+
+    <body>
+        <div id="root"></div>
+        <div id="bottom">Bottom</div>
+        <script>
+            byId = (id) => { return document.getElementById(id) }
+            console.log(byId('root'));
+            const name1 = "aaa"
+            const name2 = "bbb"
+
+            function getGreeting(user) {
+                if (user) {
+                    return <h1>Hello, {formatName(user)}!</h1>;
+                }
+                return <h1>Hello, Stranger.</h1>;
+            }
+
+            function formatName(user) {
+                return user.firstName + ' ' + user.lastName;
+            }
+
+            const user = {
+                firstName: 'Name',
+                lastName: 'Surname'
+            };
+
+console.log(getGreeting);
+            
+        </script>
+        <script type="text/babel">
+
+            ReactDOM.render(<h1>Hello, {getGreeting()}!</h1>, byId('root'));
+            ReactDOM.render(<h1>Hello, world2!</h1>, byId('bottom'));
+        </script>
+    </body>
+
+    </html>
+</body>
+
+</html>

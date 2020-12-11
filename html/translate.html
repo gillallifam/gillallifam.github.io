@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSTs</title>
+    <style>
+        div {
+            width: 2207px;
+            height: 100px;
+            margin: auto;
+            background-color: #73AD21;
+            border: 3px solid rgb(173, 33, 68);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="rootdiv"></div>
+    <input id="inmail" type="text" name="" id="">
+    <button onclick="getQuote();">quote</button>
+    <button onclick="getNumber2();">quote2</button>
+    <script>
+        var allElems = document.querySelectorAll("*")
+        console.log(allElems);
+        for (const el of allElems) {
+            if (el.id && el.tagName == "INPUT") console.log(el);
+        }
+
+
+        let client = function (name, feedback) {
+            this.clientName = name;
+            this.clientFeedback = feedback;
+        }
+
+        let client1 = new client('jo', 'hello')
+        let client2 = new client('mark', 'bye')
+
+        let clientKeys = Object.keys(client1);
+        console.log(clientKeys);
+
+
+        var str = "Restaurant Chile - Santiago de Chile, 123904, Chile";
+        str = str.replace(", Chile", " ")
+        console.log(str);
+
+        var isbn = "155404295XaaaaaaAABBBbb"
+        isbn = isbn.replace(/[^\dX]/g, "");
+        console.log(isbn);
+
+        function jhh(params) {
+        }
+        jhh.str = "kfdj"
+        console.log(jhh.str);
+
+        function getNumber() {
+            return (getNumber.number = Math.floor(Math.random() * (5 + 1))) === getNumber.lastNumber ? getNumber() : getNumber.lastNumber = getNumber.number;
+        }
+
+        function getNumber2() {
+            console.log(getNumber()); // Generates a random number between 0 and 4
+        }
+
+        //window.open("www.google.com", '_blank')
+
+        var quotes = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
+        var quoteIndex = 0, newIndex = 0;
+        function getQuote() {
+            while (newIndex == quoteIndex && quotes.length > 1) {
+                newIndex = Math.floor(Math.random() * (quotes.length));
+            }
+            quoteIndex = newIndex
+            console.log(newIndex);
+        }
+
+
+        const array = [{
+            name: 'Alex',
+            age: 10,
+            details: [{
+                day: 'Monday',
+                asst: 'Leo',
+                subDetails: [{ color: 'green', qty: 85 }, { color: 'orange', qty: 35 }]
+            },
+            {
+                day: 'Tuesday',
+                asst: 'Shaun',
+                subDetails: [{ color: 'brown', qty: 15 }, { color: 'indigo', qty: 35 }]
+            },
+            {
+                day: 'Wednesday',
+                asst: 'Julian',
+                subDetails: [{ color: 'pink', qty: 25 }, { color: 'blue', qty: 15 }]
+            },
+            {
+                day: 'Thursday',
+                asst: 'Luis',
+                subDetails: [{ color: 'peach', qty: 5 }, { color: 'black', qty: 15 }]
+            },
+            ]
+        }]
+        array[0].details = array[0].details.filter(d => d.day == "Monday")
+        console.log(array);
+        console.log(Number().toLocaleString(undefined, { style: "currency", currency: "USD" }).split(" ")[0]);
+
+        console.log(navigator.languages);
+        console.log(navigator.language);
+        var userLang = navigator.language || navigator.userLanguage;
+        userLang = "pt-BR"
+        var defaultLang = "EN"
+        var gender = ""
+
+        var tt = {
+            t: function (key) {
+                return bank2[userLang][key]() || bank2[defaultLang][key]()
+            }
+        }
+
+        var bank2 = {
+            "EN": {
+                mister: () => {
+                    switch (gender) {
+                        case "F": return "miss"
+                        case "O": return "misster"
+                        default: return "mister"
+                    }
+                },
+                welcome: () => {
+                    return "mundo"
+                }
+            },
+            "pt-BR": {
+                mister: () => {
+                    switch (gender) {
+                        case "F": return "senhora"
+                        case "O": return "cenora"
+                        default: return "senhor"
+                    }
+                },
+                welcome: () => {
+                    let w = "benvind"
+                    switch (gender) {
+                        case "F": return w + "a"
+                        case "O": return w + "x"
+                        default: return w + "o"
+                    }
+                }
+            },
+            "ES": {
+                hello: "hola",
+                world: "mundo"
+            }
+        }
+
+        var bank = {
+            "EN": {
+                hello: "hello",
+                world: "world"
+            },
+            "pt-BR": {
+                hello: "olá",
+                world: "mundo"
+            },
+            "ES": {
+                hello: "hola",
+                world: "mundo"
+            }
+        }
+
+        console.log(tt.t("welcome"), tt.t("mister"));
+        //console.log(tt.t("hello"), tt.t("world"));
+
+        var decSeparator = getDecSeparator()
+        var json = JSON.parse('{"age":"1","weight":"1.1","name":"Gilmar","password":"12356"}')
+        var json2 = JSON.parse('{"age":"1","weight":"1.1","name":"Gilmar","surname":"Alves","password":"123456"}')
+        var json3 = JSON.parse('{"age":"1"}')
+        var validator = {
+            schema: {
+                name: function (name) {
+                    if (typeof name != "string") return validator.inputError("Name is not a valid string.")
+                    if (name.length < 4) return validator.inputError("Name is too short.")
+                    return true
+                },
+                age: function (age) {
+                    if (/[\,\.]/.test(age)) return validator.inputError("Age must not contains separators.")
+                    var r = parseInt(age);
+                    if (isNaN(r)) return validator.inputError("Age is not a number.")
+                    if (!Number.isInteger(r)) return validator.inputError("Age is not a integer.")
+                    return true
+                },
+                weight: function (weight) {
+                    var r = parseFloat(weight)
+                    if (isNaN(r)) return validator.inputError("Invalid weight.")
+                    return true
+                },
+                password: function (password) {
+                    if (typeof password != "string") return validator.inputError("Password is not a string.")
+                    if (password.length < 6) return validator.inputError("Password is too short.")
+                    return true
+                }
+            },
+            scmKeys: [],
+            validate: function (obj, showObj = false) {
+                isValid = this.scmKeys.every((value) => validator.schema[value](obj[value]))
+                if (!isValid && showObj) console.log("Obj is invalid:", obj);
+                return isValid
+            },
+            inputError: function (msg) {
+                console.log(msg);
+                return false
+            }
+        }
+        validator.scmKeys = Object.keys(validator.schema).sort()
+        console.log("validate1: ", validator.validate(json, true));
+        console.log("validate2: ", validator.validate(json2, true));
+        //console.log("validate3: ", validator.validate(json3));
+
+        /* console.log("Is obj1 match:", validator.isObjMatch(json));
+        console.log("Is obj1 compatible:", validator.isObjCompatible(json));
+
+        console.log("Is obj2 match:", validator.isObjMatch(json2));
+        console.log("Is obj2 compatible:", validator.isObjCompatible(json2)); */
+        /*
+        ,
+            isObjMatch: function (obj) {
+                var objKeys = Object.keys(obj).sort()
+                return this.scmKeys.length === objKeys.length && this.scmKeys.every((key) => objKeys.includes(key))
+            },
+            isObjCompatible: function (obj) {
+                var objKeys = Object.keys(obj).sort()
+                if (this.isObjMatch(obj)) return true
+                return this.scmKeys.length !== objKeys.length && this.scmKeys.every((key) => objKeys.includes(key))
+            }
+        */
+
+        function getDecSeparator() {
+            var n = 1.1;
+            n = n.toLocaleString().substring(1, 2);
+            return n;
+        }
+
+        /* function getCardFlag(cardnumber) {
+            var cardnumber = cardnumber.replace(/[^0-9]+/g, '');
+
+            var cards = {
+                visa: /^4[0-9]{12}(?:[0-9]{3})/,
+                mastercard: /^5[1-5][0-9]{14}/,
+                diners: /^3(?:0[0-5]|[68][0-9])[0-9]{11}/,
+                amex: /^3[47][0-9]{13}/,
+                discover: /^6(?:011|5[0-9]{2})[0-9]{12}/,
+                hipercard: /^(606282\d{10}(\d{3})?)|(3841\d{15})/,
+                elo: /^((((636368)|(438935)|(504175)|(451416)|(636297))\d{0,10})|((5067)|(4576)|(4011))\d{0,12})/,
+                jcb: /^(?:2131|1800|35\d{3})\d{11}/,
+                aura: /^(5078\d{2})(\d{2})(\d{11})$/
+            };
+
+            for (var flag in cards) {
+                if (cards[flag].test(cardnumber)) {
+                    return flag;
+                }
+            }
+
+            return false;
+        } */
+    </script>
+</body>
+
+</html>

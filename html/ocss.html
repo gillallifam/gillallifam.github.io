@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="YIixEsfSCFpRlGZCr0BGVdwQqE-lV8yK4TjbwVfD_KM" />
-    <title>ocss</title>
+    <title>OCSS - Object Cascading Style Sheet</title>
     <link rel="stylesheet" href="/css/stl-ocss.css">
     <style>
         .content {
@@ -22,7 +22,7 @@
 <body>
     <div class="topnav" id="myTopnav">
         <a href="#ocss" class="active">OCSS</a>
-        <a href="#about">Functions</a>
+        <a href="#funcs">Functions</a>
         <a href="#about">About</a>
         <a href="javascript:void(0);" class="icon" id="menuicon" onclick="toggleMenu()">
             &darr;
@@ -159,7 +159,9 @@
         let inputid = document.getElementById("inputid")
 
         let obj = JSONF(ocsstext.innerHTML)
+        console.time("ocssparse")
         let css = ocss("", obj)
+        console.timeEnd("ocssparse")
         ocssoutput.innerHTML = css
         appendStyle(css, "myexstyles")
 
@@ -184,8 +186,8 @@
             let vars = "";
             let gCss = "";
             (function g(path, o) {
-                let entry = "", props = [], nested = []
-                Object.entries(o).forEach((e, i, a) => {
+                let entry = "", nested = []
+                Object.entries(o).forEach((e) => {
                     let [k, v] = e
                     if (typeof v === 'object' && v !== null) { nested.push(e) } else {
                         if (typeof v === "function") v = v()
@@ -199,7 +201,7 @@
                 })
                 if (entry) gCss += `${path} {${entry}}\n`
                 nested.forEach(([k, v]) => {
-                    k.charAt(0) === ":" ? g(path + k, v) : g(`${path} ${k}`, v)
+                    k[0] === ":" ? g(path + k, v) : g(`${path} ${k}`, v)
                 })
             })(target, obj);
             if (vars) vars += "}"

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script> -->
+
+    <script>
+
+        var myDB = null
+
+        const customerData = [
+            { ssn: "444-44-4444", name: "Xena", age: 35, email: "xena@company.com" },
+            { ssn: "555-55-5555", name: "Donna", age: 32, email: "donna@home.org" },
+            { ssn: "777-77-7777", name: "Hilda", age: 32, email: "hilda@home.org" }
+        ];
+
+        async function init(params) {
+            let request = await indexedDB.open("MyTestDatabase", 3);
+            console.log(request);
+            request.onerror = function (event) {
+                console.log(event);
+            };
+            request.onsuccess = function (event) {
+                console.log(event);
+                myDB = event.target.result
+            };
+            request.onupgradeneeded = function (event) {
+                var db = event.target.result;
+
+                var objectStore = db.createObjectStore("customers", { keyPath: "ssn" });
+
+                objectStore.createIndex("name", "name", { unique: false });
+
+                objectStore.createIndex("email", "email", { unique: true });
+
+                objectStore.transaction.oncomplete = function (event) {//optional
+                    var customerObjectStore = db.transaction("customers", "readwrite").objectStore("customers");
+                    customerData.forEach(function (customer) {
+                        customerObjectStore.add(customer);
+                    });
+                };
+            };
+            console.log(request);
+        }
+
+        init()
+
+        setTimeout(async () => {
+            console.log("myDB",myDB);
+            //myDB.close()
+            //console.log(myDB.createObjectStore("xxx", { keyPath: "ssn" }));
+            var transaction = myDB.transaction(["customers"]);
+            var objectStore = transaction.objectStore("customers");
+            var request = objectStore.get("444-44-4444");
+            request.onerror = function (event) {
+                // Handle errors!
+            };
+            request.onsuccess = function (event) {
+                // Do something with the request.result!
+                console.log("Name for SSN 444-44-4444 is " + request.result.name);
+            };
+            //console.log(transaction);
+        }, 200);
+
+        function createObjectStore(storeName) {//use function
+            var secondRequest = indexedDB.open(myDB.name, myDB.version + 1);
+            secondRequest.onupgradeneeded = function (e) {
+                var database = e.target.result;
+                var objectStore = database.createObjectStore(storeName, {
+                    keyPath: 'id'
+                });
+            };
+            secondRequest.onsuccess = function (e) {
+                //e.target.result.close();
+            }
+
+        }
+
+
+        async function isPers(params) {
+            if (navigator.storage && navigator.storage.persist) {
+                const isPersisted = await navigator.storage.persist();
+                console.log(`Persisted storage granted: ${isPersisted}`);
+            }
+            if (navigator.storage && navigator.storage.persist) {
+                const isPersisted = await navigator.storage.persisted();
+                console.log(`Persisted storage granted: ${isPersisted}`);
+            }
+        }
+
+        isPers()
+
+        //var db = new Dexie("friend_database");
+        /* db.version(1).stores({
+            friends: 'name,shoeSize'
+        });
+
+        console.log(db);
+
+        db.friends.put({ name: "Nicolas", shoeSize: 8 }).then(function () {
+            return db.friends.get('Nicolas');
+        }).then(function (friend) {
+            console.log("Nicolas has shoe size " + friend.shoeSize);
+        }).catch(function (error) {
+            console.log("Ooops: " + error);
+        }); */
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

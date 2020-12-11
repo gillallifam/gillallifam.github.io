@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        //Use join on objects
+        var obd = {
+            "§tables": ["people", "addr"],
+            addr: {},
+            //search(f) { return Object.values },
+            addAddres(id) {
+                let o = Object.create(null)
+                o.id = id
+                o["rua"] = makeid(6)
+                o["n"] = makeid(6)
+                this.addr[id] = o
+            },
+            addPeople(p) {
+                let o = Object.create(null)
+                for (pp in p) o[pp] = p[pp]
+                this.people[o.id] = o
+            },
+            people: {}
+        }
+
+        for (let i = 1; i <= 10000; i++) {
+            let id = makeid(10) + i
+            obd.addAddres(id)
+            obd.addPeople({ id: id, name: makeid(5), age: 0.1 * i, addr: "§" })
+        }
+
+        function joiner(obj) {
+            for (p in obj) if (obj[p] === "§") obj[p] = obd[p][obj.id] || null
+        }
+
+        function joinerb(grp) { for (p in grp) joiner(grp[p]) }
+
+        function targetsObj(x, y) {
+            for (k in y) {
+                if (isObj(x[k])) targetsObj(x[k], y[k])
+                if (Array.isArray(x[k])) targetsArr(x[k], y[k])
+            }
+            return true
+        }
+        function targetsArr(x, y) {
+            console.log(x, y);
+            switch (y[0]) {
+                case "length":
+                    console.log("arr len", x.length === y[1]);
+                    return x.length === y[1]
+                    break;
+                case "includes":
+                    console.log("arr includes", x.includes(y[1]));
+                    return x.includes(y[1])
+                    break;
+                default:
+                    x.forEach(e => {
+                        console.log("e", e);
+                    });
+                    break;
+            }
+            return true
+        }
+
+        function objType(o) {
+            if (typeof o === 'object' && o !== null) return "object"
+            if (Array.isArray(o)) return "array"
+            return typeof o
+        }
+
+        function isObj(x) {
+            return typeof x === 'object' && x !== null && !Array.isArray(x)
+        }
+
+        console.log(targetsObj({ age: 10, o: { deep: 1 }, tst: "x", arr: [1, 2, 3] },
+            { age: [">", 10], o: { deep: [">", 0] }, tst: ["==", "y"], arr: ["some", ["=", 10]] }));
+
+
+        joinerb(obd.people)
+        console.time("search")
+        var fitOn = { age: [">", 10] }
+        console.log(Object.values(obd.people).filter((x) => { return x.name.includes("x") && x.age }));
+        console.timeEnd("search")
+
+        function makeid(length) {
+            var result = '';
+            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            var charactersLength = characters.length;
+            for (var i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        }
+
+        function tcomparer(x, s, y) {
+            switch (s) {
+                case ">":
+                    return (y > x) ? true : false
+                case ">=":
+                    return (y >= x) ? true : false
+                case "<=":
+                    return (y <= x) ? true : false
+            }
+        }
+    </script>
+</body>
+
+</html>

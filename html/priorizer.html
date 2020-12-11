@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        var grp = []
+        for (let o = 0; o < 1000; o++) {
+            //grp.push({a:1})
+            /* let n = lightObj()
+            n.a = 1
+            grp.push(n) */
+            grp.push(lightObj())
+        }
+
+        console.log(grp);
+        var statitiscs = lightObj()
+        statitiscs.ap = 0
+        statitiscs.bp = 0
+        console.log(statitiscs);
+        function lightObj() {
+            return Object.create(null)
+        }
+        var priorizer = []
+        function useA() {
+            statitiscs.ap++
+            console.log("using A");
+        }
+        function useB() {
+            statitiscs.bp++
+            console.log("using B");
+        }
+        priorizer[0] = useA
+        priorizer[1] = useB
+
+        priorizer[0]()
+        priorizer[0]()
+        priorizer.push(priorizer.shift())
+        priorizer[0]()
+        console.log(lightObj());
+        console.log(statitiscs);
+    </script>
+</body>
+
+</html>

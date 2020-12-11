@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>litedom</title>
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        #idtest {
+            background-color: darkorange;
+        }
+
+        .mmodel {
+            background-color: blueviolet;
+        }
+    </style>
+
+</head>
+
+<body>
+    <script>
+
+        let name = user.name; // shows "GET name"
+        user.name = "Pete"; // shows "SET name=Pete"
+
+        var targetObj = {};
+        var targetProxy = new Proxy(targetObj, {
+            set: function (target, key, value) {
+                console.log(`${key} set to ${value}`);
+                target[key] = value;
+                return true;
+            }
+        });
+
+        targetProxy.hello_world = "test";
+        targetProxy.hello_world2 = "test2";
+        targetProxy.myvalue = "new value";
+
+        /* function sleepz() {
+            var element = new Image();
+            Object.defineProperty(element, 'id', {
+                get: function () {
+                    location.replace("error.html")
+                }
+            });
+            console.log('Hello', element);
+        }
+
+        sleepz() */
+
+
+
+
+        hashCode = _0x195447 => _0x195447['split']('')['reduce']((_0x430acb, _0x221bd7) => { return _0x430acb = (_0x430acb << 0x5) - _0x430acb + _0x221bd7['charCodeAt'](0x0), _0x430acb & _0x430acb; }, 0x0);
+        console.log(hashCode(Object.keys(window).join("")));
+
+        //hashCode = s => s.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0)
+
+
+        console.log(Object.keys(window).join("").split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0));
+
+        //console.log(window.location);
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+
+        function addComponent(params) {
+            let { name, template, styles } = params
+            class BaseComponent extends HTMLElement {
+
+                constructor() {
+                    super();
+                    let stl = document.createElement('style');
+                    stl.cssText = styles
+                    this.sroot = this.attachShadow({ mode: 'open' })
+                    this.sroot.innerHTML = template
+                    this.sroot.append(stl)
+                }
+            }
+            customElements.define("c-" + name, BaseComponent);
+        }
+
+        addComponent({ name: "mycomponent", template: "<p>hello</p>", style: "color:red" })
+    </script>
+    <script type="module">
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            console.log('DOM fully loaded and parsed');
+
+            /* const template = document.getElementById('template');
+            console.log(template.innerHTML);
+
+            document.getElementById("root").appendChild(
+                document.importNode(template.content, true)
+            ); */
+
+            /* if (!window.matchMedia('(display-mode: standalone)').matches) {
+                alert("must be installed");
+            } */
+
+            // Set up channel
+            const broadcast = new BroadcastChannel('count-channel');
+
+            // Listen to the response
+            broadcast.onmessage = (event) => {
+                console.log(event.data.payload);
+            };
+
+            // Send first request
+            broadcast.postMessage({
+                type: 'INCREASE_COUNT',
+            });
+
+        });
+
+        window.appHistory = []
+        window.appStore = {}
+        window.allStates = {}
+        import Litedom from '/litedom.es.js';
+        import Litestate from '/litestate.esm.js';
+        import ExtElem from '/extElem.js';
+
+        if (ExtElem.$store) ExtElem.$store = namedStore(ExtElem.$store.name, ExtElem.$store.store)
+        //console.log(ExtElem);
+        Litedom(ExtElem)
+
+        function namedStore(name, obj) {
+            allStates[name] = Litestate(obj)
+            return allStates[name]
+        }
+
+        var origin1 = {
+            tagName: 'e-templated',
+            template: `<div :style='this.style' class='mmodel' id='idtest'>{this.d} {this.prop.name} {this.$store.tst}
+                <e-extElem name='child'></e-extElem>
+                </div>`,
+            $store: namedStore('e-templated', { state: { name: "custom elem", tst: "from store" } }),
+            data: {
+                style: {
+                    'font-size': '40px'
+                },
+                d: 'from data'
+            },
+            exec: function (state) {
+                console.log('executed', this.data.d);
+                this.data.d = 'changed'
+            },
+            created: function (state) {
+                console.log('created');
+            },
+            updated: function () {
+                console.log('updated');
+            }
+        }
+        var origin2 = {
+            tagName: 'e-templated2',
+            template: `<div :style='this.style' class='mmodel' id='idtest'>{this.d} {this.prop.name} {this.$store.tst}</div>`,
+            $store: namedStore('e-templated2', { state: { name: "custom elem", tst: "from store" } }),
+            data: {
+                style: {
+                    backgroundColor: "violet",
+                    'font-size': '33px'
+                },
+                d: 'from data'
+            },
+            exec: function (state) {
+                console.log('executed', this.data.d);
+                this.data.d = 'changed'
+            },
+            created: function (state) {
+                console.log('created');
+            },
+            updated: function () {
+                console.log('updated');
+            }
+        }
+
+        if (origin1.$store) origin1.$store = { type: "store", name: origin1.tagName, state: { state: origin1.$store.getState() } }
+        console.log(origin1);
+
+        var dry = JSON.stringify(origin1, function (key, value) {
+            if (typeof value === "function") {
+                return "/F(" + value.toString() + ")/";
+            }
+            return value;
+        });
+
+        console.log(dry.replace(/\\n/g, ''));
+
+        var seed = `{"tagName":"e-templated","template":"<div :style='this.style' id='x1'>{this.d} {this.prop.name} {this.$store.tst}</div>","$store":{"type":"store","name":"e-templated","state":{"state":{"name":"custom elem","tst":"from store"}}},"data":{"style":{"backgroundColor":"orange","font-size":"33px"},"d":"from data"},"exec":"/F(function (state) {                console.log('executed', this.data.d);                this.data.d = 'changed'            })/","created":"/F(function (state) {                console.log('created');            })/","updated":"/F(function () {                console.log('updated');            })/"}`
+
+        var sprout = JSON.parse(seed, function (key, value) {
+            if (value.type === "store") {
+                return namedStore(value.name, value.state)
+            }
+            if (typeof value === "string" && value.startsWith("/F(") && value.endsWith(")/")) {
+                value = value.substring(3, value.length - 2);
+                return (0, eval)("(" + value + ")");
+            }
+            return value;
+        });
+
+        console.log("sprout", sprout);
+
+
+        var humid = JSON.parse(dry, function (key, value) {
+            if (value.type === "store") {
+                return namedStore(value.name, value.state)
+            }
+            if (typeof value === "string" &&
+                value.startsWith("/F(") &&
+                value.endsWith(")/")) {
+                value = value.substring(3, value.length - 2);
+                return (0, eval)("(" + value + ")");
+            }
+            return value;
+        });
+
+        console.log(humid);
+
+        function liteRef(h) {
+            Litedom(h)
+        }
+
+        let myElem = liteRef(humid)
+        liteRef(origin2)
+        var root = document.getElementById("root")
+        var injected = document.createElement("e-templated2")
+        injected.setAttribute("name", "from injected")
+        root.appendChild(injected)
+        setTimeout(() => {
+            humid.exec()
+        }, 1000);
+        console.log(window.allStates);
+
+
+
+    </script>
+
+
+
+
+    <e-templated name='from t1'></e-templated>
+    <e-extElem name='from tag'></e-extElem>
+    <div id="root"></div>
+
+
+    <br>
+    <c-mycomponent></c-mycomponent>
+
+
+</body>
+
+</html>
