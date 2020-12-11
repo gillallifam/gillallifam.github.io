@@ -36,11 +36,16 @@
         <div id="content-body">
             <p>OCSS is a way to use scss like in browser, very experimental, but can do some cool things.</p>
             <p>With this you can transform scss like obj into css.</p>
+            <label for="inputid">For id/class:</label>
+            <input type="text" name="inputid" id="inputid">
+            <br>
+            <br>
             <textarea name="ocsstext" id="ocsstext">
+{
 "--main-color": "#963232",
 "--color1": "#333",
-"--injson": "function () {return Math.abs(-10.15245251);}/f",
-"--injson2": "function fromWindow/e",
+"--useeval": "function () {return Math.abs(-10.15245251);}",
+"--fromWindow": "exec fromWindow",
 "#mainDiv": {
     "--scopedvar1": "gold",
     "--scopedvar2": "brown",
@@ -93,6 +98,7 @@
         "cursor": "pointer"
     }
 }
+}
             </textarea>
             <textarea name="ocssoutput" id="ocssoutput" readonly></textarea>
         </div>
@@ -125,8 +131,9 @@
         }
 
         function fromWindow() {
-            return "from window"
+            return "data from window function"
         }
+
         function executeFunctionByName(functionName, context /*, args */) {
             var args = Array.prototype.slice.call(arguments, 2);
             var namespaces = functionName.split(".");
@@ -137,12 +144,11 @@
             return context[func].apply(context, args);
         }
 
-        let JSONF = (str) => {
+        var JSONF = (str) => {
             return JSON.parse(str, function (key, value) {
-                if (typeof value === "string" && value.startsWith("function")) {
-                    value = value.substring(0, value.length - 2);
-                    if (value.endsWith("/f")) return (0, eval)("(" + value + ")");
-                    if (value.endsWith("/e")) return window[value.split(" ")[1]]
+                if (typeof value === "string" && (value.startsWith("function")||value.startsWith("exec"))) {
+                    if (value.startsWith("function")) return (0, eval)("(" + value + ")");
+                    if (value.startsWith("exec")) return window[value.split(" ")[1]]
                 }
                 return value;
             });
@@ -150,22 +156,24 @@
 
         let ocsstext = document.getElementById("ocsstext")
         let ocssoutput = document.getElementById("ocssoutput")
-        let parsed = JSONF("{" + ocsstext.innerHTML + "}")
-        parsed["--color2"] = "orange//added in code"
-        ocssoutput.innerHTML = ocss("#ldldldl", parsed)
-        appendStyle(ocss("", parsed), "myexstyles")
+        let inputid = document.getElementById("inputid")
 
-        ocsstext.addEventListener('input', function () {
-            let json = JSON.parse("{" + ocsstext.value + "}")
-            let parsed = ocss("", json)
-            ocssoutput.innerHTML = parsed
-            appendStyle(parsed, "myexstyles")
+        let obj = JSONF(ocsstext.innerHTML)
+        let css = ocss("", obj)
+        ocssoutput.innerHTML = css
+        appendStyle(css, "myexstyles")
+
+        ocsstext.addEventListener('input', () => {
+            let obj = JSONF(ocsstext.value)
+            let css = ocss(inputid.value, obj)
+            ocssoutput.innerHTML = css
+            appendStyle(css, "myexstyles")
         }, false);
 
 
         function appendStyle(str, id = "rootocss") {
-            document.getElementById(id) && e.remove()
-
+            let e = document.getElementById(id)
+            if (e) e.remove()
             const style = document.createElement('style');
             style.id = id
             style.textContent = str;
@@ -177,18 +185,18 @@
             let gCss = "";
             (function g(path, o) {
                 let entry = "", props = [], nested = []
-                Object.entries(o).forEach((e) => {
-                    if (typeof e[1] === 'object' && e[1] !== null) { nested.push(e) } else props.push(e)
-                })
-                props.forEach(([k, v], i, a) => {
-                    if (typeof v === "function") v = v()
-                    if (k.startsWith("--") && !path) {
-                        if (!vars) vars += ":root {\n"
-                        vars += `${k}:${v};\n`
-                        return
+                Object.entries(o).forEach((e, i, a) => {
+                    let [k, v] = e
+                    if (typeof v === 'object' && v !== null) { nested.push(e) } else {
+                        if (typeof v === "function") v = v()
+                        if (k.startsWith("--") && !path) {
+                            if (!vars) vars += ":root {\n"
+                            vars += `${k}:${v};\n`
+                            return
+                        }
+                        entry += `${k}:${v};`
                     }
-                    entry += `${k}:${v};`
-                });
+                })
                 if (entry) gCss += `${path} {${entry}}\n`
                 nested.forEach(([k, v]) => {
                     k.charAt(0) === ":" ? g(path + k, v) : g(`${path} ${k}`, v)
