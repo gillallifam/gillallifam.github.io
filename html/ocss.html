@@ -49,8 +49,8 @@
 "#mainDiv": {
     "--scopedvar1": "gold",
     "--scopedvar2": "brown",
-    "background-color": "var(--main-color)",
-    "text-align": "center",
+    "backgroundColor": "var(--main-color)",
+    "textAlign": "center",
     "span":{
         "color":"whitesmoke"
     },
@@ -71,7 +71,7 @@
 "#subDiv": {
     "--scopedvar1": "gold",
     "--scopedvar2": "brown",
-    "background-color": "var(--color1)",
+    "backgroundColor": "var(--color1)",
     "text-align": "right",
     "span":{
         "color":"white"
@@ -119,6 +119,10 @@
     <button>button</button>
     <script>
 
+
+
+
+
         let topnav = document.getElementById("myTopnav");
         let menuicon = document.getElementById("menuicon");
 
@@ -146,7 +150,7 @@
 
         var JSONF = (str) => {
             return JSON.parse(str, function (key, value) {
-                if (typeof value === "string" && (value.startsWith("function")||value.startsWith("exec"))) {
+                if (typeof value === "string" && (value.startsWith("function") || value.startsWith("exec"))) {
                     if (value.startsWith("function")) return (0, eval)("(" + value + ")");
                     if (value.startsWith("exec")) return window[value.split(" ")[1]]
                 }
@@ -160,14 +164,14 @@
 
         let obj = JSONF(ocsstext.innerHTML)
         console.time("ocssparse")
-        let css = ocss("", obj)
+        let css = ocss("", obj, { camelCase: true })
         console.timeEnd("ocssparse")
         ocssoutput.innerHTML = css
         appendStyle(css, "myexstyles")
 
         ocsstext.addEventListener('input', () => {
             let obj = JSONF(ocsstext.value)
-            let css = ocss(inputid.value, obj)
+            let css = ocss(inputid.value, obj, { camelCase: true })
             ocssoutput.innerHTML = css
             appendStyle(css, "myexstyles")
         }, false);
@@ -185,6 +189,7 @@
         function ocss(target, obj, opt) {
             let vars = "";
             let gCss = "";
+            const camToKeb = str => str.replace(/[A-Z]/g, l => `-${l.toLowerCase()}`);
             (function g(path, o) {
                 let entry = "", nested = []
                 Object.entries(o).forEach((e) => {
@@ -196,6 +201,7 @@
                             vars += `${k}:${v};\n`
                             return
                         }
+                        k = camToKeb(k)
                         entry += `${k}:${v};`
                     }
                 })
