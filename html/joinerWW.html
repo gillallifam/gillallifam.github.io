@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <button id="doSearch">search</button>
+    <button id="doSomething" disabled>something</button>
+</head>
+
+<body>
+    <script>
+        let mainData = []
+        const worker1 = new Worker("../js/worker.js");
+        worker1.onmessage = (e) => {
+            //console.log(e.data.data);
+            mainData = e.data.data
+            
+            doSomething.disabled = false
+        }
+
+        var JSONStr = (obj) => {
+            return JSON.stringify(obj, function (key, val) {
+                if (typeof val === 'function') {
+                    return val + ''; // implicitly `toString` it
+                }
+                return val;
+            });
+        }
+
+        var JSONPrs = (str) => {
+            return JSON.parse(str, function (key, value) {
+                if (typeof value === "string" && (value.startsWith("function") || value.startsWith("exec"))) {
+                    if (value.startsWith("function")) return (0, eval)("(" + value + ")");
+                }
+                return value;
+            });
+        }
+
+        let searchDef1 = {
+            table: "hobbie",
+            joins: ["user"],
+            type: "filter",
+            job: function (x) { return x.h1.includes("a") || x.h2.includes("b") }
+        }
+        let searchDef2 = {
+            table: "user",
+            joins: ["addr"],
+            type: "filter",
+            job: function (x) { return x.addr.includes("a") }
+        }
+
+        let doSearch = document.getElementById("doSearch")
+        doSearch.onclick = async () => {
+            worker1.postMessage({ action: "search", opt: JSONStr(searchDef1) })
+        }
+        let doSomething = document.getElementById("doSomething")
+        doSomething.onclick = async () => {
+            console.log(mainData);
+        }
+
+        function targetsObj(x, y) {
+            for (k in y) {
+                if (isObj(x[k])) targetsObj(x[k], y[k])
+                if (Array.isArray(x[k])) targetsArr(x[k], y[k])
+            }
+            return true
+        }
+        function targetsArr(x, y) {
+            console.log(x, y);
+            switch (y[0]) {
+                case "length":
+                    console.log("arr len", x.length === y[1]);
+                    return x.length === y[1]
+                    break;
+                case "includes":
+                    console.log("arr includes", x.includes(y[1]));
+                    return x.includes(y[1])
+                    break;
+                default:
+                    x.forEach(e => {
+                        console.log("e", e);
+                    });
+                    break;
+            }
+            return true
+        }
+
+        function objType(o) {
+            if (typeof o === 'object' && o !== null) return "object"
+            if (Array.isArray(o)) return "array"
+            return typeof o
+        }
+
+        function isObj(x) {
+            return typeof x === 'object' && x !== null && !Array.isArray(x)
+        }
+
+    </script>
+</body>
+
+</html>

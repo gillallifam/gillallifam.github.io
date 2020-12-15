@@ -131,9 +131,6 @@
             }
         }
 
-        var ocssTargets = []
-        ocssFindTargets()
-
         function fromWindow() {
             return "data from window function"
         }
@@ -150,7 +147,6 @@
 
         var JSONF = (str) => {
             return JSON.parse(str, function (key, value) {
-                console.log(key,value);
                 if (typeof value === "string" && (value.startsWith("function") || value.startsWith("exec"))) {
                     if (value.startsWith("function")) return (0, eval)("(" + value + ")");
                     if (value.startsWith("exec")) return window[value.split(" ")[1]]
@@ -186,7 +182,7 @@
             document.head.append(style);
         }
 
-        function ocss(target, obj, opt) {//get document classes
+        function ocss(target, obj, opt) {
             let vars = "";
             let gCss = "";
             const camToKeb = str => str.replace(/[A-Z]/g, l => `-${l.toLowerCase()}`);
@@ -213,17 +209,26 @@
             if (vars) vars += "}"
             return vars + "\n" + gCss;
         }
-        function ocssFindTargets() {
-            let docTags = new Set()
-            let all = document.body.querySelectorAll("*")
-            for (const e of all) {
-                docTags.add(e.tagName)
-                if (e.className) ocssTargets.push(...e.className.split(" ").map(x => "." + x))
-                if (e.id !== "") { ocssTargets.push("#" + e.id) }
-            }
-            ocssTargets.push(...docTags)
-            console.log(ocssTargets);
+
+        let all = document.body.querySelectorAll("*")
+        let classes = []
+        let myrules = []
+        for (const e of all) {
+            classes.push(...e.className.split(" "))
+            //console.log(e.className.fil);
         }
+        console.log(classes.map(x => "." + x).filter(x => x != "."));
+        console.log(document.styleSheets[1].rules[2].cssText);
+        for (const r of Array.from(document.styleSheets[1].rules)) {
+            for (const cls of classes) {
+                //if(r.selectorText && r.selectorText.includes(cls))myrules.push(r.selectorText)
+            }
+            //console.log(r.selectorText);
+        }
+        /* for (const sheet of document.styleSheets) {
+            console.log(sheet);
+        } */
+        console.log(myrules);
     </script>
 </body>
 
