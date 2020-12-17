@@ -16,7 +16,7 @@ var obd = {
   },
   hobbie: {}
 };
-console.log(obd);
+console.log(obd); //console.log(e.data.data);
 
 var JSONPrs = function JSONPrs(str) {
   return JSON.parse(str, function (key, value) {
@@ -35,7 +35,8 @@ for (var i = 1; i <= 10000; i++) {
   obd.addAddres({
     id: id,
     rua: makeid(5),
-    n: makeid(5)
+    n: makeid(5),
+    bairro: makeid(5)
   });
   obd.addHobbie({
     id: id,
@@ -52,11 +53,14 @@ for (var i = 1; i <= 10000; i++) {
 console.timeEnd("Filling");
 
 function bdSearch(defs) {
+  //console.log(obd);
   var result = {};
-  result[defs.table] = Object.values(obd[defs.table])[defs.type](defs.job);
   defs.joins.forEach(function (j) {
-    joinAny(result[defs.table], j);
-  }); //console.log(result);
+    joinAny(obd[defs.table], j);
+  }); //console.log(obd);
+  //console.log(defs.job);
+
+  result[defs.table] = Object.values(obd[defs.table])[defs.type](defs.job); //console.log(result);
 
   return result;
 }
@@ -117,7 +121,8 @@ onmessage = function onmessage(e) {
 
   switch (action) {
     case "search":
-      console.time("search");
+      console.time("search"); //console.log(opt);
+
       var res = bdSearch(JSONPrs(opt));
       console.timeEnd("search");
       this.postMessage({

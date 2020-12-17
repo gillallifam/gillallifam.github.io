@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+    <script src="../js/lz-string.min.js"></script>
+    <script src="../js/cli-commom.js"></script>
+</head>
+
+<body>
+    <button id="sendData">sendData</button>
+    <button id="getData">getData</button>
+    <button id="pingServer">Ping</button>
+    <script>
+        async function quota(params) {
+            if (navigator.storage && navigator.storage.estimate) {
+                const quota = await navigator.storage.estimate();
+                // quota.usage -> Number of bytes used.
+                // quota.quota -> Maximum number of bytes available.
+                const percentageUsed = (quota.usage / quota.quota) * 100;
+                console.log(`You've used ${percentageUsed}% of the available storage.`);
+                const remaining = quota.quota - quota.usage;
+                console.log(`You can write up to ${remaining/1000000000} more bytes.`);
+            }
+        }
+        quota()
+        const sendData = document.getElementById("sendData")
+        const getData = document.getElementById("getData")
+        const pingServer = document.getElementById("pingServer")
+        let bkpServer = ""
+        var conn = null
+        var cliId = "cli01"
+        document.title = cliId
+
+        fetch('http://172.100.11.87:9000/servers').then(async function (response) {
+            let data = await response.json()
+            bkpServer = data[0]
+            conn = peer.connect("nodeClient");
+            conn.on('open', function () {
+                console.log("Conectado ao servidor de BKP. " + bkpServer);
+            });
+            conn.on('data', function (data) {
+                switch (data.msg) {
+                    case "ping":
+                        console.log("ping");
+                        break;
+                    case "bkpData":
+                        console.log(data);
+                        break;
+                    case "getData":
+                        console.log(data);
+                        break;
+                    default:
+                        break;
+                }
+            });
+            conn.on('close', function () {
+                console.log("Disconnected from server");
+            });
+        })
+        pingServer.onclick = () => {
+            if (conn) conn.send({ cliId, msg: "ping" });
+        }
+
+        sendData.onclick = () => {
+            let compressed = LZString.compressToUTF16(JSON.stringify(bkpData))
+            if (conn) conn.send({ cliId, msg: "bkpData", payLoad: compressed });
+        }
+
+        getData.onclick = () => {
+            if (conn) conn.send({ cliId, msg: "getData" });
+        }
+
+        const bkpData = []
+        for (let i = 0; i < totalItems; i++) {
+            bkpData.push({ a: 1, b: makeid(10), c: { d: 3 }, e: i + makeid(8), f: i * i })
+        }
+        const peer = new Peer(cliId, {
+            host: '172.100.11.87',
+            port: socketPort,
+            path: '/service/socket'
+        });
+        peer.on('close', function () { console.log("Peer closed"); });
+    </script>
+
+</body>
+
+</html>

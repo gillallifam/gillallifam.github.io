@@ -11,19 +11,48 @@
 
 <body>
     <script>
+        var global = (function () {
+            return this || (1, eval)('this');
+        }());
+        console.log(global);
+
+        var x = 'outer';
+        (function () {
+            var x = 'inner';
+            eval('console.log("direct call: " + x)');
+            (1, eval)('console.log("indirect call: " + x)');
+        })();
+
+        adder1 =  (a, b) => { return a + b }
+
+
+        var adder2 = new Function('a', 'b', 'return a + b');
+        console.time("new func")
+        adder2(2, 6);
+        console.timeEnd("new func")
+
+        var adder3 = eval("(function adder3(a,b) {return a + b })")
+
+        console.time("func");
+        adder1(2, 6);
+        console.timeEnd("func");
+
+        console.time("eval")
+        adder3(2, 6);
+        console.timeEnd("eval")
+
         let mainData = []
         const worker1 = new Worker("../js/worker.js");
         worker1.onmessage = (e) => {
-            //console.log(e.data.data);
             mainData = e.data.data
-            
+            console.log(mainData);
             doSomething.disabled = false
         }
 
         var JSONStr = (obj) => {
             return JSON.stringify(obj, function (key, val) {
                 if (typeof val === 'function') {
-                    return val + ''; // implicitly `toString` it
+                    return val + '';
                 }
                 return val;
             });
@@ -48,12 +77,20 @@
             table: "user",
             joins: ["addr"],
             type: "filter",
-            job: function (x) { return x.addr.includes("a") }
+            job: function (x) { return x.addr.rua.includes("a") }
+        }
+        let searchDef3 = {
+            table: "user",
+            joins: ["addr"],
+            type: "filter",
+            job: function (x) { return x.addr.bairro.includes("gil") }
         }
 
         let doSearch = document.getElementById("doSearch")
         doSearch.onclick = async () => {
             worker1.postMessage({ action: "search", opt: JSONStr(searchDef1) })
+            //worker1.postMessage({ action: "search", opt: JSONStr(searchDef2) })
+            //worker1.postMessage({ action: "search", opt: JSONStr(searchDef3) })
         }
         let doSomething = document.getElementById("doSomething")
         doSomething.onclick = async () => {
