@@ -24,11 +24,13 @@
         var clients = new Map()
         const peer = new Peer("BKPServer1", {
             host: '172.100.11.87',
-            port: socketPort,
+            port: 9099,
             path: '/service/socket'
         });
 
+        console.log(peer);
         peer.on('connection', function (conn) {
+            
             storeCliNames.add(conn.peer)
             cliNames.innerHTML = Array.from(storeCliNames).join(", ")
             clients.set(conn.peer, conn)
