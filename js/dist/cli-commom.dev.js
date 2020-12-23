@@ -2,6 +2,10 @@
 
 var totalItems = 10000;
 var socketPort = 9001;
+/**
+ * todo:
+ * @param {*} length 
+ */
 
 function makeid(length) {
   var result = '';

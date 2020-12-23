@@ -7,25 +7,158 @@
     <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
     <script src="../js/lz-string.min.js"></script>
     <script src="../js/cli-commom.js"></script>
+    <script src="../js/currency.min.js"></script>
+    <style>
+        :root {
+            --mouse-x: 0px;
+            --mouse-y: 0px;
+        }
+
+        .mover {
+            width: 50px;
+            height: 50px;
+            background: red;
+            position: absolute;
+            left: var(--mouse-x);
+            top: var(--mouse-y);
+        }
+    </style>
 </head>
 
 <body>
     <button id="sendData">sendData</button>
     <button id="getData">getData</button>
     <button id="pingServer">Ping</button>
+    <!-- <div class="mover"></div> -->
     <script>
-        function sendData2(data) {
-            let websocket = new WebSocket("ws://localhost:8090")
-            websocket.onopen = (o) => {
-                websocket.send("hello!") 
-                websocket.close()
+        let validator = {
+            string: {
+                maxLen: (s, v) => {
+                    return s.length <= v
+                },
+                minLen: (s, v) => {
+                    return s.length >= v
+                }
+            },
+            number: {
+                max: (n, v) => {
+                    return n <= v
+                },
+                min: (n, v) => {
+                    return n >= v
+                }
+            },
+            phone: {}
+        }
+
+        let orgObj1 = { "name": "111kkkkkkk", "age": 3 }
+        //let orgObj2 = { "a": "111", "b": 2, "c": { "o": 10, "d": [0, 1, "x"] } }
+
+        let schema = {
+            name: ['string', '{"minLen":3,"maxLen":10}'],
+            age: ['number', '{"min":3,"max":10}'],
+            phone: ['phone', '{"rgx":"\\d"}']
+        }
+
+        function validate(obj, sch) {
+            let pass = true
+            for (const prop of Object.keys(obj)) {
+                let [type, reqs] = sch[prop]
+                reqs = JSON.parse(reqs)
+                for (const r of Object.entries(reqs)) {
+                    let [k, v] = r
+                    if (!validator[type][k](obj[prop], v)) pass = false
+                }
+            }
+            return pass
+        }
+
+        console.log(validate(orgObj1, schema));
+        /* for (const e of entries) {
+            let [k, v] = e
+            console.log(k, v);
+            console.log(validator[type][k](orgObj1.a, e[1]));
+        } */
+
+        console.log("====================");
+        //console.log(k, v);
+        //console.log(orgObj.a[k]);
+        //if (typeof orgObj.a === type) console.log("Type valid!");
+        //console.log(orgObj.a, type, ps);
+
+        /* const nFormat = Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" })
+
+        let amount = 1n;
+        console.log(amount);
+        let i = Number(amount.toString().slice(0, -2))
+        let c = Number("0." + amount.toString().padStart(2, '0').slice(-2))
+        console.log(c);
+        console.log(nFormat.format(i + c));
+
+        console.log("enter", parseInt("0.10".replace(".", ""))); */
+
+        //let grouped = 'sdadasd-cccc-fffff'
+        /* const [a, b, c] = grouped.split("-")
+        console.log(a, b, c); */
+
+        //let obs = new IntersectionObserver()
+        //console.dir(document.getElementById("pingServer"))
+
+        /* const vehicles = ['Motorcycle', 'Bus', 'Car'];
+
+        const formatter = new Intl.ListFormat('pt-BR', { style: 'long', type: 'conjunction' });
+        console.log(formatter.format(vehicles));
+
+        const formatter2 = new Intl.ListFormat('pt-BR', { style: 'short', type: 'disjunction' });
+        console.log(formatter2.format(vehicles));
+
+        const formatter3 = new Intl.ListFormat('pt-BR', { style: 'narrow', type: 'unit' });
+        console.log(formatter3.format(vehicles)); */
+
+        let root = document.documentElement;
+
+        root.addEventListener("mousemove", e => {
+            root.style.setProperty('--mouse-x', e.clientX + "px");
+            root.style.setProperty('--mouse-y', e.clientY + "px");
+            //console.log(root.style.getPropertyValue("--mouse-x"));
+        });
+        const rtf1 = new Intl.RelativeTimeFormat('pt-BR', { style: 'narrow' });
+
+        //console.log(rtf1.format(90, 'days'));
+        //console.log(navigator.languages);
+        console.log(Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(100));
+        const names = ["a", "b", "c", "d", "e", "f"]
+        const { length, 0: first, 3: pick, [length - 1]: last } = names
+        console.log(length, first, pick, last);
+
+        console.time("time")
+        xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("HEAD", "http://127.0.0.1:8080/html/peerSocket1.html", true);
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4) {
+                console.timeEnd("time")
+                console.log(xmlhttp.getResponseHeader("Date"));
+                //alert(xmlhttp.getResponseHeader("Date"));
             }
         }
 
-        sendData2("dssdsd")
-        setTimeout(() => {
+        xmlhttp.send(null);
+
+        function sendData2(data) {
+            let websocket = new WebSocket("ws://localhost:8090")
+            websocket.onopen = (o) => {
+                //console.log(o);
+                websocket.send(data)
+            }
+            websocket.onmessage = function (event) {
+                console.log("WebSocket message received:", event.data);
+            };
+        }
+
+        sendData2("hello")
+        /* setTimeout(() => {
             sendData2("dssddsd")
-        }, 1000);
+        }, 1000); */
 
 
         const sendData = document.getElementById("sendData")
@@ -36,7 +169,7 @@
         var cliId = "cli01"
         document.title = cliId
 
-        fetch('http://172.100.11.87:9099/servers').then(async function (response) {
+        /* fetch('http://172.100.11.87:9099/servers').then(async function (response) {
             let data = await response.json()
             bkpServer = data[0]
             conn = peer.connect("BKPServer1");
@@ -61,7 +194,7 @@
             conn.on('close', function () {
                 console.log("Disconnected from server");
             });
-        })
+        }) */
         pingServer.onclick = () => {
             if (conn) conn.send({ cliId, msg: "ping" });
         }
@@ -79,12 +212,12 @@
         for (let i = 0; i < totalItems; i++) {
             bkpData.push({ a: 1, b: makeid(10), c: { d: 3 }, e: i + makeid(8), f: i * i })
         }
-        const peer = new Peer(cliId, {
+        /* const peer = new Peer(cliId, {
             host: '172.100.11.87',
             port: 9099,
             path: '/service/socket'
         });
-        peer.on('close', function () { console.log("Peer closed"); });
+        peer.on('close', function () { console.log("Peer closed"); }); */
     </script>
 
 </body>

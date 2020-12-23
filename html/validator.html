@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+
+    </style>
+</head>
+
+<body>
+    <button id="sendData">sendData</button>
+    <button id="getData">getData</button>
+    <button id="pingServer">Ping</button>
+    <!-- <div class="mover"></div> -->
+    <script>
+        let validator = {
+            name: {
+                maxLen: (s, v) => {
+                    return s.length <= v
+                },
+                minLen: (s, v) => {
+                    return s.length >= v
+                }
+            },
+            age: {
+                max: (n, v) => {
+                    return n <= v
+                },
+                min: (n, v) => {
+                    return n >= v
+                }
+            },
+            phone: {
+                rgx: (p, r) => {
+                    //console.log(p, r);
+                    return true
+                },
+                onlyNumbers: (p, f) => {
+                    //console.log(p, f);
+                    return true
+                }
+            }
+        }
+
+        let orgObj1 = { name: "111kkkkkkk", age: 3, phone: "859652256632" }
+        //let orgObj2 = { "a": "111", "b": 2, "c": { "o": 10, "d": [0, 1, "x"] } }
+
+        let schema = {
+            name: ['name', '{"minLen":3,"maxLen":10}'],
+            age: ['age', '{"min":3,"max":10}'],
+            phone: ['phone', '{"rgx":"\d","onlyNumbers":true}']
+        }
+
+        function validate(obj, sch) {
+            let pass = true
+            for (const prop of Object.keys(obj)) {
+                console.log(prop);
+                let [type, reqs] = sch[prop]
+                reqs = JSON.parse(reqs)
+                for (const r of Object.entries(reqs)) {
+                    let [k, v] = r
+                    if (!validator[prop][k](obj[prop], v)) pass = false
+                }
+            }
+            return pass
+        }
+
+        console.log(validate(orgObj1, schema));
+        console.log("====================");
+
+    </script>
+
+</body>
+
+</html>
