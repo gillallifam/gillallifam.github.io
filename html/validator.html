@@ -41,35 +41,38 @@
                     //console.log(p, f);
                     return true
                 }
+            },
+            street: {
+                minLen: (s, v) => {
+                    return s.length >= v
+                }
+            },
+            hnumber: {
+                isNumber: (n) => {
+                    return Number.isInteger(n) & n > 0
+                }
             }
         }
 
-        let orgObj1 = { name: "11kkkkkkkk", age: 3, phone: "988067816" }
-        //let orgObj2 = { "a": "111", "b": 2, "c": { "o": 10, "d": [0, 1, "x"] } }
+        let orgObj1 = { name: "11kkkkkkkk", age: 3, phone: "988067816", address: { street: "tst", hnumber: 100 } }
 
         let schema1 = {
             name: '{"minLen":3,"maxLen":10}',
             age: '{"min":3,"max":10}',
-            phone: '{"rgx":"\d","onlyNumbers":true}'
+            phone: '{"rgx":"\d","onlyNumbers":true}',
+            street: '{"minLen":3}',
+            hnumber: { "isNumber": 0 }
         }
 
         let schema2 = {}
         for (const [k, v] of Object.entries(schema1)) {
-            schema2[k] = JSON.parse(v)
-        }
-
-        function validate1(obj, sch) {
-            for (const [oe, ov] of Object.entries(obj)) {
-                if (sch[oe]) { var reqs = JSON.parse(sch[oe]) } else return false
-                for (const [func, v] of Object.entries(reqs)) {
-                    if (!validator[oe] || !validator[oe][func] || !validator[oe][func](ov, v)) return false
-                }
-            }
-            return true
+            if (typeof v === "string") schema2[k] = JSON.parse(v)
+            else schema2[k] = v
         }
 
         function validate2(obj, sch) {
             for (const [oe, ov] of Object.entries(obj)) {
+                if (isObj(ov)) return validate2(ov, sch)
                 if (!sch[oe]) return false
                 for (const [func, v] of Object.entries(sch[oe])) {
                     if (!validator[oe] || !validator[oe][func] || !validator[oe][func](ov, v)) return false
@@ -78,9 +81,25 @@
             return true
         }
 
-        console.time("validate1")
+        /* function validate1(obj, sch) {
+            for (const [oe, ov] of Object.entries(obj)) {
+                if (sch[oe]) { var reqs = JSON.parse(sch[oe]) } else return false
+                for (const [func, v] of Object.entries(reqs)) {
+                    if (!validator[oe] || !validator[oe][func] || !validator[oe][func](ov, v)) return false
+                }
+            }
+            return true
+        } */
+
+
+
+        function isObj(x) {
+            return typeof x === 'object' && x !== null && !Array.isArray(x)
+        }
+
+        /* console.time("validate1")
         console.log(validate1(orgObj1, schema1));
-        console.timeEnd("validate1")
+        console.timeEnd("validate1") */
         console.time("validate2")
         console.log(validate2(orgObj1, schema2));
         console.timeEnd("validate2")
