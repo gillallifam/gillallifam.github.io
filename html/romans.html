@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2</title>
+</head>
+
+<body>
+    <script>
+        const rMap = new Map()
+        rMap.set("M", 1000)
+        rMap.set("CM", 900)
+        rMap.set("D", 500)
+        rMap.set("CD", 400)
+        rMap.set("C", 100)
+        rMap.set("XC", 90)
+        rMap.set("L", 50)
+        rMap.set("XL", 40)
+        rMap.set("X", 10)
+        rMap.set("IX", 9)
+        rMap.set("V", 5)
+        rMap.set("IV", 4)
+        rMap.set("I", 1)
+
+        function printRoman(num) {
+            let roman = ''
+            for (k of rMap.keys()) {
+                let v = rMap.get(k)
+                while (num >= v) {
+                    roman += k;
+                    num -= v;
+                }
+            }
+            return roman;
+        }
+        console.log(printRoman(3549));
+        console.log(printRoman(10000));
+    </script>
+</body>
+
+</html>

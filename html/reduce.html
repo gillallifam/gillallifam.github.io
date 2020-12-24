@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+
+        const pokemon = [
+            { name: "charmander", type: "fire" },
+            { name: "squirtle", type: "water" },
+            { name: "bulbasaur", type: "grass" }
+        ]
+
+        for (const prop in pokemon[0]) {
+            //console.log(prop);
+            console.log("obj." + prop + " = " + pokemon[0][prop])
+        }
+
+        var pockage = pokemon.reduce((cage, pkm, i) => {
+            cage[pkm.name] = { type: pkm.type, life: 9 + i };
+            return cage
+        }, {})
+
+        console.log(pockage);
+
+       
+
+
+
+    </script>
+</body>
+
+</html>
