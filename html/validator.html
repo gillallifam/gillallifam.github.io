@@ -11,99 +11,67 @@
 </head>
 
 <body>
-    <button id="sendData">sendData</button>
-    <button id="getData">getData</button>
-    <button id="pingServer">Ping</button>
-    <!-- <div class="mover"></div> -->
     <script>
         let validator = {
-            name: {
-                maxLen: (s, v) => {
-                    return s.length <= v
-                },
-                minLen: (s, v) => {
-                    return s.length >= v
-                }
+            ['$chema']: {
+                name: { minLen: 3, maxLen: 10 },
+                age: { min: 3, max: 10 },
+                phone: { onlyNumbers: true },
+                street: { minLen: 3 },
+                hnumber: { isNumber: true },
+                email: { isEmail: true }
             },
-            age: {
-                max: (n, v) => {
-                    return n <= v
-                },
-                min: (n, v) => {
-                    return n >= v
+            ['$validate']: function validate(obj) {
+                let valid = true
+                for (const [oe, ov] of Object.entries(obj)) {
+                    if (isObj(ov)) return this.$validate(ov, this.$chema)
+                    for (const [func, v] of Object.entries(this.$chema[oe])) {
+                        if (!validator[func] || !validator[func](ov, v)) return false
+                    }
                 }
+                return true
             },
-            phone: {
-                rgx: (p, f) => {
-                    return true
-                },
-                onlyNumbers: (p, f) => {
-                    //console.log(p, f);
-                    return true
+            ["$validateAll"]: function (objs) {
+                for (const obj of objs) {
+                    if (!this.$validate(obj)) return false
                 }
+                return true
             },
-            street: {
-                minLen: (s, v) => {
-                    return s.length >= v
-                }
+            ['$rgx']: {
+                emailUser: /^([A-Z0-9_%+\-!#$&'*\/=?^`{|}~]+\.?)*[A-Z0-9_%+\-!#$&'*\/=?^`{|}~]+$/i,
+                emailDomain: /^([A-Z0-9-]+\.?)*[A-Z0-9-]+(\.[A-Z]{2,9})+$/i,
+                onlyNumbers: /^\d+$/
             },
-            hnumber: {
-                isNumber: (n) => {
-                    return Number.isInteger(n) & n > 0
-                }
+            maxLen: (s, v) => { return s.length <= v },
+            minLen: (s, v) => { return s.length >= v },
+            max: (n, v) => { return n <= v },
+            min: (n, v) => { return n >= v },
+            onlyNumbers: function (s, b) { return (this.$rgx.onlyNumbers).test(s) === b },
+            minLen: (s, v) => { return s.length >= v },
+            isNumber: (n, b) => { return Number.isInteger(n) & n > 0 },
+            isEmail: function (mail, b) {
+                p = mail.split("@");
+                if (p.length != 2) return false;
+                return (this.$rgx.emailUser.test(p[0]) && this.$rgx.emailDomain.test(p[1]));
             }
         }
 
-        let orgObj1 = { name: "11kkkkkkkk", age: 3, phone: "988067816", address: { street: "tst", hnumber: 100 } }
+        let obj1 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@g.com", address: { street: "tst", hnumber: 100 } }
+        let obj2 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@@g.com", address: { street: "tst", hnumber: 100 } }
+        let obj3 = { name: "11kkkkkkkk", age: 3, phone: "988067a816", email: "gill@g.com", address: { street: "tst", hnumber: 100 } }
+        let obj4 = { name: "11kkkkkkkk", age: 2, phone: "988067816", email: "gill@g.com", address: { street: "tst", hnumber: 0 } }
+        let obj5 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@g.com", address: { street: "tst", hnumber: 100 } }
 
-        let schema1 = {
-            name: '{"minLen":3,"maxLen":10}',
-            age: '{"min":3,"max":10}',
-            phone: '{"rgx":"\d","onlyNumbers":true}',
-            street: '{"minLen":3}',
-            hnumber: { "isNumber": 0 }
-        }
-
-        let schema2 = {}
-        for (const [k, v] of Object.entries(schema1)) {
-            if (typeof v === "string") schema2[k] = JSON.parse(v)
-            else schema2[k] = v
-        }
-
-        function validate2(obj, sch) {
-            for (const [oe, ov] of Object.entries(obj)) {
-                if (isObj(ov)) return validate2(ov, sch)
-                if (!sch[oe]) return false
-                for (const [func, v] of Object.entries(sch[oe])) {
-                    if (!validator[oe] || !validator[oe][func] || !validator[oe][func](ov, v)) return false
-                }
-            }
-            return true
-        }
-
-        /* function validate1(obj, sch) {
-            for (const [oe, ov] of Object.entries(obj)) {
-                if (sch[oe]) { var reqs = JSON.parse(sch[oe]) } else return false
-                for (const [func, v] of Object.entries(reqs)) {
-                    if (!validator[oe] || !validator[oe][func] || !validator[oe][func](ov, v)) return false
-                }
-            }
-            return true
-        } */
-
-
+        console.time("validate2")
+        console.log('obj1', validator.$validate(obj1));
+        console.log('obj2', validator.$validate(obj2));
+        console.log('Group',validator.$validateAll([obj1, obj2, obj5]));
+        console.timeEnd("validate2")
+        console.log("====================");
 
         function isObj(x) {
             return typeof x === 'object' && x !== null && !Array.isArray(x)
         }
-
-        /* console.time("validate1")
-        console.log(validate1(orgObj1, schema1));
-        console.timeEnd("validate1") */
-        console.time("validate2")
-        console.log(validate2(orgObj1, schema2));
-        console.timeEnd("validate2")
-        console.log("====================");
 
     </script>
 
