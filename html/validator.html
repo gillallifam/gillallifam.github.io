@@ -12,49 +12,58 @@
 
 <body>
     <script>
-        let validator = {
-            ['$chema']: {
-                name: { minLen: 3, maxLen: 10 },
-                age: { min: 3, max: 10 },
-                phone: { onlyNumbers: true },
-                street: { minLen: 3 },
-                hnumber: { isNumber: true },
-                email: { isEmail: true }
-            },
-            ['$validate']: function validate(obj) {
+        class Vals {
+            constructor() {
+                this.root = this
+                this.schema = {
+                    name: { minLen: 3, maxLen: 10 },
+                    age: { min: 3, max: 10 },
+                    phone: { onlyNumbers: true },
+                    street: { minLen: 3 },
+                    hnumber: { isNumber: true },
+                    email: { isEmail: true }
+                }
+                this.rgx = {
+                    emailUser: /^([A-Z0-9_%+\-!#$&'*\/=?^`{|}~]+\.?)*[A-Z0-9_%+\-!#$&'*\/=?^`{|}~]+$/i,
+                    emailDomain: /^([A-Z0-9-]+\.?)*[A-Z0-9-]+(\.[A-Z]{2,9})+$/i,
+                    onlyNumbers: /^\d+$/
+                }
+                this.rules = {
+                    maxLen: (s, v) => { return s.length <= v },
+                    minLen: (s, v) => { return s.length >= v },
+                    max: (n, v) => { return n <= v },
+                    min: (n, v) => { return n >= v },
+                    onlyNumbers: (s, b) => { return (this.rgx.onlyNumbers).test(s) === b },
+                    minLen: (s, v) => { return s.length >= v },
+                    isNumber: (n, b) => { return Number.isInteger(n) & n > 0 },
+                    isEmail: (mail, b) =>                {
+                        let p = mail.split("@");
+                        if (p.length != 2) return false;
+                        return (this.rgx.emailUser.test(p[0]) && this.rgx.emailDomain.test(p[1]));
+                    }
+                }
+            }
+            validate(obj) {
                 let valid = true
                 for (const [oe, ov] of Object.entries(obj)) {
-                    if (isObj(ov)) return this.$validate(ov, this.$chema)
-                    for (const [func, v] of Object.entries(this.$chema[oe])) {
-                        if (!validator[func] || !validator[func](ov, v)) return false
+                    if (isObj(ov)) return this.validate(ov, this.schema)
+                    for (const [func, v] of Object.entries(this.schema[oe])) {
+                        if (!this.rules[func] || !this.rules[func](ov, v)) return false
                     }
                 }
                 return true
-            },
-            ["$validateAll"]: function (objs) {
+            }
+            validateAll(objs) {
                 for (const obj of objs) {
-                    if (!this.$validate(obj)) return false
+                    if (!this.validate(obj)) return false
                 }
                 return true
-            },
-            ['$rgx']: {
-                emailUser: /^([A-Z0-9_%+\-!#$&'*\/=?^`{|}~]+\.?)*[A-Z0-9_%+\-!#$&'*\/=?^`{|}~]+$/i,
-                emailDomain: /^([A-Z0-9-]+\.?)*[A-Z0-9-]+(\.[A-Z]{2,9})+$/i,
-                onlyNumbers: /^\d+$/
-            },
-            maxLen: (s, v) => { return s.length <= v },
-            minLen: (s, v) => { return s.length >= v },
-            max: (n, v) => { return n <= v },
-            min: (n, v) => { return n >= v },
-            onlyNumbers: function (s, b) { return (this.$rgx.onlyNumbers).test(s) === b },
-            minLen: (s, v) => { return s.length >= v },
-            isNumber: (n, b) => { return Number.isInteger(n) & n > 0 },
-            isEmail: function (mail, b) {
-                p = mail.split("@");
-                if (p.length != 2) return false;
-                return (this.$rgx.emailUser.test(p[0]) && this.$rgx.emailDomain.test(p[1]));
             }
         }
+
+        let vals = new Vals()
+        
+        console.log(vals);
 
         let obj1 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@g.com", address: { street: "tst", hnumber: 100 } }
         let obj2 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@@g.com", address: { street: "tst", hnumber: 100 } }
@@ -63,9 +72,12 @@
         let obj5 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@g.com", address: { street: "tst", hnumber: 100 } }
 
         console.time("validate2")
-        console.log('obj1', validator.$validate(obj1));
-        console.log('obj2', validator.$validate(obj2));
-        console.log('Group',validator.$validateAll([obj1, obj2, obj5]));
+        console.log('obj1', vals.validate(obj1));
+        console.log('obj2', vals.validate(obj2));
+        console.log('obj3', vals.validate(obj3));
+        console.log('obj4', vals.validate(obj4));
+        console.log('obj5', vals.validate(obj5));
+        console.log('Group', vals.validateAll([obj1, obj2, obj5]));
         console.timeEnd("validate2")
         console.log("====================");
 
