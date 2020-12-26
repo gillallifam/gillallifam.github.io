@@ -11,17 +11,41 @@
 </head>
 
 <body>
+    <form>
+        <label for="title">Title</label>
+        <input type="text" name="title" id="title" value="Fight Club">
+
+        <label for="name">Name</label>
+        <input type="text" name="name" id="name" value="Tyler">
+
+        <label for="msg">Body</label>
+        <textarea id="msg" name="msg">Fight, no speak, and drink some beer.</textarea>
+
+        <!-- <input type="hidden" name="userId" value="1"> -->
+
+        <button>Submit</button>
+    </form>
     <script>
+
+
+        document.addEventListener('submit', function (event) {
+            let data = Object.fromEntries(new FormData(event.target))
+            console.log(vals.validate(data));
+            event.preventDefault();
+        });
         class Vals {
             constructor() {
                 this.root = this
                 this.schema = {
-                    name: { minLen: 3, maxLen: 10 },
-                    age: { min: 3, max: 10 },
+                    title: { mustContains: "Club" },
+                    msg: { empty: false, mustNotContains: "Fight Club" },
+                    name: { minLen: 3, maxLen: 10, mustContains: "Tyler" },
+                    userId: { minLen: 1 }
+                    /* age: { min: 3, max: 10 },
                     phone: { onlyNumbers: true },
                     street: { minLen: 3 },
-                    hnumber: { isNumber: true },
-                    email: { isEmail: true }
+                    hnumber: { isPositive: true },
+                    email: { isEmail: true } */
                 }
                 this.rgx = {
                     emailUser: /^([A-Z0-9_%+\-!#$&'*\/=?^`{|}~]+\.?)*[A-Z0-9_%+\-!#$&'*\/=?^`{|}~]+$/i,
@@ -29,14 +53,18 @@
                     onlyNumbers: /^\d+$/
                 }
                 this.rules = {
+                    isArray: (o, flag) => { return Array.isArray(o) === flag },
+                    empty: (s, flag) => { return (s === "") === flag },
+                    mustContains: (s, v) => { return s.includes(v) },
+                    mustNotContains: (s, v) => { return !s.includes(v) },
                     maxLen: (s, v) => { return s.length <= v },
                     minLen: (s, v) => { return s.length >= v },
                     max: (n, v) => { return n <= v },
                     min: (n, v) => { return n >= v },
                     onlyNumbers: (s, b) => { return (this.rgx.onlyNumbers).test(s) === b },
                     minLen: (s, v) => { return s.length >= v },
-                    isNumber: (n, b) => { return Number.isInteger(n) & n > 0 },
-                    isEmail: (mail, b) =>                {
+                    isPositive: (n, b) => { return Number.isInteger(n) & n > 0 },
+                    isEmail: (mail, b) => {
                         let p = mail.split("@");
                         if (p.length != 2) return false;
                         return (this.rgx.emailUser.test(p[0]) && this.rgx.emailDomain.test(p[1]));
@@ -47,9 +75,15 @@
                 let valid = true
                 for (const [oe, ov] of Object.entries(obj)) {
                     if (isObj(ov)) return this.validate(ov, this.schema)
-                    for (const [func, v] of Object.entries(this.schema[oe])) {
-                        if (!this.rules[func] || !this.rules[func](ov, v)) return false
+                    let fs = this.schema[oe]
+                    if (fs) {
+                        console.log(oe, fs);
+                        for (const [func, v] of Object.entries(fs)) {
+                            if (!this.rules[func]) return false//must be warning
+                            if (!this.rules[func](ov, v)) return false//not pass
+                        }
                     }
+
                 }
                 return true
             }
@@ -62,7 +96,7 @@
         }
 
         let vals = new Vals()
-        
+
         console.log(vals);
 
         let obj1 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@g.com", address: { street: "tst", hnumber: 100 } }
@@ -72,12 +106,13 @@
         let obj5 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@g.com", address: { street: "tst", hnumber: 100 } }
 
         console.time("validate2")
-        console.log('obj1', vals.validate(obj1));
+        /* console.log('obj1', vals.validate(obj1));
         console.log('obj2', vals.validate(obj2));
         console.log('obj3', vals.validate(obj3));
         console.log('obj4', vals.validate(obj4));
         console.log('obj5', vals.validate(obj5));
-        console.log('Group', vals.validateAll([obj1, obj2, obj5]));
+        console.log('Group1', vals.validateAll([obj1, obj5]));
+        console.log('Group2', vals.validateAll([obj1, obj2, obj5])); */
         console.timeEnd("validate2")
         console.log("====================");
 
