@@ -11,81 +11,127 @@
 </head>
 
 <body>
-    <form>
+    <form id="formTest">
         <label for="title">Title</label>
         <input type="text" name="title" id="title" value="Fight Club">
 
         <label for="name">Name</label>
         <input type="text" name="name" id="name" value="Tyler">
+        <br>
+        <label for="job">Job</label>
+        <select id="job" name="job">
+            <option value="doctor">Doctor</option>
+            <option value="waiter">Waiter</option>
+            <option value="driver">Driver</option>
+        </select>
+        <label for="hobbies">Hobbies</label>
+        <select multiple id="hobbies" name="hobbies">
+            <option value="fight">Fight</option>
+            <option value="anarchy">Anarchy</option>
+            <option value="bombs">Bombs</option>
+        </select>
 
-        <label for="msg">Body</label>
-        <textarea id="msg" name="msg">Fight, no speak, and drink some beer.</textarea>
-
-        <!-- <input type="hidden" name="userId" value="1"> -->
+        <label for="msg">Message</label>
+        <textarea id="msg" name="msg">Fight, no speak and make soap.</textarea>
 
         <button>Submit</button>
     </form>
     <script>
 
+        var JSONStr = (obj) => {
+            return JSON.stringify(obj, function (key, val) {
+                if (typeof val === 'function') {
+                    return val + '';
+                }
+                return val;
+            });
+        }
 
-        document.addEventListener('submit', function (event) {
-            let data = Object.fromEntries(new FormData(event.target))
-            console.log(vals.validate(data));
+        var JSONPrs = (str) => {
+            return JSON.parse(str, function (key, value) {//^\(.+\) =>
+                if (typeof value === "string" && (value.startsWith("function") || (/^\((\w+), ?(\w+)\)/).test(value))) {
+                    return (0, eval)("(" + value + ")");
+                }
+                return value;
+            });
+        }
+
+        let formTest = document.getElementById("formTest")
+        formTest.onsubmit = (e) => {
             event.preventDefault();
-        });
+            let data = Object.fromEntries(new FormData(event.target))
+            let selected, values
+            for (const sel of document.querySelectorAll('select')) {
+                if (sel.multiple) {
+                    selected = document.querySelectorAll('#hobbies option:checked');
+                    values = Array.from(selected).map(el => el.value);
+                }
+            }
+            data.hobbies = values
+            console.log(data);
+            console.log(vals.validate(data));
+        }
+
         class Vals {
-            constructor() {
-                this.root = this
+            constructor(form) {
+                this.form = form
                 this.schema = {
                     title: { mustContains: "Club" },
                     msg: { empty: false, mustNotContains: "Fight Club" },
                     name: { minLen: 3, maxLen: 10, mustContains: "Tyler" },
-                    userId: { minLen: 1 }
-                    /* age: { min: 3, max: 10 },
+                    age: { min: 3, max: 10 },
                     phone: { onlyNumbers: true },
                     street: { minLen: 3 },
                     hnumber: { isPositive: true },
-                    email: { isEmail: true } */
+                    email: { isEmail: true },
+                    hobbies: { minElems: 1 }
                 }
                 this.rgx = {
                     emailUser: /^([A-Z0-9_%+\-!#$&'*\/=?^`{|}~]+\.?)*[A-Z0-9_%+\-!#$&'*\/=?^`{|}~]+$/i,
                     emailDomain: /^([A-Z0-9-]+\.?)*[A-Z0-9-]+(\.[A-Z]{2,9})+$/i,
                     onlyNumbers: /^\d+$/
                 }
-                this.rules = {
-                    isArray: (o, flag) => { return Array.isArray(o) === flag },
-                    empty: (s, flag) => { return (s === "") === flag },
-                    mustContains: (s, v) => { return s.includes(v) },
-                    mustNotContains: (s, v) => { return !s.includes(v) },
-                    maxLen: (s, v) => { return s.length <= v },
-                    minLen: (s, v) => { return s.length >= v },
-                    max: (n, v) => { return n <= v },
-                    min: (n, v) => { return n >= v },
-                    onlyNumbers: (s, b) => { return (this.rgx.onlyNumbers).test(s) === b },
-                    minLen: (s, v) => { return s.length >= v },
-                    isPositive: (n, b) => { return Number.isInteger(n) & n > 0 },
-                    isEmail: (mail, b) => {
-                        let p = mail.split("@");
+                this.errors = {
+                    mustContains: (oe, v) => `${oe} must contains ${v}`
+                }
+                this.rules = {//must return bool
+                    isArray: (o, f) => Array.isArray(o) === f,
+                    minElems: (a, n) => Array.isArray(a) && a.length >= n,
+                    empty: (s, f) => (s === "") === f,
+                    mustContains: (s, v) => s.includes(v),
+                    mustNotContains: (s, v) => !s.includes(v),
+                    maxLen: (s, v) => s.length <= v,
+                    minLen: (s, v) => s.length >= v,
+                    max: (n, v) => n <= v,
+                    min: (n, v) => n >= v,
+                    onlyNumbers: (s, b) => (this.rgx.onlyNumbers).test(s) === b,
+                    minLen: (s, v) => s.length >= v,
+                    isPositive: (n, b) => Number.isInteger(n) & n > 0,
+                    isEmail: (m, b) => {
+                        let p = m.split("@");
                         if (p.length != 2) return false;
                         return (this.rgx.emailUser.test(p[0]) && this.rgx.emailDomain.test(p[1]));
                     }
                 }
             }
             validate(obj) {
-                let valid = true
+                let result = { pass: true }
                 for (const [oe, ov] of Object.entries(obj)) {
-                    if (isObj(ov)) return this.validate(ov, this.schema)
+                    //if (isObj(ov)) return this.validate(ov, this.schema)
                     let fs = this.schema[oe]
                     if (fs) {
-                        console.log(oe, fs);
-                        for (const [func, v] of Object.entries(fs)) {
-                            if (!this.rules[func]) return false//must be warning
-                            if (!this.rules[func](ov, v)) return false//not pass
+                        //console.log(oe, fs);
+                        for (const [r, v] of Object.entries(fs)) {
+                            if (!this.rules[r]) result.pass = false; //must be warning
+                            if (!this.rules[r](ov, v)) {
+                                result.pass = false;
+                                result.error = this.errors[r] ? `${this.errors[r](oe, v)}` : `${oe}, ${r} ${v}`;
+                                return result//not pass
+                            }
                         }
                     }
-
                 }
-                return true
+                return result
             }
             validateAll(objs) {
                 for (const obj of objs) {
@@ -95,9 +141,15 @@
             }
         }
 
-        let vals = new Vals()
-
+        let vals = new Vals(formTest)
         console.log(vals);
+        console.log(formTest.querySelectorAll("*[name]"));
+        console.log(formTest.querySelectorAll("*")[16].style.backgroundColor = "pink");
+        //let str1 = JSONStr(vals)
+        //console.log(str1);
+        //let fnc = JSONPrs(str1)
+        //console.log(fnc.rules);
+
 
         let obj1 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@g.com", address: { street: "tst", hnumber: 100 } }
         let obj2 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@@g.com", address: { street: "tst", hnumber: 100 } }

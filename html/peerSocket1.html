@@ -31,54 +31,7 @@
     <button id="pingServer">Ping</button>
     <!-- <div class="mover"></div> -->
     <script>
-        let validator = {
-            string: {
-                maxLen: (s, v) => {
-                    return s.length <= v
-                },
-                minLen: (s, v) => {
-                    return s.length >= v
-                }
-            },
-            number: {
-                max: (n, v) => {
-                    return n <= v
-                },
-                min: (n, v) => {
-                    return n >= v
-                }
-            },
-            phone: {}
-        }
-
-        let orgObj1 = { "name": "111kkkkkkk", "age": 3 }
-        //let orgObj2 = { "a": "111", "b": 2, "c": { "o": 10, "d": [0, 1, "x"] } }
-
-        let schema = {
-            name: ['string', '{"minLen":3,"maxLen":10}'],
-            age: ['number', '{"min":3,"max":10}'],
-            phone: ['phone', '{"rgx":"\\d"}']
-        }
-
-        function validate(obj, sch) {
-            let pass = true
-            for (const prop of Object.keys(obj)) {
-                let [type, reqs] = sch[prop]
-                reqs = JSON.parse(reqs)
-                for (const r of Object.entries(reqs)) {
-                    let [k, v] = r
-                    if (!validator[type][k](obj[prop], v)) pass = false
-                }
-            }
-            return pass
-        }
-
-        console.log(validate(orgObj1, schema));
-        /* for (const e of entries) {
-            let [k, v] = e
-            console.log(k, v);
-            console.log(validator[type][k](orgObj1.a, e[1]));
-        } */
+        
 
         console.log("====================");
         //console.log(k, v);
