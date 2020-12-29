@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../js/strings.js"></script>
+    <style id="mainStyles">
+        p {
+            background-color: pink;
+            color: blue;
+        }
+
+        #dddddd {
+            color: red;
+            background-color: pink;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <p>dsds</p>
+
+    <script>
+        let translated =  ["teste", "casa", "janela"]
+        //console.log(translated);
+        let brLang = {}
+        let pos = -1
+        for (const k of Object.keys($L.D)) {
+            pos++
+            $L.BR[k] = translated[pos]
+        }
+        $L.C = $L.BR
+        console.log($L.C);
+        
+        let mainStyles = document.getElementById("mainStyles")
+        let cssStyles = {}
+        for (const r of mainStyles.sheet.rules) {
+            for (let i = 0; i < r.styleMap.size; i++) {
+                cssStyles[r.selectorText] = cssStyles[r.selectorText] || {}
+                cssStyles[r.selectorText][r.style[i]] = r.style[r.style[i]]
+            }
+        }
+        cssStyles.p.color = "green"
+        console.log(cssStyles);
+        for (const key in cssStyles) {
+            for (const r of mainStyles.sheet.rules) {
+                console.log(r.style);
+            }
+            //console.log(cssStyles[key]);
+        }
+    </script>
+
+</body>
+
+</html>
