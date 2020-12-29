@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>global hash</title>
+</head>
+
+<body>
+    <script>
+        var devtools = function () { };
+        devtools.toString = function () {
+            if (!this.opened) {
+                alert("Opened");
+            }
+            this.opened = true;
+        }
+
+        console.log('%c', devtools);
+        /* delete window.console
+        console.log('test'); */
+        /* (function () {
+            (function a() {
+                try {
+                    (function b(i) {
+                        if (('' + (i / i)).length !== 1 || i % 20 === 0) {
+                            (function () { }).constructor('debugger')()
+                        } else {
+                            debugger
+                        }
+                        b(++i)
+                    }
+                    )(0)
+                } catch (e) {
+                    setTimeout(a, 5000)
+                }
+            }
+            )()
+        }
+        )(); */
+        function getGlobalProperties(prefix) {
+            var keyValues = [], global = window; // window for browser environments
+            for (var prop in global) {
+                if (prop.indexOf(prefix) == 0) // check the prefix
+                    keyValues.push(prop + "=" + global[prop]);
+            }
+            return keyValues.join('&'); // build the string
+        }
+
+        hashCode = function (s) {
+            return s.split("").reduce(function (a, b) { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0);
+        }
+        window.addEventListener('DOMContentLoaded', (event) => {
+            setTimeout(() => {
+                console.log(Object.keys(window).join("").length);
+                console.log(hashCode(Object.keys(window).join("")));
+            }, 5000);
+        });
+
+
+    </script>
+</body>
+
+</html>

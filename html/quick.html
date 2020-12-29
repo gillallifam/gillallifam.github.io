@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+
+    </style>
+</head>
+
+<body>
+    <script>
+
+        let scss = {
+            nav: {
+                ul: {
+                    margin: 0,
+                    padding: 0,
+                    ["list-style"]: "none"
+                },
+                li: { display: "inline-block" },
+                a: {
+                    display: "block",
+                    padding: "6px 12px",
+                    ["text-decoration"]: "none",
+                }
+            }
+        }
+        var stl = ""
+        let parents = []
+        let pars = {}
+        let deep = -1
+        //let deeps = []
+        loopKeys(scss)
+
+        function loopKeys(o) {
+            let data = Object.entries(o).reduce((acc, c, i, a) => {
+                console.log(c);
+                if (typeof c[1] === "object") return loopKeys(c[1])
+                return acc += c[0]
+            }, "");
+            console.log(data);
+        }
+    </script>
+</body>
+
+</html>

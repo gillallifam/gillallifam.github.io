@@ -6,85 +6,265 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
+        #snackbar {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #e61414;
+            color: #fff;
+            text-align: center;
+            border-radius: 20px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+        }
 
+        #snackbar.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @-webkit-keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @-webkit-keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <button id="sendData">sendData</button>
-    <button id="getData">getData</button>
-    <button id="pingServer">Ping</button>
-    <!-- <div class="mover"></div> -->
+    <form id="formTest">
+        <label for="club">Club:</label>
+        <input type="text" name="club" id="club" value="Fight Club">
+
+        <label for="name">Name</label>
+        <input type="text" name="name" id="name" value="Tyler">
+        <br>
+        <label for="job">Job</label>
+        <select id="job" name="job">
+            <option value="doctor">Doctor</option>
+            <option value="waiter">Waiter</option>
+            <option value="driver">Driver</option>
+            <option selected value="salesman">Salesman</option>
+        </select>
+        <label for="hobbies">Hobbies</label>
+        <select multiple id="hobbies" name="hobbies">
+            <option value="fight">Fight</option>
+            <option value="anarchy">Anarchy</option>
+            <option value="bombs">Bombs</option>
+        </select>
+
+        <label for="msg">Message</label>
+        <textarea id="msg" name="msg">Not talk, NOT talk, fight and make soap.</textarea>
+
+        <button>Submit</button>
+    </form>
+    <div id="snackbar">Some text some message..</div>
     <script>
-        let validator = {
-            name: {
-                maxLen: (s, v) => {
-                    return s.length <= v
-                },
-                minLen: (s, v) => {
-                    return s.length >= v
+
+        let formTest = document.getElementById("formTest")
+
+        class Vals {
+            constructor(form) {
+                if (form) {
+                    this.form = form
+                    form.onsubmit = (e) => {
+                        event.preventDefault();
+                        let data = Object.fromEntries(new FormData(event.target))
+                        let selected, values
+                        for (const sel of document.querySelectorAll('select')) {
+                            if (sel.multiple) {
+                                selected = document.querySelectorAll('#hobbies option:checked');
+                                values = Array.from(selected).map(el => el.value);
+                            }
+                        }
+                        data.hobbies = values
+                        //console.log(data);
+                        console.log(this.validate(data));
+                    }
                 }
-            },
-            age: {
-                max: (n, v) => {
-                    return n <= v
-                },
-                min: (n, v) => {
-                    return n >= v
+                this.schema = {
+
                 }
-            },
-            phone: {
-                rgx: (p, f) => {
-                    return true
-                },
-                onlyNumbers: (p, f) => {
-                    //console.log(p, f);
-                    return true
+                this.rgx = {
+                    emailUser: /^([A-Z0-9_%+\-!#$&'*\/=?^`{|}~]+\.?)*[A-Z0-9_%+\-!#$&'*\/=?^`{|}~]+$/i,
+                    emailDomain: /^([A-Z0-9-]+\.?)*[A-Z0-9-]+(\.[A-Z]{2,9})+$/i,
+                    onlyNumbers: /^\d+$/
                 }
+                this.errors = {
+                    name: (oe, r, v) => { return `That's not here!` },
+                    msg: (oe, r, v) => { return `You do not talk about Fight Club.` }
+                }
+                this.rules = {
+                    isArray: (o, f) => Array.isArray(o) === f,
+                    minElems: (a, n) => Array.isArray(a) && a.length >= n,
+                    empty: (s, f) => (s === "") === f,
+                    notEqual: (s1, s2) => s1 !== s2,
+                    mustContains: (s, v) => s.toLowerCase().includes(v.toLowerCase()),
+                    mustNotContains: (s, v) => !s.toLowerCase().includes(v.toLowerCase()),
+                    maxLen: (s, v) => s.length <= v,
+                    minLen: (s, v) => s.length >= v,
+                    max: (n, v) => n <= v,
+                    min: (n, v) => n >= v,
+                    onlyNumbers: (s, b) => (this.rgx.onlyNumbers).test(s) === b,
+                    minLen: (s, v) => s.length >= v,
+                    isPositive: (n, b) => Number.isInteger(n) & n > 0,
+                    isEmail: (m, b) => {
+                        let p = m.split("@");
+                        if (p.length != 2) return false;
+                        return (this.rgx.emailUser.test(p[0]) && this.rgx.emailDomain.test(p[1]));
+                    }
+                }
+            }
+            validate(obj) {
+                let result = { pass: true }
+                for (const [oe, ov] of Object.entries(obj)) {
+                    let fs = this.schema[oe]
+                    if (fs) {
+                        for (const [r, v] of Object.entries(fs)) {
+                            if (!this.rules[r]) result.pass = false; //must be warning
+                            if (!this.rules[r](ov, v)) {
+                                result.pass = false;
+                                let barMsg = ""
+                                if (this.errors[oe]) barMsg = `${this.errors[oe](oe, r, v)}`
+                                else barMsg = `${oe} ${r} ${v}`
+                                this.toast(false, barMsg)
+                                result.error = this.errors[oe] ? `${this.errors[oe](oe, r, v)}` : `${oe} ${r} ${v}`;
+                                this.form.querySelector(`*[name=${oe}]`).style.backgroundColor = "pink"
+                                return result//not pass
+                            } else {
+                                this.form.querySelector(`*[name=${oe}]`).style.backgroundColor = "#b6ceb6"
+                            }
+                        }
+                    }
+                }
+                if (result.pass) this.toast(result.pass)
+                return result
+            }
+            validateAll(objs) {
+                for (const obj of objs) {
+                    if (!this.validate(obj)) return false
+                }
+                return true
+            }
+            toast(success, msg) {
+                let bar = document.getElementById("snackbar");
+                if (success) {
+                    bar.innerHTML = "Success!"
+                    bar.style.backgroundColor = "#086d1e"
+                } else {
+                    bar.style.backgroundColor = "#e61414"
+                    bar.innerHTML = msg
+                }
+                bar.className = "show"
+                setTimeout(function () { bar.className = bar.className.replace("show", ""); }, 3000);
             }
         }
 
-        let orgObj1 = { name: "11kkkkkkkk", age: 3, phone: "988067816" }
-        //let orgObj2 = { "a": "111", "b": 2, "c": { "o": 10, "d": [0, 1, "x"] } }
-
-        let schema1 = {
-            name: '{"minLen":3,"maxLen":10}',
-            age: '{"min":3,"max":10}',
-            phone: '{"rgx":"\d","onlyNumbers":true}'
+        let vals = new Vals(formTest)
+        vals.schema = {
+            club: { mustContains: "Club" },
+            msg: { mustNotContains: "Fight Club" },
+            name: { minLen: 3, maxLen: 10, mustContains: "Tyler" },
+            job: { notEqual: "unemployed" },
+            age: { min: 3, max: 10 },
+            phone: { onlyNumbers: true },
+            street: { minLen: 3 },
+            hnumber: { isPositive: true },
+            email: { isEmail: true },
+            hobbies: { minElems: 1 }
         }
+        console.log(vals);
+        //console.log(formTest.querySelectorAll("*[name]"));
+        //console.log(formTest.querySelectorAll("*")[16].style.backgroundColor = "pink");
+        //let str1 = JSONStr(vals)
+        //console.log(str1);
+        //let fnc = JSONPrs(str1)
+        //console.log(fnc.rules);
 
-        let schema2 = {}
-        for (const [k, v] of Object.entries(schema1)) {
-            schema2[k] = JSON.parse(v)
-        }
 
-        function validate1(obj, sch) {
-            for (const [oe, ov] of Object.entries(obj)) {
-                if (sch[oe]) { var reqs = JSON.parse(sch[oe]) } else return false
-                for (const [func, v] of Object.entries(reqs)) {
-                    if (!validator[oe] || !validator[oe][func] || !validator[oe][func](ov, v)) return false
-                }
-            }
-            return true
-        }
+        let obj1 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@g.com", address: { street: "tst", hnumber: 100 } }
+        let obj2 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@@g.com", address: { street: "tst", hnumber: 100 } }
+        let obj3 = { name: "11kkkkkkkk", age: 3, phone: "988067a816", email: "gill@g.com", address: { street: "tst", hnumber: 100 } }
+        let obj4 = { name: "11kkkkkkkk", age: 2, phone: "988067816", email: "gill@g.com", address: { street: "tst", hnumber: 0 } }
+        let obj5 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@g.com", address: { street: "tst", hnumber: 100 } }
 
-        function validate2(obj, sch) {
-            for (const [oe, ov] of Object.entries(obj)) {
-                if (!sch[oe]) return false
-                for (const [func, v] of Object.entries(sch[oe])) {
-                    if (!validator[oe] || !validator[oe][func] || !validator[oe][func](ov, v)) return false
-                }
-            }
-            return true
-        }
-
-        console.time("validate1")
-        console.log(validate1(orgObj1, schema1));
-        console.timeEnd("validate1")
         console.time("validate2")
-        console.log(validate2(orgObj1, schema2));
+        /* console.log('obj1', vals.validate(obj1));
+        console.log('obj2', vals.validate(obj2));
+        console.log('obj3', vals.validate(obj3));
+        console.log('obj4', vals.validate(obj4));
+        console.log('obj5', vals.validate(obj5));
+        console.log('Group1', vals.validateAll([obj1, obj5]));
+        console.log('Group2', vals.validateAll([obj1, obj2, obj5])); */
         console.timeEnd("validate2")
         console.log("====================");
+
+        function isObj(x) {
+            return typeof x === 'object' && x !== null && !Array.isArray(x)
+        }
+
+        var JSONStr = (obj) => {
+            return JSON.stringify(obj, function (key, val) {
+                if (typeof val === 'function') {
+                    return val + '';
+                }
+                return val;
+            });
+        }
+
+        var JSONPrs = (str) => {
+            return JSON.parse(str, function (key, value) {//^\(.+\) =>
+                if (typeof value === "string" && (value.startsWith("function") || (/^\((\w+), ?(\w+)\)/).test(value))) {
+                    return (0, eval)("(" + value + ")");
+                }
+                return value;
+            });
+        }
 
     </script>
 
