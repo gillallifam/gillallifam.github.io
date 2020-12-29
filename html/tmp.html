@@ -10,24 +10,7 @@
 
 <body>
     <script>
-        const peer = new Peer('someid', {
-            host: '127.0.0.1',
-            port: 9000,
-            path: '/service/socket'
-        });
-        console.log(peer);
-        function addMinutes(date, minutes) {
-            return new Date(date.getTime() + minutes * 60000);
-        }
-        /* for (let i = 0; i < 100; i++) {
-            console.log(Date.now().toString(36)); 
-        } */
-        //console.log(new Date().toUTCString());
-        console.log(new Date().toISOString());
-        var d = new Date();
-        var n = d.getTimezoneOffset();
-        console.log(n);
-        console.log(addMinutes(d, n * -1).toISOString());
+       
     </script>
 
 </body>
