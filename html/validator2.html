@@ -20,25 +20,34 @@
 </head>
 
 <body>
-    <p id="p1" class="trans dsd" data-trans>house</p>
+    <p id="p1" class="trans">house</p>
+    <p id="p2" class="trans">sky</p>
+    <p id="p3" class="trans">team</p>
+    <p id="p4" class="trans">timeMsg</p>
+    <p id="p5" class="trans">defMessage</p>
+    <p id="p6" class="trans">funcMsg</p>
+    <button class="trans">Start</button>
 
     <script>
-        
-        /* let toTranslate = Object.values($L.D)
-        console.log(toTranslate.toString());
-        let translated =  ["teste", "casa", "janela"]
-        console.log(translated); 
-        let pos = -1
-        for (const k of Object.keys($L.D)) {
-            pos++
-            $L.BR[k] = translated[pos]
-        }*/
         $Lc = $L.BR
-        console.log($Lc.house);
-        for (const e of document.body.querySelectorAll("*")) {
-            if (e.classList.contains("trans")){
-                e.innerText = $Lc[e.innerText] || $Ld[e.innerText]
-            } console.log(e.innerText);
+        console.log($Lc);
+        for (const e of document.body.querySelectorAll(".trans")) {
+            let txt = e.innerText
+            if ($Lc[txt]) {
+                if (typeof $Lc[txt] === "function") {
+                    e.innerText = $Lc[txt]()
+                } else {
+                    e.innerText = $Lc[txt]
+                }
+
+            } else {
+                if (typeof $Ld[txt] === "function") {
+                    e.innerText = $Ld[txt]()
+                } else {
+                    e.innerText = $Ld[txt]
+                }
+                console.log(`${txt} not translated`);
+            }
         }
 
         let mainStyles = document.getElementById("mainStyles")
@@ -57,6 +66,10 @@
             }
             //console.log(cssStyles[key]);
         }
+
+      console.log(matchCase('WoRD', 'mot'))
+        
+        console.log(matchCase('WOrd', 'mot'));
     </script>
 
 </body>
