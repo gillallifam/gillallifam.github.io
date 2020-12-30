@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <script src="../js/vals.js"></script>
     <style>
         #snackbar {
             visibility: hidden;
@@ -79,10 +79,10 @@
 <body>
     <form id="formTest">
         <label for="club">Club:</label>
-        <input type="text" name="club" id="club" value="Fight Club">
+        <input type="text" name="club" id="club" value="Fight Clu">
 
         <label for="name">Name</label>
-        <input type="text" name="name" id="name" value="Tyler">
+        <input type="text" name="name" id="name" value="Tyxler">
         <br>
         <label for="job">Job</label>
         <select id="job" name="job">
@@ -99,172 +99,64 @@
         </select>
 
         <label for="msg">Message</label>
-        <textarea id="msg" name="msg">Not talk, NOT talk, fight and make soap.</textarea>
+        <textarea id="msg" name="msg">Not talk, NOT talk, fight club and make soap.</textarea>
+        <br>
+        <label for="chka">A</label>
+        <input type="checkbox" name="chka" id="chka">
+        <label for="chkb">B</label>
+        <input type="checkbox" name="chkb" id="chkb">
+        <br>
+        <input type="radio" name="g1" id="_1234" value="g1a" />
+        <input type="radio" name="g1" id="_2345" value="g1b" />
+        <input type="radio" name="g2" id="_3456" value="g2a" />
+        <input type="radio" name="g2" id="_4567" value="g2b" />
 
         <button>Submit</button>
     </form>
-    <div id="snackbar">Some text some message..</div>
+    <div id="snackbar"></div>
     <script>
-
+        
         let formTest = document.getElementById("formTest")
 
-        class Vals {
-            constructor(form) {
-                if (form) {
-                    this.form = form
-                    form.onsubmit = (e) => {
-                        event.preventDefault();
-                        let data = Object.fromEntries(new FormData(event.target))
-                        let selected, values
-                        for (const sel of document.querySelectorAll('select')) {
-                            if (sel.multiple) {
-                                selected = document.querySelectorAll('#hobbies option:checked');
-                                values = Array.from(selected).map(el => el.value);
-                            }
-                        }
-                        data.hobbies = values
-                        //console.log(data);
-                        console.log(this.validate(data));
-                    }
-                }
-                this.schema = {
-
-                }
-                this.rgx = {
-                    emailUser: /^([A-Z0-9_%+\-!#$&'*\/=?^`{|}~]+\.?)*[A-Z0-9_%+\-!#$&'*\/=?^`{|}~]+$/i,
-                    emailDomain: /^([A-Z0-9-]+\.?)*[A-Z0-9-]+(\.[A-Z]{2,9})+$/i,
-                    onlyNumbers: /^\d+$/
-                }
-                this.errors = {
-                    name: (oe, r, v) => { return `That's not here!` },
-                    msg: (oe, r, v) => { return `You do not talk about Fight Club.` }
-                }
-                this.rules = {
-                    isArray: (o, f) => Array.isArray(o) === f,
-                    minElems: (a, n) => Array.isArray(a) && a.length >= n,
-                    empty: (s, f) => (s === "") === f,
-                    notEqual: (s1, s2) => s1 !== s2,
-                    mustContains: (s, v) => s.toLowerCase().includes(v.toLowerCase()),
-                    mustNotContains: (s, v) => !s.toLowerCase().includes(v.toLowerCase()),
-                    maxLen: (s, v) => s.length <= v,
-                    minLen: (s, v) => s.length >= v,
-                    max: (n, v) => n <= v,
-                    min: (n, v) => n >= v,
-                    onlyNumbers: (s, b) => (this.rgx.onlyNumbers).test(s) === b,
-                    minLen: (s, v) => s.length >= v,
-                    isPositive: (n, b) => Number.isInteger(n) & n > 0,
-                    isEmail: (m, b) => {
-                        let p = m.split("@");
-                        if (p.length != 2) return false;
-                        return (this.rgx.emailUser.test(p[0]) && this.rgx.emailDomain.test(p[1]));
-                    }
-                }
-            }
-            validate(obj) {
-                let result = { pass: true }
-                for (const [oe, ov] of Object.entries(obj)) {
-                    let fs = this.schema[oe]
-                    if (fs) {
-                        for (const [r, v] of Object.entries(fs)) {
-                            if (!this.rules[r]) result.pass = false; //must be warning
-                            if (!this.rules[r](ov, v)) {
-                                result.pass = false;
-                                let barMsg = ""
-                                if (this.errors[oe]) barMsg = `${this.errors[oe](oe, r, v)}`
-                                else barMsg = `${oe} ${r} ${v}`
-                                this.toast(false, barMsg)
-                                result.error = this.errors[oe] ? `${this.errors[oe](oe, r, v)}` : `${oe} ${r} ${v}`;
-                                this.form.querySelector(`*[name=${oe}]`).style.backgroundColor = "pink"
-                                return result//not pass
-                            } else {
-                                this.form.querySelector(`*[name=${oe}]`).style.backgroundColor = "#b6ceb6"
-                            }
-                        }
-                    }
-                }
-                if (result.pass) this.toast(result.pass)
-                return result
-            }
-            validateAll(objs) {
-                for (const obj of objs) {
-                    if (!this.validate(obj)) return false
-                }
-                return true
-            }
-            toast(success, msg) {
-                let bar = document.getElementById("snackbar");
-                if (success) {
-                    bar.innerHTML = "Success!"
-                    bar.style.backgroundColor = "#086d1e"
-                } else {
-                    bar.style.backgroundColor = "#e61414"
-                    bar.innerHTML = msg
-                }
-                bar.className = "show"
-                setTimeout(function () { bar.className = bar.className.replace("show", ""); }, 3000);
-            }
-        }
-
-        let vals = new Vals(formTest)
+        let vals = new Vals(formTest, {
+            colorSuccess: "greenyellow",
+            colorError: "pink",
+            msgSuccess: "Welcome to the Fight...!"
+        })
         vals.schema = {
             club: { mustContains: "Club" },
             msg: { mustNotContains: "Fight Club" },
             name: { minLen: 3, maxLen: 10, mustContains: "Tyler" },
             job: { notEqual: "unemployed" },
-            age: { min: 3, max: 10 },
-            phone: { onlyNumbers: true },
-            street: { minLen: 3 },
-            hnumber: { isPositive: true },
-            email: { isEmail: true },
             hobbies: { minElems: 1 }
         }
+        vals.avaliators = {//the boring part
+            isArray: (o, f) => Array.isArray(o) === f,
+            minElems: (a, n) => Array.isArray(a) && a.length >= n,
+            empty: (s, f) => (s === "") === f,
+            notEqual: (s1, s2) => s1 !== s2,
+            mustContains: (s, v) => s.toLowerCase().includes(v.toLowerCase()),
+            mustNotContains: (s, v) => !s.toLowerCase().includes(v.toLowerCase()),
+            maxLen: (s, v) => s.length <= v,
+            minLen: (s, v) => s.length >= v,
+            max: (n, v) => n <= v,
+            min: (n, v) => n >= v,
+            onlyNumbers: (s, b) => (this.rgx.onlyNumbers).test(s) === b,
+            minLen: (s, v) => s.length >= v,
+            isPositive: (n, b) => Number.isInteger(n) & n > 0,
+            isEmail: (m, b) => {
+                let p = m.split("@");
+                if (p.length != 2) return false;
+                return (this.rgx.emailUser.test(p[0]) && this.rgx.emailDomain.test(p[1]));
+            }
+        }
+        vals.errors = {
+            name: (element, rule, value) => { return `That's not here!` },
+            msg: (element, rule, value) => { return `You do not talk about Fight Club.` },
+            hobbies: (element) => { return `There's something you like?` },
+        }
+
         console.log(vals);
-        //console.log(formTest.querySelectorAll("*[name]"));
-        //console.log(formTest.querySelectorAll("*")[16].style.backgroundColor = "pink");
-        //let str1 = JSONStr(vals)
-        //console.log(str1);
-        //let fnc = JSONPrs(str1)
-        //console.log(fnc.rules);
-
-
-        let obj1 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@g.com", address: { street: "tst", hnumber: 100 } }
-        let obj2 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@@g.com", address: { street: "tst", hnumber: 100 } }
-        let obj3 = { name: "11kkkkkkkk", age: 3, phone: "988067a816", email: "gill@g.com", address: { street: "tst", hnumber: 100 } }
-        let obj4 = { name: "11kkkkkkkk", age: 2, phone: "988067816", email: "gill@g.com", address: { street: "tst", hnumber: 0 } }
-        let obj5 = { name: "11kkkkkkkk", age: 3, phone: "988067816", email: "gill@g.com", address: { street: "tst", hnumber: 100 } }
-
-        console.time("validate2")
-        /* console.log('obj1', vals.validate(obj1));
-        console.log('obj2', vals.validate(obj2));
-        console.log('obj3', vals.validate(obj3));
-        console.log('obj4', vals.validate(obj4));
-        console.log('obj5', vals.validate(obj5));
-        console.log('Group1', vals.validateAll([obj1, obj5]));
-        console.log('Group2', vals.validateAll([obj1, obj2, obj5])); */
-        console.timeEnd("validate2")
-        console.log("====================");
-
-        function isObj(x) {
-            return typeof x === 'object' && x !== null && !Array.isArray(x)
-        }
-
-        var JSONStr = (obj) => {
-            return JSON.stringify(obj, function (key, val) {
-                if (typeof val === 'function') {
-                    return val + '';
-                }
-                return val;
-            });
-        }
-
-        var JSONPrs = (str) => {
-            return JSON.parse(str, function (key, value) {//^\(.+\) =>
-                if (typeof value === "string" && (value.startsWith("function") || (/^\((\w+), ?(\w+)\)/).test(value))) {
-                    return (0, eval)("(" + value + ")");
-                }
-                return value;
-            });
-        }
 
     </script>
 

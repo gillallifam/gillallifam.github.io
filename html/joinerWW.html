@@ -134,6 +134,24 @@
             return typeof x === 'object' && x !== null && !Array.isArray(x)
         }
 
+        var JSONStr = (obj) => {
+            return JSON.stringify(obj, function (key, val) {
+                if (typeof val === 'function') {
+                    return val + '';
+                }
+                return val;
+            });
+        }
+
+        var JSONPrs = (str) => {
+            return JSON.parse(str, function (key, value) {//^\(.+\) =>
+                if (typeof value === "string" && (value.startsWith("function") || (/^\((\w+), ?(\w+)\)/).test(value))) {
+                    return (0, eval)("(" + value + ")");
+                }
+                return value;
+            });
+        }
+
     </script>
 </body>
 
