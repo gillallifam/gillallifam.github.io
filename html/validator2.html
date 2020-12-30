@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="../js/strings.js"></script>
+    <script src="../js/langs.js"></script>
     <style id="mainStyles">
         p {
             background-color: pink;
@@ -20,20 +20,27 @@
 </head>
 
 <body>
-    <p>dsds</p>
+    <p id="p1" class="trans dsd" data-trans>house</p>
 
     <script>
+        
+        /* let toTranslate = Object.values($L.D)
+        console.log(toTranslate.toString());
         let translated =  ["teste", "casa", "janela"]
-        //console.log(translated);
-        let brLang = {}
+        console.log(translated); 
         let pos = -1
         for (const k of Object.keys($L.D)) {
             pos++
             $L.BR[k] = translated[pos]
+        }*/
+        $Lc = $L.BR
+        console.log($Lc.house);
+        for (const e of document.body.querySelectorAll("*")) {
+            if (e.classList.contains("trans")){
+                e.innerText = $Lc[e.innerText] || $Ld[e.innerText]
+            } console.log(e.innerText);
         }
-        $L.C = $L.BR
-        console.log($L.C);
-        
+
         let mainStyles = document.getElementById("mainStyles")
         let cssStyles = {}
         for (const r of mainStyles.sheet.rules) {
