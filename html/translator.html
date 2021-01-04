@@ -7,44 +7,41 @@
     <script src="../js/langs.js"></script>
     <style id="mainStyles">
         p {
-            background-color: pink;
-            color: blue;
-        }
-
-        #dddddd {
-            color: red;
-            background-color: pink;
-            text-align: center;
+            background-color: rgb(255, 220, 192);
+            color: rgb(5, 5, 49);
         }
     </style>
 </head>
 
 <body>
-    <p id="p1" class="trans">house</p>
+    <p class="trans">house</p>
     <p id="p2" class="trans">sky</p>
     <p id="p3" class="trans">team</p>
     <p id="p4" class="trans">welcomeMsg</p>
     <p id="p5" class="trans">defMessage</p>
     <p id="p6" class="trans">timeMessage</p>
-    <p id="p7" class="trans">langCode</p>
-    <button id="changelang" class="trans">start</button>
+    <p class="trans">star</p>
+    <p class="trans">fish</p>
+    <button id="bt1" class="trans">start</button>
 
     <script>
-        for (const e of document.body.querySelectorAll(".trans")) {
-            let txt = e.innerText
-            //let key = txt.toLowerCase()
-            if ($Lc[txt]) {
-                if (typeof $Lc[txt] === "function") {
-                    e.innerText = $Lc[txt]()
-                } else {
-                    e.innerText = $Lc[txt]
-                }
-
-            }
-        }
-
-        //console.log(matchCase('WoRD', 'mot'))
-        //console.log(matchCase('WOrd', 'mot'));
+        document.addEventListener("DOMContentLoaded", function (event) {
+            let targets = getTargets()
+            console.log(targets);
+            console.time("t1")
+            translateTargets(buildLanguage("PT"), targets)
+            console.timeEnd("t1")
+            setTimeout(() => {
+                console.time("t1")
+                translateTargets(buildLanguage("ES"), targets)
+                console.timeEnd("t1")
+            }, 2000);
+            setTimeout(() => {
+                console.time("t1")
+                translateTargets(buildLanguage("EN"), targets)
+                console.timeEnd("t1")
+            }, 5000);
+        });
     </script>
 
 </body>
