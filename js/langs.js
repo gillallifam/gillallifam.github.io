@@ -25,8 +25,9 @@ var genID = idMaker();
 
 let allLangs = {
     EN: {
-        D: ["test", "House", "Window", "Sky", "Team", "start", "star", "fish"],
+        D: ["test", "House", "house", "Window", "Sky", "Team", "start", "star", "fish", "sand"],
         R: {
+            langName: "EN",
             welcomeMsg: "Welcome!",
             defMessage: "Hello!"
         },
@@ -40,23 +41,9 @@ let allLangs = {
         }
     },
     PT: {
-        D: ["teste", "Casa", "janela", "céu", "time", "iniciar", "estrela", "peixe"],
+        D: ["teste", "Casa", "casa", "janela", "Céu", "time", "Iniciar", "estrela", "peixe", "areia"],
         R: {
-            welcomeMsg: "Seja bem vindo!",
-            defMessage: "Olá!"
-        },
-        F: {
-            timeMessage: () => {
-                let hour = new Date().getHours()
-                if (hour >= 18) return "Boa noite!";
-                if (hour >= 12 && hour < 18) return "Boa tarde!";
-                if (hour < 12) return "Bom dia!";
-            }
-        }
-    },
-    ["pt-BR"]: {
-        D: ["teste", "Casa", "janela", "céu", "time", "iniciar", "estrela", "peixe"],
-        R: {
+            langName: "PT",
             welcomeMsg: "Seja bem vindo!",
             defMessage: "Olá!"
         },
@@ -70,23 +57,9 @@ let allLangs = {
         }
     },
     ES: {
-        D: ["prueba", "casa", "ventana", "cielo", "equipo", "comienzo", "estrella", "pez"],
+        D: ["prueba", "Casa", "casa", "ventana", "cielo", "equipo", "Comienzo", "estrella", "pez", "arena"],
         R: {
-            welcomeMsg: "Bienvenidos!",
-            defMessage: "ola!"
-        },
-        F: {
-            timeMessage: () => {
-                let hour = new Date().getHours()
-                if (hour >= 18) return "Buenas noches!";
-                if (hour >= 12 && hour < 18) return "Buenas tardes!";
-                if (hour < 12) return "Buenos dias!";
-            }
-        }
-    },
-    ["es-MX"]: {
-        D: ["prueba", "casa", "ventana", "cielo", "equipo", "comienzo", "estrella", "pez"],
-        R: {
+            langName: "ES",
             welcomeMsg: "Bienvenidos!",
             defMessage: "ola!"
         },
@@ -101,43 +74,53 @@ let allLangs = {
     }
 }
 console.log(allLangs);
-let allStr = JSONStr(allLangs)
-console.log(allStr);
-console.log(JSONPrs(allStr));
+//let allStr = JSONStr(allLangs)
+//console.log(allStr);
+//console.log(JSONPrs(allStr));
 
-let arrLangs = Object.keys(allLangs)
-if (arrLangs.length > 1) {
-    let stop = false
-    for (let i = 1; i < arrLangs.length; i++) {
-        for (const k of Object.keys(allLangs[arrLangs[0]])) {
-            if (!Object.keys(allLangs[arrLangs[i]]).includes(k)) {
-                console.error(`Lang ${arrLangs[i]} dont match the needed translations types.`);
-                stop = true
-                break
+function testLangs(allLangs) {
+    let arrLangs = Object.keys(allLangs)
+    let pass = true
+    if (arrLangs.length > 1) {
+        let stop = false
+        for (let i = 1; i < arrLangs.length; i++) {
+            for (const k of Object.keys(allLangs[arrLangs[0]])) {
+                if (!Object.keys(allLangs[arrLangs[i]]).includes(k)) {
+                    console.error(`Lang ${arrLangs[i]} dont match the needed translations types.`);
+                    stop = true
+                    pass = false
+                    break
+                }
             }
-        }
-        if (stop) break
-        if (allLangs[arrLangs[i]].D.length !== allLangs[arrLangs[0]].D.length) {
-            console.error(`Lang ${arrLangs[i]} dont match direct translations.`);
-        }
-        for (const k of Object.keys(allLangs[arrLangs[0]].R)) {
-            if (!Object.keys(allLangs[arrLangs[i]].R).includes(k)) {
-                console.error(`Lang ${arrLangs[i]} dont match relative translactions.`);
-                break
+            if (stop) break
+            if (allLangs[arrLangs[i]].D.length !== allLangs[arrLangs[0]].D.length) {
+                pass = false
+                console.error(`Lang ${arrLangs[i]} dont match direct translations.`);
             }
-        }
-        for (const k of Object.keys(allLangs[arrLangs[0]].F)) {
-            if (!Object.keys(allLangs[arrLangs[i]].F).includes(k)) {
-                console.error(`Lang ${arrLangs[i]} dont have the needed functions.`);
-                break
+            for (const k of Object.keys(allLangs[arrLangs[0]].R)) {
+                if (!Object.keys(allLangs[arrLangs[i]].R).includes(k)) {
+                    pass = false
+                    console.error(`Lang ${arrLangs[i]} dont match relative translactions.`);
+                    break
+                }
+            }
+            for (const k of Object.keys(allLangs[arrLangs[0]].F)) {
+                if (!Object.keys(allLangs[arrLangs[i]].F).includes(k)) {
+                    pass = false
+                    console.error(`Lang ${arrLangs[i]} dont have the needed functions.`);
+                    break
+                }
             }
         }
     }
+    return pass
 }
+
+testLangs(allLangs)
 
 function buildLanguage(lang) {
     if (!Object.keys(allLangs).includes(lang)) lang = "EN"
-    let target = allLangs.EN.D.reduce((a, v, i) => { a[v.toLowerCase()] = allLangs[lang].D[i]; return a }, {})
+    let target = allLangs.EN.D.reduce((a, v, i) => { a[v] = allLangs[lang].D[i]; return a }, {})
     target = { ...target, ...allLangs[lang].R }
     target = { ...target, ...allLangs[lang].F }
     return target
@@ -174,6 +157,8 @@ function matchCase(word1, word2) {
         word1[1] === word1[1].toLowerCase() ? word2[0].toUpperCase() + word2.slice(1).toLowerCase() :
             word2.toUpperCase();
 }
+
+
 
 
 

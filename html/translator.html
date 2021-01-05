@@ -10,21 +10,60 @@
             background-color: rgb(255, 220, 192);
             color: rgb(5, 5, 49);
         }
+
+        .tstpass {
+            background-color: rgb(196, 236, 134);
+        }
+
+        .notpass {
+            background-color: indianred;
+        }
+
+        #testResults {
+            visibility: hidden;
+            position: absolute;
+            left: 50%;
+            top: 20%;
+            background-color: ivory;
+            width: 60%;
+            transform: translateX(-50%);
+        }
+
+        #closeTestPopup {
+            float: right;
+        }
     </style>
 </head>
 
 <body>
+    <p id="testTarget" class="trans">House</p>
     <p class="trans">house</p>
-    <p id="p2" class="trans">sky</p>
+    <p id="p2" class="trans">Sky</p>
     <p id="p3" class="trans">team</p>
     <p id="p4" class="trans">welcomeMsg</p>
     <p id="p5" class="trans">defMessage</p>
     <p id="p6" class="trans">timeMessage</p>
     <p class="trans">star</p>
     <p class="trans">fish</p>
-    <button id="bt1" class="trans">start</button>
+    <button id="bt1" class="trans">test</button>
+
+    <div id="testResults">
+        <button id="closeTestPopup">x</button>
+        <h1 id="testHeader"></h1>
+        <div id="testData">
+        </div>
+    </div>
+
 
     <script>
+        let tstPopup = document.getElementById("testResults")
+        let closeTestPopup = document.getElementById("closeTestPopup")
+        function closeDivPopup() {
+            tstPopup.style.visibility = "hidden"
+        }
+        closeTestPopup.onclick = closeDivPopup
+        console.log(location.hash.split("#")[1]);
+
         document.addEventListener("DOMContentLoaded", function (event) {
             let targets = getTargets()
             console.log(targets);
@@ -41,7 +80,59 @@
                 translateTargets(buildLanguage("EN"), targets)
                 console.timeEnd("t1")
             }, 5000);
+
+            document.getElementById("bt1").onclick = () => {
+                runTests("Translator")
+            }
         });
+
+        const unitTest = function (name, spec, comparator, result) {//param as obj
+            let msgSuccess = `<p class="tstpass">${name} : ${spec} ${comparator} ${result}</p>`
+            let msgFail = `<p class="notpass">${name} : ${spec} ${comparator} ${result}</p>`
+            switch (comparator) {
+                case "===":
+                    if (spec === result) return msgSuccess; else return msgFail
+                case "!==":
+                    if (spec !== result) return msgSuccess; else return msgFail
+                case ">=":
+                    if (spec >= result) return msgSuccess; else return msgFail
+                case "<=":
+                    if (spec >= result) return msgSuccess; else return msgFail
+                default:
+                    break;
+            }
+        }
+
+        function runTests(name) {
+            console.log("Testing:", name);
+            let tstNum = localStorage.getItem("tstNum") || "0,0"
+            tstNum = tstNum.split(",").map(n => parseInt(n))
+            var tstReport = ""
+            let testHeader = document.getElementById("testHeader")
+            testHeader.innerHTML = `Test results ${name}`
+            let testData = document.getElementById("testData")
+            console.time("tests")
+            let anId = genID.next().value
+            tstReport += unitTest("Generate ID", undefined, "!==", anId)
+            tstReport += unitTest("Generate multiple IDs", anId, "!==", genID.next().value)
+            tstReport += unitTest("All langs ok", true, "===", testLangs(allLangs))
+            let langEN = buildLanguage("xyz")
+            tstReport += unitTest("Use default language", "EN", "===", langEN.langName)
+            tstReport += unitTest("Use language", "Hello!", "===", langEN.defMessage)
+            tstReport += unitTest("Build a language", "PT", "===", buildLanguage("PT").langName)
+            tstReport += unitTest("Have langs", Object.keys(allLangs).length, ">=", 1)
+            tstReport += unitTest("Have targets", Object.keys(getTargets()).length, ">=", 1)
+            translateTargets(buildLanguage("PT"), getTargets())
+            let tt = document.getElementById("testTarget")
+            tstReport += unitTest("Translate targets", "Casa", "===", tt.innerText)
+            if (tstReport.includes("notpass")) tstNum[0]++; else tstNum[1]++;
+            tstReport += `<h2>Spec failed ${tstNum.join("/")} runs.`
+            console.timeEnd("tests")
+            localStorage.setItem("tstNum", tstNum)
+            testData.innerHTML = tstReport
+            tstPopup.style.visibility = "visible"
+            return tstReport
+        }
     </script>
 
 </body>
