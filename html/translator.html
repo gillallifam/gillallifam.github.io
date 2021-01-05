@@ -25,7 +25,7 @@
             left: 50%;
             top: 20%;
             background-color: ivory;
-            width: 60%;
+            width: 50%;
             transform: translateX(-50%);
         }
 
@@ -86,15 +86,19 @@
             }
         });
 
-        const unitTest = function (name, spec, comparator, result) {//param as obj
-            let msgSuccess = `<p class="tstpass">${name} : ${spec} ${comparator} ${result}</p>`
-            let msgFail = `<p class="notpass">${name} : ${spec} ${comparator} ${result}</p>`
+        const basicComparator = function (name, spec, comparator, result) {//param as obj
+            let msgSuccess = `<p class="tstpass">${name} : ${spec} ${comparator} ${result} ✅</p>`
+            let msgFail = `<p class="notpass">${name} : ${spec} ${comparator} ${result} ❌</p>`
             switch (comparator) {
+                case "==":
+                    if (spec == result) return msgSuccess; else return msgFail
                 case "===":
                     if (spec === result) return msgSuccess; else return msgFail
                 case "!==":
                     if (spec !== result) return msgSuccess; else return msgFail
                 case ">=":
+                    if (spec >= result) return msgSuccess; else return msgFail
+                case ">":
                     if (spec >= result) return msgSuccess; else return msgFail
                 case "<=":
                     if (spec >= result) return msgSuccess; else return msgFail
@@ -107,31 +111,33 @@
             console.log("Testing:", name);
             let tstNum = localStorage.getItem("tstNum") || "0,0"
             tstNum = tstNum.split(",").map(n => parseInt(n))
-            var tstReport = ""
+            let htmlReport = ""
+            let jsonReport = {}
             let testHeader = document.getElementById("testHeader")
             testHeader.innerHTML = `Test results ${name}`
             let testData = document.getElementById("testData")
             console.time("tests")
             let anId = genID.next().value
-            tstReport += unitTest("Generate ID", undefined, "!==", anId)
-            tstReport += unitTest("Generate multiple IDs", anId, "!==", genID.next().value)
-            tstReport += unitTest("All langs ok", true, "===", testLangs(allLangs))
+            htmlReport += basicComparator("Generate ID", undefined, "!==", anId)
+            htmlReport += basicComparator("Generate multiple IDs", anId, "!==", genID.next().value)
+            htmlReport += basicComparator("Have langs", Object.keys(allLangs).length, ">=", 1)
+            htmlReport += basicComparator("Have targets", Object.keys(getTargets()).length, ">", 0)
+            htmlReport += basicComparator("All langs ok", true, "===", testLangs(allLangs))
             let langEN = buildLanguage("xyz")
-            tstReport += unitTest("Use default language", "EN", "===", langEN.langName)
-            tstReport += unitTest("Use language", "Hello!", "===", langEN.defMessage)
-            tstReport += unitTest("Build a language", "PT", "===", buildLanguage("PT").langName)
-            tstReport += unitTest("Have langs", Object.keys(allLangs).length, ">=", 1)
-            tstReport += unitTest("Have targets", Object.keys(getTargets()).length, ">=", 1)
+            htmlReport += basicComparator("Use default language", "EN", "===", langEN.langName)
+            htmlReport += basicComparator("Test language", "Hello!", "===", langEN.defMessage)
+            htmlReport += basicComparator("Build a language", "PT", "===", buildLanguage("PT").langName)
             translateTargets(buildLanguage("PT"), getTargets())
             let tt = document.getElementById("testTarget")
-            tstReport += unitTest("Translate targets", "Casa", "===", tt.innerText)
-            if (tstReport.includes("notpass")) tstNum[0]++; else tstNum[1]++;
-            tstReport += `<h2>Spec failed ${tstNum.join("/")} runs.`
+            htmlReport += basicComparator("Translate targets", "Casa", "===", tt.innerText)
+            if (htmlReport.includes("notpass")) tstNum[0]++; else tstNum[1]++;
+            htmlReport += `<h2>Spec failed ${tstNum.join("/")} runs.`
             console.timeEnd("tests")
+            translateTargets(buildLanguage("EN"), getTargets())
             localStorage.setItem("tstNum", tstNum)
-            testData.innerHTML = tstReport
+            testData.innerHTML = htmlReport
             tstPopup.style.visibility = "visible"
-            return tstReport
+            return htmlReport
         }
     </script>
 
