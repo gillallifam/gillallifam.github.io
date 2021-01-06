@@ -3,63 +3,94 @@
 class TT {
     constructor() {
         this.index = 0
-        this.originTargets = null
+        this.targets = null
+        this.Commoms = {
+            AppName: () => "Tiny Translator"
+        }
         this.allLangs = {
             EN: {
-                D: ["Test", "House", "house", "Window", "Sky", "team", "start", "star", "fish", "Report"],
+                D: ["Test", "House", "house", "Window", "Sky", "team", "start", "star", "fish", "Report","help",
+                    "Good day!", "Good afternoon!", "Good night!"],
                 R: {
-                    langName: "EN",
+                    $langName: "EN",
                     welcomeMsg: "Welcome!",
-                    defMessage: "Hello!"
+                    defMessage: "Hello!",
+                    premiumMsg: "Dear premium user"
                 },
                 F: {
                     timeMessage: () => {
                         let hour = new Date().getHours()
-                        if (hour >= 18) return "Good day!";
-                        if (hour >= 12 && hour < 18) return "Good afternoon!";
-                        if (hour < 12) return "Good night!";
+                        if (hour >= 18) return this.cl.D[12];
+                        if (hour >= 12 && hour < 18) return this.cl.D[11];
+                        if (hour < 12) return this.cl.D[10];
                     }
                 }
             },
             PT: {
-                D: ["Teste", "Casa", "casa", "janela", "Céu", "time", "Iniciar", "estrela", "peixe", "Relatório"],
+                D: ["Teste", "Casa", "casa", "janela", "Céu", "time", "Iniciar", "estrela", "peixe", "Relatório","ajuda",
+                    "Bom dia!", "Boa tarde!", "Boa noite!"],
                 R: {
-                    langName: "PT",
+                    $langName: "PT",
                     welcomeMsg: "Seja bem vindo!",
-                    defMessage: "Olá!"
+                    defMessage: "Olá!",
+                    premiumMsg: "Querido usuário premium"
                 },
                 F: {
                     timeMessage: () => {
                         let hour = new Date().getHours()
-                        if (hour >= 18) return "Boa noite!";
-                        if (hour >= 12 && hour < 18) return "Boa tarde!";
-                        if (hour < 12) return "Bom dia!";
+                        if (hour >= 18) return this.cl.D[12];
+                        if (hour >= 12 && hour < 18) return this.cl.D[11];
+                        if (hour < 12) return this.cl.D[10];
                     }
                 }
             },
             ES: {
-                D: ["Prueba", "Casa", "casa", "ventana", "cielo", "equipo", "comienzo", "estrella", "pez", "Reporte"],
+                D: ["Prueba", "Casa", "casa", "ventana", "cielo", "equipo", "comienzo", "estrella", "pez", "Reporte","ayuda",
+                    "Buenos dias!", "Buenas tardes!", "Buenas noches!"],
                 R: {
-                    langName: "ES",
+                    $langName: "ES",
                     welcomeMsg: "Bienvenidos!",
-                    defMessage: "ola!"
+                    defMessage: "Ola!",
+                    premiumMsg: "Estimado usuario premium"
                 },
                 F: {
                     timeMessage: () => {
                         let hour = new Date().getHours()
-                        if (hour >= 18) return "Buenas noches!";
-                        if (hour >= 12 && hour < 18) return "Buenas tardes!";
-                        if (hour < 12) return "Buenos dias!";
+                        if (hour >= 18) return this.cl.D[12];
+                        if (hour >= 12 && hour < 18) return this.cl.D[11];
+                        if (hour < 12) return this.cl.D[10];
+                    }
+                }
+            },
+            IT: {
+                D: ["Test", "Casa", "casa", "finestra", "cielo", "squadra", "inizio", "stella", "pesce", "Rapporto","aiuto",
+                    "Buongiorno!", "Buon pomeriggio!", "Buona notte!"],
+                R: {
+                    $langName: "IT",
+                    welcomeMsg: "Benvenuto!",
+                    defMessage: "Ciao!",
+                    premiumMsg: "Gentile utente premium"
+                },
+                F: {
+                    timeMessage: () => {
+                        let hour = new Date().getHours()
+                        if (hour >= 18) return this.cl.D[12];
+                        if (hour >= 12 && hour < 18) return this.cl.D[11];
+                        if (hour < 12) return this.cl.D[10];
                     }
                 }
             }
         }
+        this.cl = this.allLangs.EN
+    }
+    listStrings() {
+        console.log(this.cl.D.toString() + "#" + Object.values(this.cl.R).toString());
     }
     * genID() {
         while (true)
             yield "gnrtID" + ++this.index;
     }
-    resetToDefaults() { for (const [id, txt] of Object.entries(this.originTargets)) document.getElementById(id).innerText = txt }
+    resetToDefaults() { for (const [id, txt] of Object.entries(this.targets)) document.getElementById(id).innerText = txt }
     testLangs() {
         let arrLangs = Object.keys(this.allLangs)
         let pass = true
@@ -97,27 +128,28 @@ class TT {
         }
         return pass
     }
-    buildLanguage(lang) {
-        if (!Object.keys(this.allLangs).includes(lang)) lang = "EN"
-        let target = this.allLangs.EN.D.reduce((a, v, i) => { a[v] = this.allLangs[lang].D[i]; return a }, {})
-        target = { ...target, ...this.allLangs[lang].R }
-        target = { ...target, ...this.allLangs[lang].F }
-        return target
+    buildLanguage(langName) {
+        if (!Object.keys(this.allLangs).includes(langName)) langName = "EN"
+        let lang = this.allLangs.EN.D.reduce((a, v, i) => { a[v] = this.allLangs[langName].D[i]; return a }, {})
+        lang = { ...lang, ...this.allLangs[langName].R }
+        lang = { ...lang, ...this.allLangs[langName].F }
+        lang = { ...lang, ...this.Commoms }
+        return lang
     }
     getTargets() {
-        if(this.originTargets!== null) this.resetToDefaults()
+        if (this.targets !== null) this.resetToDefaults()
         let targets = {}
         for (const e of document.body.querySelectorAll(".trans")) {
             let txt = e.innerText
             if (e.id) targets[e.id] = txt
             else { e.id = this.genID().next().value; targets[e.id] = txt }
         }
-        if (this.originTargets === null) this.originTargets = targets
+        if (this.targets === null) this.targets = targets
         return targets
     }
-
-    translateTargets(lang, targets) {
-        for (const [id, txt] of Object.entries(targets)) {
+    translateTargets(lang) {
+        this.cl = this.allLangs[lang.$langName]
+        for (const [id, txt] of Object.entries(this.targets)) {
             let e = document.getElementById(id)
             if (lang[txt]) {
                 if (typeof lang[txt] === "function") {

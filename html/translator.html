@@ -67,9 +67,12 @@
     <p id="p4" class="trans">welcomeMsg</p>
     <p id="p5" class="trans">defMessage</p>
     <p id="p6" class="trans">timeMessage</p>
+    <p id="p7" class="trans">AppName</p>
+    <p id="p8" class="trans">help</p>
     <p class="trans">star</p>
     <p class="trans">fish</p>
     <button id="bt2" class="trans">Report</button>
+    <button id="bt3" onclick="setLang();">Set Lang</button>
     <div id="blockLayer" class="blockLayer">
         <div id="testResults">
             <button id="closeTestPopup">x</button>
@@ -78,37 +81,33 @@
             </div>
         </div>
     </div>
-
-    <div id="onlyTarget"></div>
-
     <script>
+
+        function setLang() {
+            tt.translateTargets(tt.buildLanguage("IT"), tt.getTargets())
+        }
 
         let blockLayer = document.getElementById("blockLayer")
         let tstPopup = document.getElementById("testResults")
         let closeTestPopup = document.getElementById("closeTestPopup")
-        let originalTargets = {}
         function closeDivPopup() {
             blockLayer.style.visibility = "hidden"
         }
         closeTestPopup.onclick = closeDivPopup
-        //console.log(location.hash.split("#")[1]);
 
         document.addEventListener("DOMContentLoaded", function (event) {
-            originalTargets = tt.getTargets()
-            console.log(originalTargets);
             console.time("t1")
-            tt.translateTargets(tt.buildLanguage("PT"), originalTargets)
+            tt.translateTargets(tt.buildLanguage("PT"), tt.getTargets())
             console.timeEnd("t1")
             setTimeout(() => {
                 console.time("t1")
-                tt.translateTargets(tt.buildLanguage("ES"), originalTargets)
+                tt.translateTargets(tt.buildLanguage("ES"), tt.targets)
                 console.timeEnd("t1")
             }, 2000);
             setTimeout(() => {
                 console.time("t1")
-                tt.translateTargets(tt.buildLanguage("EN"), originalTargets)
+                tt.translateTargets(tt.buildLanguage("EN"), tt.getTargets())
                 console.timeEnd("t1")
-                console.log(tt.getTargets());
             }, 5000);
 
             document.getElementById("bt2").onclick = () => {
@@ -162,16 +161,16 @@
             genReport(reportData, multiComparator("Generate ID", anId, "!==", undefined))
             genReport(reportData, multiComparator("Generate multiple IDs", anId, "!==", tt.genID().next().value))
             genReport(reportData, multiComparator("Have langs", Object.keys(tt.allLangs).length, ">=", 1))
-            genReport(reportData, multiComparator("Have targets", Object.keys(originalTargets).length, ">", 0))
+            genReport(reportData, multiComparator("Have targets", Object.keys(tt.getTargets()).length, ">", 0))
             genReport(reportData, multiComparator("All langs ok", true, "===", tt.testLangs(tt.allLangs)))
             let langEN = tt.buildLanguage("xyz")
-            genReport(reportData, multiComparator("Use default language", "EN", "===", langEN.langName))
+            genReport(reportData, multiComparator("Use default language", "EN", "===", langEN.$langName))
             genReport(reportData, multiComparator("Test language", "Hello!", "===", langEN.defMessage))
-            genReport(reportData, multiComparator("Build a language", "PT", "===", tt.buildLanguage("PT").langName))
-            tt.translateTargets(tt.buildLanguage("PT"), originalTargets)
+            genReport(reportData, multiComparator("Build a language", "PT", "===", tt.buildLanguage("PT").$langName))
+            tt.translateTargets(tt.buildLanguage("PT"))
             let tstTarget = document.getElementById("testTarget")
             genReport(reportData, multiComparator("Translate a target", "Casa", "===", tstTarget.innerText))
-            tt.translateTargets(tt.buildLanguage("EN"), originalTargets)
+            tt.translateTargets(tt.buildLanguage("EN"))
             genReport(reportData, multiComparator("Back to default lang", "House", "===", tstTarget.innerText))
             console.timeEnd("tests")
             return reportData
@@ -190,7 +189,7 @@
                     <span class="toRight ${v.status === 's' ? 'tstpass' : 'notpass'}">${v.status === 's' ? '✅' : '❎'}</span></div>`
                         break;
                     case "func":
-                        report += `<div class="repLine"><span class=${v.status === 's' ? 'tstpass' : 'notpass'}>${v.name}: ${v.spec} ${v.result}</span> 
+                        report += `<div class="repLine"><span class=${v.status === 's' ? 'tstpass' : 'notpass'}>${v.name}: ${v.spec} </span> 
                     <span class="toRight ${v.status === 's' ? 'tstpass' : 'notpass'}">${v.status === 's' ? '✅' : '❎'}</span></div>`
                         break
                     default:

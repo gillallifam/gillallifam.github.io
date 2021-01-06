@@ -158,6 +158,18 @@
                     word2.toUpperCase();
         }
 
+        function goTranslate() {
+            let tl = "pt"
+            fetch(`https://api.mymemory.translated.net/get?q=Test, House, house, Window, Sky, team, start, star, fish, Report&langpair=en|${tl}&k=dfba36e19336909c4dff&de=gilmar.alves.ifam@gmail.com`)
+                .then(async function (response) {
+                    console.log(response);
+                    let r = await response.json()
+                    console.log(r);
+                    console.log(r.matches[0].translation);
+                    return response;
+                })
+        }
+
     </script>
 </body>
 
