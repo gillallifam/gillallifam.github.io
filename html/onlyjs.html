@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    </style>
+</head>
+
+<body>
+    <div id="onlyTarget"></div>
+
+    <script type="module">
+        import only from "../js/only.js"
+        only.setHtml([
+            {
+                div: [
+                    {
+                        ul: [
+                            { li: "Milk" },
+                            { li: "Spinach" },
+                            { li: "Tacos" },
+                            { li: "Peas" },
+                            { li: "Apples" }
+                        ],
+                        class: "cake",
+                        css: {
+                            color: "green"
+                        }
+                    }]//ul
+            }//div
+        ], document.getElementById("onlyTarget"));
+    </script>
+</body>
+
+</html>

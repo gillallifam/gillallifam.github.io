@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="../js/langs.js"></script>
+
     <style id="mainStyles">
         p {
             background-color: rgb(255, 220, 192);
@@ -12,25 +13,47 @@
         }
 
         .tstpass {
-            background-color: rgb(196, 236, 134);
+            color: darkgreen;
         }
 
         .notpass {
-            background-color: indianred;
+            color: indianred;
+        }
+
+        .blockLayer {
+            user-select: none;
+            visibility: hidden;
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(164, 180, 180, 0.514);
         }
 
         #testResults {
-            visibility: hidden;
             position: absolute;
             left: 50%;
             top: 20%;
+            padding: 10px;
             background-color: ivory;
+            border-radius: 3%;
             width: 50%;
             transform: translateX(-50%);
+            box-shadow: -1px 0px 25px 0px rgba(0, 0, 0, 0.68);
+        }
+
+        .toRight {
+            float: right;
         }
 
         #closeTestPopup {
+            border-radius: 25%;
             float: right;
+        }
+
+        .repLine {
+            width: 100%;
+            background-color: gainsboro;
         }
     </style>
 </head>
@@ -45,50 +68,54 @@
     <p id="p6" class="trans">timeMessage</p>
     <p class="trans">star</p>
     <p class="trans">fish</p>
-    <button id="bt1" class="trans">test</button>
-
-    <div id="testResults">
-        <button id="closeTestPopup">x</button>
-        <h1 id="testHeader"></h1>
-        <div id="testData">
+    <button id="bt2" class="trans">Report</button>
+    <div id="blockLayer" class="blockLayer">
+        <div id="testResults">
+            <button id="closeTestPopup">x</button>
+            <h1 id="testHeader"></h1>
+            <div id="testData">
+            </div>
         </div>
     </div>
 
+    <div id="onlyTarget"></div>
 
     <script>
+        let blockLayer = document.getElementById("blockLayer")
         let tstPopup = document.getElementById("testResults")
         let closeTestPopup = document.getElementById("closeTestPopup")
+        let originalTargets = {}
         function closeDivPopup() {
-            tstPopup.style.visibility = "hidden"
+            blockLayer.style.visibility = "hidden"
         }
         closeTestPopup.onclick = closeDivPopup
-        console.log(location.hash.split("#")[1]);
+        //console.log(location.hash.split("#")[1]);
 
         document.addEventListener("DOMContentLoaded", function (event) {
-            let targets = getTargets()
-            console.log(targets);
+            originalTargets = getTargets()
+            console.log(originalTargets);
             console.time("t1")
-            translateTargets(buildLanguage("PT"), targets)
+            translateTargets(buildLanguage("PT"), originalTargets)
             console.timeEnd("t1")
             setTimeout(() => {
                 console.time("t1")
-                translateTargets(buildLanguage("ES"), targets)
+                translateTargets(buildLanguage("ES"), originalTargets)
                 console.timeEnd("t1")
             }, 2000);
             setTimeout(() => {
                 console.time("t1")
-                translateTargets(buildLanguage("EN"), targets)
+                translateTargets(buildLanguage("EN"), originalTargets)
                 console.timeEnd("t1")
             }, 5000);
 
-            document.getElementById("bt1").onclick = () => {
-                runTests("Translator")
+            document.getElementById("bt2").onclick = () => {
+                testAndReport("htmReport")
             }
         });
 
-        const basicComparator = function (name, spec, comparator, result) {//param as obj
-            let msgSuccess = `<p class="tstpass">${name} : ${spec} ${comparator} ${result} ✅</p>`
-            let msgFail = `<p class="notpass">${name} : ${spec} ${comparator} ${result} ❌</p>`
+        const basicComparator = function (name, spec, comparator, result) {
+            let msgSuccess = { name, spec, comparator, result, status: "s" }
+            let msgFail = { name, spec, comparator, result, status: "f" }
             switch (comparator) {
                 case "==":
                     if (spec == result) return msgSuccess; else return msgFail
@@ -107,37 +134,56 @@
             }
         }
 
-        function runTests(name) {
-            console.log("Testing:", name);
-            let tstNum = localStorage.getItem("tstNum") || "0,0"
-            tstNum = tstNum.split(",").map(n => parseInt(n))
+        function genReport(rd, d) {
+            rd.push(d)
+        }
+
+        function sleep(ms) {
+            return new Promise(r => setTimeout(r, ms));
+        }
+
+        function runTests() {
+            let reportData = []
+            console.time("tests")
+            let anId = genID.next().value
+            genReport(reportData, basicComparator("Generate ID", undefined, "!==", anId))
+            genReport(reportData, basicComparator("Generate multiple IDs", anId, "!==", genID.next().value))
+            genReport(reportData, basicComparator("Have langs", Object.keys(allLangs).length, ">=", 1))
+            genReport(reportData, basicComparator("Have targets", Object.keys(originalTargets).length, ">", 0))
+            genReport(reportData, basicComparator("All langs ok", true, "===", testLangs(allLangs)))
+            let langEN = buildLanguage("xyz")
+            genReport(reportData, basicComparator("Use default language", "EN", "===", langEN.langName))
+            genReport(reportData, basicComparator("Test language", "Hello!", "===", langEN.defMessage))
+            genReport(reportData, basicComparator("Build a language", "PT", "===", buildLanguage("PT").langName))
+            translateTargets(buildLanguage("PT"), originalTargets)
+            let tt = document.getElementById("testTarget")
+            genReport(reportData, basicComparator("Translate a target", "Casa", "===", tt.innerText))
+            translateTargets(buildLanguage("EN"), originalTargets)
+            genReport(reportData, basicComparator("Back to default lang", "House", "===", tt.innerText))
+            console.timeEnd("tests")
+            return reportData
+        }
+
+        function htmReport(name, reportData) {
+            console.time("relats")
             let htmlReport = ""
-            let jsonReport = {}
             let testHeader = document.getElementById("testHeader")
             testHeader.innerHTML = `Test results ${name}`
             let testData = document.getElementById("testData")
-            console.time("tests")
-            let anId = genID.next().value
-            htmlReport += basicComparator("Generate ID", undefined, "!==", anId)
-            htmlReport += basicComparator("Generate multiple IDs", anId, "!==", genID.next().value)
-            htmlReport += basicComparator("Have langs", Object.keys(allLangs).length, ">=", 1)
-            htmlReport += basicComparator("Have targets", Object.keys(getTargets()).length, ">", 0)
-            htmlReport += basicComparator("All langs ok", true, "===", testLangs(allLangs))
-            let langEN = buildLanguage("xyz")
-            htmlReport += basicComparator("Use default language", "EN", "===", langEN.langName)
-            htmlReport += basicComparator("Test language", "Hello!", "===", langEN.defMessage)
-            htmlReport += basicComparator("Build a language", "PT", "===", buildLanguage("PT").langName)
-            translateTargets(buildLanguage("PT"), getTargets())
-            let tt = document.getElementById("testTarget")
-            htmlReport += basicComparator("Translate targets", "Casa", "===", tt.innerText)
-            if (htmlReport.includes("notpass")) tstNum[0]++; else tstNum[1]++;
-            htmlReport += `<h2>Spec failed ${tstNum.join("/")} runs.`
-            console.timeEnd("tests")
-            translateTargets(buildLanguage("EN"), getTargets())
-            localStorage.setItem("tstNum", tstNum)
+            for (const v of reportData) {
+                htmlReport += `<div class="repLine"><span class=${v.status === 's' ? 'tstpass' : 'notpass'}>${v.name}: ${v.spec} ${v.comparator} ${v.result}</span> 
+                    <span class="toRight ${v.status === 's' ? 'tstpass' : 'notpass'}">${v.status === 's' ? '✅' : '❎'}</span></div>`
+            }
+            htmlReport += "<br>"
+            htmlReport += new Date().toLocaleString()
             testData.innerHTML = htmlReport
-            tstPopup.style.visibility = "visible"
-            return htmlReport
+            blockLayer.style.visibility = "visible"
+            console.timeEnd("relats")
+        }
+
+        async function testAndReport(name) {
+            let data = await runTests()
+            htmReport(name, data)
         }
     </script>
 

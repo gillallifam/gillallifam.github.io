@@ -19,13 +19,74 @@ var JSONPrs = (str) => {
 function* idMaker() {
     let index = 0;
     while (true)
-        yield "genID" + ++index;
+        yield "gnrtID" + ++index;
 }
 var genID = idMaker();
 
+class TTranslator {
+    constructor() {
+        this.targets = []
+        this.allLangs = {
+            EN: {
+                D: ["Test", "House", "house", "Window", "Sky", "team", "start", "star", "fish", "Report"],
+                R: {
+                    langName: "EN",
+                    welcomeMsg: "Welcome!",
+                    defMessage: "Hello!"
+                },
+                F: {
+                    timeMessage: () => {
+                        let hour = new Date().getHours()
+                        if (hour >= 18) return "Good day!";
+                        if (hour >= 12 && hour < 18) return "Good afternoon!";
+                        if (hour < 12) return "Good night!";
+                    }
+                }
+            },
+            PT: {
+                D: ["Teste", "Casa", "casa", "janela", "Céu", "time", "Iniciar", "estrela", "peixe", "Relatório"],
+                R: {
+                    langName: "PT",
+                    welcomeMsg: "Seja bem vindo!",
+                    defMessage: "Olá!"
+                },
+                F: {
+                    timeMessage: () => {
+                        let hour = new Date().getHours()
+                        if (hour >= 18) return "Boa noite!";
+                        if (hour >= 12 && hour < 18) return "Boa tarde!";
+                        if (hour < 12) return "Bom dia!";
+                    }
+                }
+            },
+            ES: {
+                D: ["Prueba", "Casa", "casa", "ventana", "cielo", "equipo", "comienzo", "estrella", "pez", "Reporte"],
+                R: {
+                    langName: "ES",
+                    welcomeMsg: "Bienvenidos!",
+                    defMessage: "ola!"
+                },
+                F: {
+                    timeMessage: () => {
+                        let hour = new Date().getHours()
+                        if (hour >= 18) return "Buenas noches!";
+                        if (hour >= 12 && hour < 18) return "Buenas tardes!";
+                        if (hour < 12) return "Buenos dias!";
+                    }
+                }
+            }
+        }
+    }
+    resetToDefaults(targets) { for (const [id, txt] of Object.entries(originalTargets)) document.getElementById(id).innerText = txt }
+}
+
+console.log(new TTranslator());
+
+function resetToDefaults(targets) { for (const [id, txt] of Object.entries(originalTargets)) document.getElementById(id).innerText = txt }
+
 let allLangs = {
     EN: {
-        D: ["test", "House", "house", "Window", "Sky", "Team", "start", "star", "fish", "sand"],
+        D: ["Test", "House", "house", "Window", "Sky", "team", "start", "star", "fish", "Report"],
         R: {
             langName: "EN",
             welcomeMsg: "Welcome!",
@@ -41,7 +102,7 @@ let allLangs = {
         }
     },
     PT: {
-        D: ["teste", "Casa", "casa", "janela", "Céu", "time", "Iniciar", "estrela", "peixe", "areia"],
+        D: ["Teste", "Casa", "casa", "janela", "Céu", "time", "Iniciar", "estrela", "peixe", "Relatório"],
         R: {
             langName: "PT",
             welcomeMsg: "Seja bem vindo!",
@@ -57,7 +118,7 @@ let allLangs = {
         }
     },
     ES: {
-        D: ["prueba", "Casa", "casa", "ventana", "cielo", "equipo", "Comienzo", "estrella", "pez", "arena"],
+        D: ["Prueba", "Casa", "casa", "ventana", "cielo", "equipo", "comienzo", "estrella", "pez", "Reporte"],
         R: {
             langName: "ES",
             welcomeMsg: "Bienvenidos!",
