@@ -21,13 +21,14 @@
         }
 
         .blockLayer {
+            backdrop-filter: blur(3px);
             user-select: none;
             visibility: hidden;
             position: absolute;
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(164, 180, 180, 0.514);
+            background-color: rgba(0, 0, 0, 0);
         }
 
         #testResults {
@@ -53,7 +54,7 @@
 
         .repLine {
             width: 100%;
-            background-color: gainsboro;
+            background-color: rgb(220, 220, 220);
         }
     </style>
 </head>
@@ -81,6 +82,7 @@
     <div id="onlyTarget"></div>
 
     <script>
+
         let blockLayer = document.getElementById("blockLayer")
         let tstPopup = document.getElementById("testResults")
         let closeTestPopup = document.getElementById("closeTestPopup")
@@ -92,20 +94,21 @@
         //console.log(location.hash.split("#")[1]);
 
         document.addEventListener("DOMContentLoaded", function (event) {
-            originalTargets = getTargets()
+            originalTargets = tt.getTargets()
             console.log(originalTargets);
             console.time("t1")
-            translateTargets(buildLanguage("PT"), originalTargets)
+            tt.translateTargets(tt.buildLanguage("PT"), originalTargets)
             console.timeEnd("t1")
             setTimeout(() => {
                 console.time("t1")
-                translateTargets(buildLanguage("ES"), originalTargets)
+                tt.translateTargets(tt.buildLanguage("ES"), originalTargets)
                 console.timeEnd("t1")
             }, 2000);
             setTimeout(() => {
                 console.time("t1")
-                translateTargets(buildLanguage("EN"), originalTargets)
+                tt.translateTargets(tt.buildLanguage("EN"), originalTargets)
                 console.timeEnd("t1")
+                console.log(tt.getTargets());
             }, 5000);
 
             document.getElementById("bt2").onclick = () => {
@@ -113,25 +116,26 @@
             }
         });
 
-        const basicComparator = function (name, spec, comparator, result) {
-            let msgSuccess = { name, spec, comparator, result, status: "s" }
-            let msgFail = { name, spec, comparator, result, status: "f" }
+        const multiComparator = function (name, spec, comparator, result) {
+            let type = "comparator"
+            let msg = { name, type, spec, comparator, result, status: "f" }
+            let s = "f"
             switch (comparator) {
                 case "==":
-                    if (spec == result) return msgSuccess; else return msgFail
+                    if (spec == result) s = "s"; break;
                 case "===":
-                    if (spec === result) return msgSuccess; else return msgFail
+                    if (spec === result) s = "s"; break;
                 case "!==":
-                    if (spec !== result) return msgSuccess; else return msgFail
+                    if (spec !== result) s = "s"; break;
                 case ">=":
-                    if (spec >= result) return msgSuccess; else return msgFail
+                    if (spec >= result) s = "s"; break;
                 case ">":
-                    if (spec >= result) return msgSuccess; else return msgFail
+                    if (spec >= result) s = "s"; break;
                 case "<=":
-                    if (spec >= result) return msgSuccess; else return msgFail
-                default:
-                    break;
+                    if (spec >= result) s = "s"; break;
             }
+            msg.status = s
+            return msg
         }
 
         function genReport(rd, d) {
@@ -142,48 +146,68 @@
             return new Promise(r => setTimeout(r, ms));
         }
 
+        function customFunc(name, spec) {
+            let type = "func"
+            let result = spec.includes("gnrt")
+            let msg = { name, type, spec, result, status: "f" }
+            if (result === true) msg.status = 's'
+            return msg
+        }
+
         function runTests() {
             let reportData = []
             console.time("tests")
-            let anId = genID.next().value
-            genReport(reportData, basicComparator("Generate ID", undefined, "!==", anId))
-            genReport(reportData, basicComparator("Generate multiple IDs", anId, "!==", genID.next().value))
-            genReport(reportData, basicComparator("Have langs", Object.keys(allLangs).length, ">=", 1))
-            genReport(reportData, basicComparator("Have targets", Object.keys(originalTargets).length, ">", 0))
-            genReport(reportData, basicComparator("All langs ok", true, "===", testLangs(allLangs)))
-            let langEN = buildLanguage("xyz")
-            genReport(reportData, basicComparator("Use default language", "EN", "===", langEN.langName))
-            genReport(reportData, basicComparator("Test language", "Hello!", "===", langEN.defMessage))
-            genReport(reportData, basicComparator("Build a language", "PT", "===", buildLanguage("PT").langName))
-            translateTargets(buildLanguage("PT"), originalTargets)
-            let tt = document.getElementById("testTarget")
-            genReport(reportData, basicComparator("Translate a target", "Casa", "===", tt.innerText))
-            translateTargets(buildLanguage("EN"), originalTargets)
-            genReport(reportData, basicComparator("Back to default lang", "House", "===", tt.innerText))
+            let anId = tt.genID().next().value
+            genReport(reportData, customFunc("ID contains gnrt", anId))
+            genReport(reportData, multiComparator("Generate ID", anId, "!==", undefined))
+            genReport(reportData, multiComparator("Generate multiple IDs", anId, "!==", tt.genID().next().value))
+            genReport(reportData, multiComparator("Have langs", Object.keys(tt.allLangs).length, ">=", 1))
+            genReport(reportData, multiComparator("Have targets", Object.keys(originalTargets).length, ">", 0))
+            genReport(reportData, multiComparator("All langs ok", true, "===", tt.testLangs(tt.allLangs)))
+            let langEN = tt.buildLanguage("xyz")
+            genReport(reportData, multiComparator("Use default language", "EN", "===", langEN.langName))
+            genReport(reportData, multiComparator("Test language", "Hello!", "===", langEN.defMessage))
+            genReport(reportData, multiComparator("Build a language", "PT", "===", tt.buildLanguage("PT").langName))
+            tt.translateTargets(tt.buildLanguage("PT"), originalTargets)
+            let tstTarget = document.getElementById("testTarget")
+            genReport(reportData, multiComparator("Translate a target", "Casa", "===", tstTarget.innerText))
+            tt.translateTargets(tt.buildLanguage("EN"), originalTargets)
+            genReport(reportData, multiComparator("Back to default lang", "House", "===", tstTarget.innerText))
             console.timeEnd("tests")
             return reportData
         }
 
         function htmReport(name, reportData) {
             console.time("relats")
-            let htmlReport = ""
+            let report = ""
             let testHeader = document.getElementById("testHeader")
             testHeader.innerHTML = `Test results ${name}`
             let testData = document.getElementById("testData")
             for (const v of reportData) {
-                htmlReport += `<div class="repLine"><span class=${v.status === 's' ? 'tstpass' : 'notpass'}>${v.name}: ${v.spec} ${v.comparator} ${v.result}</span> 
+                switch (v.type) {
+                    case "comparator":
+                        report += `<div class="repLine"><span class=${v.status === 's' ? 'tstpass' : 'notpass'}>${v.name}: ${v.spec} ${v.comparator} ${v.result}</span> 
                     <span class="toRight ${v.status === 's' ? 'tstpass' : 'notpass'}">${v.status === 's' ? '✅' : '❎'}</span></div>`
+                        break;
+                    case "func":
+                        report += `<div class="repLine"><span class=${v.status === 's' ? 'tstpass' : 'notpass'}>${v.name}: ${v.spec} ${v.result}</span> 
+                    <span class="toRight ${v.status === 's' ? 'tstpass' : 'notpass'}">${v.status === 's' ? '✅' : '❎'}</span></div>`
+                        break
+                    default:
+                        break;
+                }
             }
-            htmlReport += "<br>"
-            htmlReport += new Date().toLocaleString()
-            testData.innerHTML = htmlReport
+            report += "<br>"
+            report += new Date().toLocaleString()
+            testData.innerHTML = report
             blockLayer.style.visibility = "visible"
             console.timeEnd("relats")
         }
 
-        async function testAndReport(name) {
-            let data = await runTests()
+        function testAndReport(name) {
+            let data = runTests()
             htmReport(name, data)
+            //console.log(tt);
         }
     </script>
 

@@ -23,7 +23,7 @@
             (1, eval)('console.log("indirect call: " + x)');
         })();
 
-        adder1 =  (a, b) => { return a + b }
+        adder1 = (a, b) => { return a + b }
 
 
         var adder2 = new Function('a', 'b', 'return a + b');
@@ -150,6 +150,12 @@
                 }
                 return value;
             });
+        }
+
+        function matchCase(word1, word2) {
+            return word1[0] === word1[0].toLowerCase() ? word2.toLowerCase() :
+                word1[1] === word1[1].toLowerCase() ? word2[0].toUpperCase() + word2.slice(1).toLowerCase() :
+                    word2.toUpperCase();
         }
 
     </script>
