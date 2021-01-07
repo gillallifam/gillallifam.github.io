@@ -4,57 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../js/utils.js"></script>
     <script src="../js/langs.js"></script>
-
+    <script src="../js/locTest.js"></script>
     <style id="mainStyles">
         p {
             background-color: rgb(255, 220, 192);
             color: rgb(5, 5, 49);
-        }
-
-        .tstpass {
-            color: darkgreen;
-        }
-
-        .notpass {
-            color: indianred;
-        }
-
-        .blockLayer {
-            backdrop-filter: blur(3px);
-            user-select: none;
-            visibility: hidden;
-            position: absolute;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0);
-        }
-
-        #testResults {
-            position: absolute;
-            left: 50%;
-            top: 20%;
-            padding: 10px;
-            background-color: ivory;
-            border-radius: 3%;
-            width: 50%;
-            transform: translateX(-50%);
-            box-shadow: -1px 0px 25px 0px rgba(0, 0, 0, 0.68);
-        }
-
-        .toRight {
-            float: right;
-        }
-
-        #closeTestPopup {
-            border-radius: 25%;
-            float: right;
-        }
-
-        .repLine {
-            width: 100%;
-            background-color: rgb(220, 220, 220);
         }
     </style>
 </head>
@@ -67,83 +23,31 @@
     <p id="p4" class="trans">welcomeMsg</p>
     <p id="p5" class="trans">defMessage</p>
     <p id="p6" class="trans">timeMessage</p>
+    <p id="p6b" class="trans">relativeMsg</p>
     <p id="p7" class="trans">AppName</p>
     <p id="p8" class="trans">help</p>
+    <p id="p9" class="trans">${tst} ${data}</p>
+    <p id="p9b" class="trans">${a} x ${b}</p>
     <p class="trans">star</p>
     <p class="trans">fish</p>
-    <button id="bt2" class="trans">Report</button>
-    <button id="bt3" onclick="setLang();">Set Lang</button>
-    <div id="blockLayer" class="blockLayer">
-        <div id="testResults">
-            <button id="closeTestPopup">x</button>
-            <h1 id="testHeader"></h1>
-            <div id="testData">
-            </div>
-        </div>
-    </div>
+    <button id="bt2" onclick="testAndReport('Translator');" class="trans">Report</button>
+    <button id="bt3" onclick="setLang('EN');">EN</button>
+    <button id="bt4" onclick="setLang('ES');"> ES</button>
+    <button id="bt5" onclick="setLang('PT');"> PT</button>
+    <button id="bt6" onclick="setLang('IT');"> IT</button>
     <script>
+        var pageName = "Translator"
+        var locTest = new LocTest(document.getElementById("tstRoot"))
 
-        function setLang() {
-            tt.translateTargets(tt.buildLanguage("IT"), tt.getTargets())
+        function setLang(lang) {
+            tt.translateTargets(tt.buildLanguage(lang), tt.getTargets())
         }
-
-        let blockLayer = document.getElementById("blockLayer")
-        let tstPopup = document.getElementById("testResults")
-        let closeTestPopup = document.getElementById("closeTestPopup")
-        function closeDivPopup() {
-            blockLayer.style.visibility = "hidden"
-        }
-        closeTestPopup.onclick = closeDivPopup
 
         document.addEventListener("DOMContentLoaded", function (event) {
-            console.time("t1")
-            tt.translateTargets(tt.buildLanguage("PT"), tt.getTargets())
-            console.timeEnd("t1")
-            setTimeout(() => {
-                console.time("t1")
-                tt.translateTargets(tt.buildLanguage("ES"), tt.targets)
-                console.timeEnd("t1")
-            }, 2000);
-            setTimeout(() => {
-                console.time("t1")
-                tt.translateTargets(tt.buildLanguage("EN"), tt.getTargets())
-                console.timeEnd("t1")
-            }, 5000);
-
-            document.getElementById("bt2").onclick = () => {
-                testAndReport("htmReport")
-            }
+            tt.translateTargets(tt.buildLanguage("EN"), tt.getTargets())
+            let r = locTest[pageName]()
+            for (const d of r) if (d.status === 'f') { locTest.popUpReport(name, r) }
         });
-
-        const multiComparator = function (name, spec, comparator, result) {
-            let type = "comparator"
-            let msg = { name, type, spec, comparator, result, status: "f" }
-            let s = "f"
-            switch (comparator) {
-                case "==":
-                    if (spec == result) s = "s"; break;
-                case "===":
-                    if (spec === result) s = "s"; break;
-                case "!==":
-                    if (spec !== result) s = "s"; break;
-                case ">=":
-                    if (spec >= result) s = "s"; break;
-                case ">":
-                    if (spec >= result) s = "s"; break;
-                case "<=":
-                    if (spec >= result) s = "s"; break;
-            }
-            msg.status = s
-            return msg
-        }
-
-        function genReport(rd, d) {
-            rd.push(d)
-        }
-
-        function sleep(ms) {
-            return new Promise(r => setTimeout(r, ms));
-        }
 
         function customFunc(name, spec) {
             let type = "func"
@@ -153,60 +57,32 @@
             return msg
         }
 
-        function runTests() {
+        function tstTranslator() {
             let reportData = []
-            console.time("tests")
+            let lc = locTest
             let anId = tt.genID().next().value
-            genReport(reportData, customFunc("ID contains gnrt", anId))
-            genReport(reportData, multiComparator("Generate ID", anId, "!==", undefined))
-            genReport(reportData, multiComparator("Generate multiple IDs", anId, "!==", tt.genID().next().value))
-            genReport(reportData, multiComparator("Have langs", Object.keys(tt.allLangs).length, ">=", 1))
-            genReport(reportData, multiComparator("Have targets", Object.keys(tt.getTargets()).length, ">", 0))
-            genReport(reportData, multiComparator("All langs ok", true, "===", tt.testLangs(tt.allLangs)))
+            lc.genReport(reportData, customFunc("ID contains gnrt", anId))
+            lc.genReport(reportData, lc.comparator("Generate ID", anId, "!==", undefined))
+            lc.genReport(reportData, lc.comparator("Generate multiple IDs", anId, "!==", tt.genID().next().value))
+            lc.genReport(reportData, lc.comparator("Have langs", Object.keys(tt.allLangs).length, ">=", 1))
+            lc.genReport(reportData, lc.comparator("Have targets", Object.keys(tt.getTargets()).length, ">", 0))
+            lc.genReport(reportData, lc.comparator("All langs ok", true, "===", tt.testLangs(tt.allLangs)))
             let langEN = tt.buildLanguage("xyz")
-            genReport(reportData, multiComparator("Use default language", "EN", "===", langEN.$langName))
-            genReport(reportData, multiComparator("Test language", "Hello!", "===", langEN.defMessage))
-            genReport(reportData, multiComparator("Build a language", "PT", "===", tt.buildLanguage("PT").$langName))
+            lc.genReport(reportData, lc.comparator("Use default language", "EN", "===", langEN.$langName))
+            lc.genReport(reportData, lc.comparator("Test language", "Hello!", "===", langEN.defMessage))
+            lc.genReport(reportData, lc.comparator("Build a language", "PT", "===", tt.buildLanguage("PT").$langName))
             tt.translateTargets(tt.buildLanguage("PT"))
             let tstTarget = document.getElementById("testTarget")
-            genReport(reportData, multiComparator("Translate a target", "Casa", "===", tstTarget.innerText))
+            lc.genReport(reportData, lc.comparator("Translate a target", "Casa", "===", tstTarget.innerText))
             tt.translateTargets(tt.buildLanguage("EN"))
-            genReport(reportData, multiComparator("Back to default lang", "House", "===", tstTarget.innerText))
-            console.timeEnd("tests")
+            lc.genReport(reportData, lc.comparator("Back to default lang", "House", "===", tstTarget.innerText))
+            for (const d of reportData) if (d.status === 'f') { lc.sendErrorReport(reportData) }
             return reportData
         }
-
-        function htmReport(name, reportData) {
-            console.time("relats")
-            let report = ""
-            let testHeader = document.getElementById("testHeader")
-            testHeader.innerHTML = `Test results ${name}`
-            let testData = document.getElementById("testData")
-            for (const v of reportData) {
-                switch (v.type) {
-                    case "comparator":
-                        report += `<div class="repLine"><span class=${v.status === 's' ? 'tstpass' : 'notpass'}>${v.name}: ${v.spec} ${v.comparator} ${v.result}</span> 
-                    <span class="toRight ${v.status === 's' ? 'tstpass' : 'notpass'}">${v.status === 's' ? '✅' : '❎'}</span></div>`
-                        break;
-                    case "func":
-                        report += `<div class="repLine"><span class=${v.status === 's' ? 'tstpass' : 'notpass'}>${v.name}: ${v.spec} </span> 
-                    <span class="toRight ${v.status === 's' ? 'tstpass' : 'notpass'}">${v.status === 's' ? '✅' : '❎'}</span></div>`
-                        break
-                    default:
-                        break;
-                }
-            }
-            report += "<br>"
-            report += new Date().toLocaleString()
-            testData.innerHTML = report
-            blockLayer.style.visibility = "visible"
-            console.timeEnd("relats")
-        }
+        locTest.appendTest(pageName, tstTranslator)
 
         function testAndReport(name) {
-            let data = runTests()
-            htmReport(name, data)
-            //console.log(tt);
+            locTest.popUpReport(name, locTest[pageName]())
         }
     </script>
 

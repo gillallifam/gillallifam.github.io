@@ -1,16 +1,20 @@
 
 
-class TT {
+class WT {
     constructor() {
+        this.tst = "rootTst"
+        this.info = "About info"
         this.index = 0
         this.targets = null
         this.Commoms = {
-            AppName: () => "Tiny Translator"
+            AppName: () => "wapp translator",
+            ["${a} x ${b}"]: (str) => { return genTemplate(str)({ a: "aaa", b: "bbb" }); }
         }
+        this.buildedLangs = {}
         this.allLangs = {
             EN: {
-                D: ["Test", "House", "house", "Window", "Sky", "team", "start", "star", "fish", "Report","help",
-                    "Good day!", "Good afternoon!", "Good night!"],
+                D: ["Test", "House", "house", "Window", "Sky", "team", "start", "star", "fish", "Report", "help",
+                    "Good day!", "Good afternoon!", "Good night!", "${tst} ${data}"],
                 R: {
                     $langName: "EN",
                     welcomeMsg: "Welcome!",
@@ -19,52 +23,65 @@ class TT {
                 },
                 F: {
                     timeMessage: () => {
-                        let hour = new Date().getHours()
-                        if (hour >= 18) return this.cl.D[12];
-                        if (hour >= 12 && hour < 18) return this.cl.D[11];
-                        if (hour < 12) return this.cl.D[10];
-                    }
+                        let t = this.buildedLangs[this.ln], hour = new Date().getHours()
+                        if (hour >= 18) return t["Good night!"];
+                        if (hour >= 12 && hour < 18) return t["Good afternoon!"];
+                        if (hour < 12) return t["Good day!"];
+                    },
+                    relativeMsg: () => {
+                        return this.buildedLangs[this.ln].premiumMsg
+                    },
+                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: this.tst, data: this.info }); }
                 }
             },
             PT: {
-                D: ["Teste", "Casa", "casa", "janela", "Céu", "time", "Iniciar", "estrela", "peixe", "Relatório","ajuda",
-                    "Bom dia!", "Boa tarde!", "Boa noite!"],
+                D: ["Teste", "Casa", "casa", "janela", "Céu", "time", "Iniciar", "estrela", "peixe", "Relatório", "ajuda",
+                    "Bom dia!", "Boa tarde!", "Boa noite!", "${tst} ${data}"],
                 R: {
                     $langName: "PT",
                     welcomeMsg: "Seja bem vindo!",
                     defMessage: "Olá!",
-                    premiumMsg: "Querido usuário premium"
+                    premiumMsg: "Querido usuário premium",
                 },
                 F: {
                     timeMessage: () => {
-                        let hour = new Date().getHours()
-                        if (hour >= 18) return this.cl.D[12];
-                        if (hour >= 12 && hour < 18) return this.cl.D[11];
-                        if (hour < 12) return this.cl.D[10];
-                    }
+                        let t = this.buildedLangs[this.ln], hour = new Date().getHours()
+                        if (hour >= 18) return t["Good night!"];
+                        if (hour >= 12 && hour < 18) return t["Good afternoon!"];
+                        if (hour < 12) return t["Good day!"];
+                    },
+                    relativeMsg: () => {
+                        return this.buildedLangs[this.ln].premiumMsg
+                    },
+                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: "tst2", data: "PTData" }); }
                 }
             },
             ES: {
-                D: ["Prueba", "Casa", "casa", "ventana", "cielo", "equipo", "comienzo", "estrella", "pez", "Reporte","ayuda",
-                    "Buenos dias!", "Buenas tardes!", "Buenas noches!"],
+                D: ["Prueba", "Casa", "casa", "ventana", "cielo", "equipo", "comienzo", "estrella", "pez", "Reporte", "ayuda",
+                    "Buenos dias!", "Buenas tardes!", "Buenas noches!", "${tst} ${data}"],
                 R: {
                     $langName: "ES",
                     welcomeMsg: "Bienvenidos!",
                     defMessage: "Ola!",
-                    premiumMsg: "Estimado usuario premium"
+                    premiumMsg: "Estimado usuário premium"
                 },
                 F: {
                     timeMessage: () => {
-                        let hour = new Date().getHours()
-                        if (hour >= 18) return this.cl.D[12];
-                        if (hour >= 12 && hour < 18) return this.cl.D[11];
-                        if (hour < 12) return this.cl.D[10];
+                        let t = this.buildedLangs[this.ln], hour = new Date().getHours()
+                        if (hour >= 18) return t["Good night!"];
+                        if (hour >= 12 && hour < 18) return t["Good afternoon!"];
+                        if (hour < 12) return t["Good day!"];
                     }
+                    ,
+                    relativeMsg: () => {
+                        return this.buildedLangs[this.ln].premiumMsg
+                    },
+                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: "tst3", data: "ESData" }); }
                 }
             },
             IT: {
-                D: ["Test", "Casa", "casa", "finestra", "cielo", "squadra", "inizio", "stella", "pesce", "Rapporto","aiuto",
-                    "Buongiorno!", "Buon pomeriggio!", "Buona notte!"],
+                D: ["Test", "Casa", "casa", "finestra", "cielo", "squadra", "inizio", "stella", "pesce", "Rapporto", "aiuto",
+                    "Buongiorno!", "Buon pomeriggio!", "Buona notte!", "${tst} ${data}"],
                 R: {
                     $langName: "IT",
                     welcomeMsg: "Benvenuto!",
@@ -73,24 +90,28 @@ class TT {
                 },
                 F: {
                     timeMessage: () => {
-                        let hour = new Date().getHours()
-                        if (hour >= 18) return this.cl.D[12];
-                        if (hour >= 12 && hour < 18) return this.cl.D[11];
-                        if (hour < 12) return this.cl.D[10];
-                    }
+                        let t = this.buildedLangs[this.ln], hour = new Date().getHours()
+                        if (hour >= 18) return t["Good night!"];
+                        if (hour >= 12 && hour < 18) return t["Good afternoon!"];
+                        if (hour < 12) return t["Good day!"];
+                    },
+                    relativeMsg: () => {
+                        return this.buildedLangs[this.ln].premiumMsg
+                    },
+                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: "tst4", data: "ITData" }); }
                 }
             }
         }
         this.cl = this.allLangs.EN
+        this.ln = this.cl.R.$langName
     }
-    listStrings() {
-        console.log(this.cl.D.toString() + "#" + Object.values(this.cl.R).toString());
-    }
-    * genID() {
-        while (true)
-            yield "gnrtID" + ++this.index;
-    }
-    resetToDefaults() { for (const [id, txt] of Object.entries(this.targets)) document.getElementById(id).innerText = txt }
+    qAll(s) { return document.body.querySelectorAll(s) }
+    entries(obj) { return Object.entries(obj) }
+    keys(obj) { return Object.keys(obj) }
+    gid(id) { return document.getElementById(id) }
+    listStrings() { console.log(this.cl.D.toString() + "#" + Object.values(this.cl.R).toString()); }
+    * genID() { while (true) yield "gnrtID" + ++this.index; }
+    resetToDefaults() { for (const [id, txt] of this.entries(this.targets)) this.gid(id).innerText = txt }
     testLangs() {
         let arrLangs = Object.keys(this.allLangs)
         let pass = true
@@ -129,18 +150,21 @@ class TT {
         return pass
     }
     buildLanguage(langName) {
-        if (!Object.keys(this.allLangs).includes(langName)) langName = "EN"
+        if (this.buildedLangs[langName]) return this.buildedLangs[langName]
+        if (!this.keys(this.allLangs).includes(langName)) langName = "EN"
         let lang = this.allLangs.EN.D.reduce((a, v, i) => { a[v] = this.allLangs[langName].D[i]; return a }, {})
         lang = { ...lang, ...this.allLangs[langName].R }
         lang = { ...lang, ...this.allLangs[langName].F }
         lang = { ...lang, ...this.Commoms }
+        this.buildedLangs[langName] = lang
+        //console.log(this.buildedLangs);
         return lang
     }
     getTargets() {
-        if (this.targets !== null) this.resetToDefaults()
-        let targets = {}
-        for (const e of document.body.querySelectorAll(".trans")) {
-            let txt = e.innerText
+        if (this.targets !== null) this.resetToDefaults();
+        let targets = {}, txt
+        for (const e of this.qAll(".trans")) {
+            txt = e.innerText
             if (e.id) targets[e.id] = txt
             else { e.id = this.genID().next().value; targets[e.id] = txt }
         }
@@ -148,12 +172,12 @@ class TT {
         return targets
     }
     translateTargets(lang) {
-        this.cl = this.allLangs[lang.$langName]
+        this.cl = this.allLangs[lang.$langName], this.ln = lang.$langName
         for (const [id, txt] of Object.entries(this.targets)) {
-            let e = document.getElementById(id)
+            let e = this.gid(id)
             if (lang[txt]) {
                 if (typeof lang[txt] === "function") {
-                    e.innerText = lang[txt]()
+                    e.innerText = lang[txt](txt)
                 } else {
                     e.innerText = lang[txt]
                 }
@@ -162,4 +186,4 @@ class TT {
     }
 }
 
-var tt = new TT();
+var tt = new WT();
