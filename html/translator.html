@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WappT</title>
     <script src="../js/utils.js"></script>
-    <script src="../js/langs.js"></script>
-    <script src="../js/locTest.js"></script>
+    <script src="../js/wappt.js"></script>
     <style id="mainStyles">
         p {
             background-color: rgb(255, 220, 192);
@@ -36,53 +36,47 @@
     <button id="bt5" onclick="setLang('PT');"> PT</button>
     <button id="bt6" onclick="setLang('IT');"> IT</button>
     <script>
+        var isDeveloper = localStorage.getItem("isDeveloper")
+        var popTester
+
+        function loadScript(src) {
+            script = document.createElement('script');
+            script.onload = function () {
+                if (src === "../js/testsTranslator.js") {
+                    popTester = new PopTester()
+                    popTester.appendTest(pageName, tstsTranslator)
+                    let r = popTester[pageName]()
+                    for (const d of r) if (d.status === 'f') { popTester.popUpReport(name, r) }
+                    console.timeEnd("boot")
+                }
+            };
+            script.src = src;
+            document.head.appendChild(script);
+        }
+
         var pageName = "Translator"
-        var locTest = new LocTest(document.getElementById("tstRoot"))
 
         function setLang(lang) {
-            tt.translateTargets(tt.buildLanguage(lang), tt.getTargets())
+            //if (lang !== wappt.ln) {
+                console.time("setLang")
+                wappt.translateTargets(wappt.buildLanguage(lang))
+                console.timeEnd("setLang")
+            //}
         }
 
         document.addEventListener("DOMContentLoaded", function (event) {
-            tt.translateTargets(tt.buildLanguage("EN"), tt.getTargets())
-            let r = locTest[pageName]()
-            for (const d of r) if (d.status === 'f') { locTest.popUpReport(name, r) }
+            wappt.translateTargets(wappt.buildLanguage("EN"), wappt.getTargets())
+            console.time("boot")
+            if (isDeveloper === 'y') {
+                loadScript("../js/popTester.js")
+                loadScript("../js/testsTranslator.js")
+            }
         });
 
-        function customFunc(name, spec) {
-            let type = "func"
-            let result = spec.includes("gnrt")
-            let msg = { name, type, spec, result, status: "f" }
-            if (result === true) msg.status = 's'
-            return msg
-        }
-
-        function tstTranslator() {
-            let reportData = []
-            let lc = locTest
-            let anId = tt.genID().next().value
-            lc.genReport(reportData, customFunc("ID contains gnrt", anId))
-            lc.genReport(reportData, lc.comparator("Generate ID", anId, "!==", undefined))
-            lc.genReport(reportData, lc.comparator("Generate multiple IDs", anId, "!==", tt.genID().next().value))
-            lc.genReport(reportData, lc.comparator("Have langs", Object.keys(tt.allLangs).length, ">=", 1))
-            lc.genReport(reportData, lc.comparator("Have targets", Object.keys(tt.getTargets()).length, ">", 0))
-            lc.genReport(reportData, lc.comparator("All langs ok", true, "===", tt.testLangs(tt.allLangs)))
-            let langEN = tt.buildLanguage("xyz")
-            lc.genReport(reportData, lc.comparator("Use default language", "EN", "===", langEN.$langName))
-            lc.genReport(reportData, lc.comparator("Test language", "Hello!", "===", langEN.defMessage))
-            lc.genReport(reportData, lc.comparator("Build a language", "PT", "===", tt.buildLanguage("PT").$langName))
-            tt.translateTargets(tt.buildLanguage("PT"))
-            let tstTarget = document.getElementById("testTarget")
-            lc.genReport(reportData, lc.comparator("Translate a target", "Casa", "===", tstTarget.innerText))
-            tt.translateTargets(tt.buildLanguage("EN"))
-            lc.genReport(reportData, lc.comparator("Back to default lang", "House", "===", tstTarget.innerText))
-            for (const d of reportData) if (d.status === 'f') { lc.sendErrorReport(reportData) }
-            return reportData
-        }
-        locTest.appendTest(pageName, tstTranslator)
-
         function testAndReport(name) {
-            locTest.popUpReport(name, locTest[pageName]())
+            if (isDeveloper === 'y')
+                popTester.popUpReport(name, popTester[pageName]())
+            else console.log("Not in development.");
         }
     </script>
 

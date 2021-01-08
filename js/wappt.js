@@ -1,7 +1,6 @@
-
-
-class WT {
+class WappT {
     constructor() {
+        this.defLang = "EN"
         this.tst = "rootTst"
         this.info = "About info"
         this.index = 0
@@ -31,7 +30,15 @@ class WT {
                     relativeMsg: () => {
                         return this.buildedLangs[this.ln].premiumMsg
                     },
-                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: this.tst, data: this.info }); }
+                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: this.tst, data: this.info }); },
+                    title: () => {
+                        let gender = "F"
+                        switch (gender) {
+                            case "F": return "Lady"
+                            case "O": return "Lard"
+                            default: return "Lord"
+                        }
+                    }
                 }
             },
             PT: {
@@ -53,7 +60,15 @@ class WT {
                     relativeMsg: () => {
                         return this.buildedLangs[this.ln].premiumMsg
                     },
-                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: "tst2", data: "PTData" }); }
+                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: "tst2", data: "PTData" }); },
+                    title: () => {
+                        let gender = "F"
+                        switch (gender) {
+                            case "F": return "Lady"
+                            case "O": return "Lard"
+                            default: return "Lord"
+                        }
+                    }
                 }
             },
             ES: {
@@ -76,7 +91,15 @@ class WT {
                     relativeMsg: () => {
                         return this.buildedLangs[this.ln].premiumMsg
                     },
-                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: "tst3", data: "ESData" }); }
+                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: "tst3", data: "ESData" }); },
+                    title: () => {
+                        let gender = "F"
+                        switch (gender) {
+                            case "F": return "Lady"
+                            case "O": return "Lard"
+                            default: return "Lord"
+                        }
+                    }
                 }
             },
             IT: {
@@ -98,7 +121,15 @@ class WT {
                     relativeMsg: () => {
                         return this.buildedLangs[this.ln].premiumMsg
                     },
-                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: "tst4", data: "ITData" }); }
+                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: "tst4", data: "ITData" }); },
+                    title: () => {
+                        let gender = "F"
+                        switch (gender) {
+                            case "F": return "Lady"
+                            case "O": return "Lard"
+                            default: return "Lord"
+                        }
+                    }
                 }
             }
         }
@@ -151,8 +182,8 @@ class WT {
     }
     buildLanguage(langName) {
         if (this.buildedLangs[langName]) return this.buildedLangs[langName]
-        if (!this.keys(this.allLangs).includes(langName)) langName = "EN"
-        let lang = this.allLangs.EN.D.reduce((a, v, i) => { a[v] = this.allLangs[langName].D[i]; return a }, {})
+        if (!this.keys(this.allLangs).includes(langName)) langName = this.defLang
+        let lang = this.allLangs[this.defLang].D.reduce((a, v, i) => { a[v] = this.allLangs[langName].D[i]; return a }, {})
         lang = { ...lang, ...this.allLangs[langName].R }
         lang = { ...lang, ...this.allLangs[langName].F }
         lang = { ...lang, ...this.Commoms }
@@ -172,10 +203,11 @@ class WT {
         return targets
     }
     translateTargets(lang) {
+        if(lang.$langName === this.ln) return
         this.cl = this.allLangs[lang.$langName], this.ln = lang.$langName
         for (const [id, txt] of Object.entries(this.targets)) {
             let e = this.gid(id)
-            if (lang[txt]) {
+            if (e && lang[txt]) {
                 if (typeof lang[txt] === "function") {
                     e.innerText = lang[txt](txt)
                 } else {
@@ -186,4 +218,4 @@ class WT {
     }
 }
 
-var tt = new WT();
+var wappt = new WappT();
