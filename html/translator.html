@@ -60,13 +60,7 @@
 
         var pageName = "Translator"
 
-        function setLang(lang) {
-            //if (lang !== wappt.ln) {
-            console.time("setLang")
-            wappt.translateTargets(wappt.buildLanguage(lang))
-            console.timeEnd("setLang")
-            //}
-        }
+        function setLang(lang) { wappt.translateTargets(wappt.buildLanguage(lang)) }
 
         document.addEventListener("DOMContentLoaded", function (event) {
             console.log("DOMContentLoaded");

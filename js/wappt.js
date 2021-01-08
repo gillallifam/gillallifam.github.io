@@ -134,7 +134,7 @@ class WappT {
             }
         }
         this.cl = this.allLangs.EN
-        this.ln = this.cl.R.$langName
+        this.ln = ""
     }
     qAll(s) { return document.body.querySelectorAll(s) }
     entries(obj) { return Object.entries(obj) }
