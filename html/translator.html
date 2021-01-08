@@ -22,8 +22,6 @@
 <body>
     <p id="testTarget" class="trans">House</p>
     <p class="trans">house</p>
-    <p id="p2" class="trans">Sky</p>
-    <p id="p3" class="trans">team</p>
     <p id="p4" class="trans">welcomeMsg</p>
     <p id="p5" class="trans">defMessage</p>
     <p id="p6" class="trans">timeMessage</p>
@@ -32,16 +30,16 @@
     <p id="p8" class="trans">help</p>
     <p id="p9" class="trans">${tst} ${data}</p>
     <p id="p9b" class="trans">${a} x ${b}</p>
-    <p class="trans">star</p>
-    <p class="trans">fish</p>
+
     <button id="bt2" onclick="testAndReport('Translator');" class="trans development">Report</button>
     <button id="bt3" onclick="setLang('EN');">EN</button>
     <button id="bt4" onclick="setLang('ES');"> ES</button>
     <button id="bt5" onclick="setLang('PT');"> PT</button>
     <button id="bt6" onclick="setLang('IT');"> IT</button>
     <script>
+        var pageName = "Translator"
         var isDeveloper = localStorage.getItem("isDeveloper")
-        var popTester
+        var popTester = null
 
         function loadScript(src) {
             script = document.createElement('script');
@@ -51,24 +49,22 @@
                     popTester.appendTest(pageName, tstsTranslator)
                     let r = popTester[pageName]()
                     for (const d of r) if (d.status === 'f') { popTester.popUpReport(name, r) }
-                    console.timeEnd("boot")
+                    //console.timeEnd("boot")
                 }
             };
             script.src = src;
             document.head.appendChild(script);
         }
 
-        var pageName = "Translator"
+        
 
         function setLang(lang) { wappt.translateTargets(wappt.buildLanguage(lang)) }
 
         document.addEventListener("DOMContentLoaded", function (event) {
-            console.log("DOMContentLoaded");
             wappt.getTargets(); setLang('EN')
-
             if (isDeveloper === 'y') {
                 for (const e of document.querySelectorAll(".development")) { e.style.display = "inline" }
-                console.time("boot")
+                //console.time("boot")
                 loadScript("../js/popTester.js")
                 loadScript("../js/testsTranslator.js")
             }
