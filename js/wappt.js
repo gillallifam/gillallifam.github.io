@@ -181,11 +181,12 @@ class WappT {
         return pass
     }
     buildLanguage(langName) {
+        let aL = this.allLangs
         if (this.buildedLangs[langName]) return this.buildedLangs[langName]
-        if (!this.keys(this.allLangs).includes(langName)) langName = this.defLang
-        let lang = this.allLangs[this.defLang].D.reduce((a, v, i) => { a[v] = this.allLangs[langName].D[i]; return a }, {})
-        lang = { ...lang, ...this.allLangs[langName].R }
-        lang = { ...lang, ...this.allLangs[langName].F }
+        if (!this.keys(aL).includes(langName)) langName = this.defLang
+        let lang = aL[this.defLang].D.reduce((a, v, i) => { a[v] = aL[langName].D[i]; return a }, {})
+        lang = { ...lang, ...aL[langName].R }
+        lang = { ...lang, ...aL[langName].F }
         lang = { ...lang, ...this.Commoms }
         this.buildedLangs[langName] = lang
         //console.log(this.buildedLangs);

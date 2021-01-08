@@ -65,9 +65,10 @@
         }
 
         document.addEventListener("DOMContentLoaded", function (event) {
+            console.log("DOMContentLoaded");
             wappt.translateTargets(wappt.buildLanguage("EN"), wappt.getTargets())
-            console.time("boot")
             if (isDeveloper === 'y') {
+                console.time("boot")
                 loadScript("../js/popTester.js")
                 loadScript("../js/testsTranslator.js")
             }
