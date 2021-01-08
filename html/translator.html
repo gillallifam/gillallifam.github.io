@@ -8,6 +8,10 @@
     <script src="../js/utils.js"></script>
     <script src="../js/wappt.js"></script>
     <style id="mainStyles">
+        .development {
+            display: none;
+        }
+
         p {
             background-color: rgb(255, 220, 192);
             color: rgb(5, 5, 49);
@@ -30,7 +34,7 @@
     <p id="p9b" class="trans">${a} x ${b}</p>
     <p class="trans">star</p>
     <p class="trans">fish</p>
-    <button id="bt2" onclick="testAndReport('Translator');" class="trans">Report</button>
+    <button id="bt2" onclick="testAndReport('Translator');" class="trans development">Report</button>
     <button id="bt3" onclick="setLang('EN');">EN</button>
     <button id="bt4" onclick="setLang('ES');"> ES</button>
     <button id="bt5" onclick="setLang('PT');"> PT</button>
@@ -69,6 +73,7 @@
             wappt.getTargets(); setLang('EN')
 
             if (isDeveloper === 'y') {
+                for (const e of document.querySelectorAll(".development")) { e.style.display = "inline" }
                 console.time("boot")
                 loadScript("../js/popTester.js")
                 loadScript("../js/testsTranslator.js")
