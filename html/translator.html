@@ -58,15 +58,16 @@
 
         function setLang(lang) {
             //if (lang !== wappt.ln) {
-                console.time("setLang")
-                wappt.translateTargets(wappt.buildLanguage(lang))
-                console.timeEnd("setLang")
+            console.time("setLang")
+            wappt.translateTargets(wappt.buildLanguage(lang))
+            console.timeEnd("setLang")
             //}
         }
 
         document.addEventListener("DOMContentLoaded", function (event) {
             console.log("DOMContentLoaded");
-            wappt.translateTargets(wappt.buildLanguage("EN"), wappt.getTargets())
+            wappt.getTargets(); setLang('EN')
+
             if (isDeveloper === 'y') {
                 console.time("boot")
                 loadScript("../js/popTester.js")
