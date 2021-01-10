@@ -33,10 +33,12 @@
 
     <button id="bt2" onclick="testAndReport('Translator');" class="trans development">Report</button>
     <button id="bt3" onclick="setLang('EN');">EN</button>
-    <button id="bt4" onclick="setLang('ES');"> ES</button>
-    <button id="bt5" onclick="setLang('PT');"> PT</button>
-    <button id="bt6" onclick="setLang('IT');"> IT</button>
+    <button id="bt4" onclick="setLang('ES');">ES</button>
+    <button id="bt5" onclick="setLang('PT');">PT</button>
+    <button id="bt6" onclick="setLang('IT');">IT</button>
+
     <script>
+
         var pageName = "Translator"
         var isDeveloper = localStorage.getItem("isDeveloper")
         var popTester = null
@@ -55,8 +57,6 @@
             script.src = src;
             document.head.appendChild(script);
         }
-
-        
 
         function setLang(lang) { wappt.translateTargets(wappt.buildLanguage(lang)) }
 
