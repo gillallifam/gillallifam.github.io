@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grids</title>
+    <style>
+        @import "../css/reset.css";
+        .holder {
+            width: 100%;
+        }
+
+        .wrapper {
+            display: grid;
+            grid-template-columns: repeat(12, [col-start] 1fr);
+            gap: 5px;
+        }
+
+        .item1 {
+            background-color: blueviolet;
+            text-align: center;
+            grid-row:    1 / span 2;
+            grid-column: col-start 1 / span 1;
+        }
+
+        .item2 {
+            grid-column: col-start 2 / span 5;
+        }
+
+        .item3 {
+            width: 100%;
+            grid-column: col-start 7 / span 1;
+        }
+
+        .item4 {
+            text-align: center;
+            grid-column: col-start 8 / span 1;
+        }
+
+        .item5 {
+            grid-column: col-start 9 / -1;
+        }
+
+        @media only screen and (max-width: 500px) {
+            .wrapper {
+                display: block;
+            }
+
+            .wrapper * {
+                width: 100%;
+                margin-top: 2px;
+                margin-bottom: 3px;
+            }
+        }
+
+        /* .item2 {
+            background-color: blueviolet;
+            grid-column: col-start 4 / span 9;
+            grid-row: 1 / 5;
+        }
+
+        .item3 {
+            background-color: brown;
+            grid-column: col-start 1 / span 3;
+            grid-row: 2;
+        }
+
+        .item4 {
+            background-color: chocolate;
+            grid-column: col-start 1 / -1;
+            grid-row: 5;
+        } */
+    </style>
+</head>
+
+<body>
+
+    <div class="holder">
+        <div class="wrapper">
+            <div class="item1">cod</div>
+            <input class="item2" type="number" />
+            <button class="item3">pesquisar</button>
+            <div class="item4">ShortName</div>
+            <input class="item5" type="text" />
+        </div>
+    </div>
+
+
+</body>
+
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRids</title>
+    <style>
+        @import "../css/reset.css";
+
+        label {
+            display: inline-block;
+        }
+
+        .wrapper {
+            display: grid;
+            grid-template-columns: repeat(11, 1fr);
+            gap: 5px;
+            grid-auto-rows: minmax(auto, auto);
+            padding: 2px;
+        }
+
+        .one {
+            grid-column: 1 / 10;
+            grid-row: 1 / 1;
+        }
+
+        .two {
+            background-color: brown;
+            grid-column: 10 / 12;
+            grid-row: 1 / 4;
+        }
+
+        .three {
+            background-color: chartreuse;
+            grid-column: 1 / 10;
+            grid-row: 2 / 2;
+        }
+
+        .four {
+            background-color: cornflowerblue;
+            grid-column: 1 / 10;
+            grid-row: 3 / 3;
+        }
+
+        .five {
+            background-color: crimson;
+            grid-column: 1;
+            grid-row: 4;
+        }
+
+        .six {
+            background-color: darkgreen;
+            grid-column: 2;
+            grid-row: 4;
+        }
+
+        .seven {
+            background-color: orangered;
+            grid-column: 3;
+            grid-row: 4;
+        }
+
+        .half {
+            float: left;
+            width: 50%;
+        }
+
+        .full {
+            width: calc(100% - 10px);
+        }
+
+        .ico {
+            vertical-align: middle;
+            width: 20px;
+            height: 20px;
+        }
+
+        ._10 {
+            width: 10%;
+        }
+
+        ._20 {
+            width: 20%;
+        }
+
+        ._40 {
+            width: 40%;
+        }
+
+        ._30 {
+            width: 30%;
+        }
+
+        ._50 {
+            width: 50%;
+        }
+
+        ._60 {
+            width: 60%;
+        }
+
+        ._70 {
+            width: 70%;
+        }
+
+        ._75 {
+            width: 75%;
+        }
+
+        ._80 {
+            width: 80%;
+        }
+
+        ._85 {
+            width: 85%;
+        }
+
+        ._90 {
+            width: 90%;
+        }
+
+        ._95 {
+            width: 95%;
+        }
+
+        @media only screen and (max-width: 900px) {
+            .wrapper * {
+                font-size: 14px;
+            }
+        }
+
+        @media only screen and (max-width: 600px) {
+            .wrapper {
+                display: block;
+            }
+
+            .expand-100{
+                width: 100%;
+                margin-top: 2px;
+                margin-bottom: 3px;
+                font-size: 16px;
+            }
+
+            .two {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="wrapper">
+        <div class="one">
+            <div class="half expand-100">
+                <label class="_10" for="prodcod">Cod: </label>
+                <input class="_70" type="number" name="" id="prodcod">
+                <img class="ico" src="../img/search.png" alt="searchIcon">
+            </div>
+
+            <div class="half expand-100">
+                <label class="_10" for="prodname">Name: </label>
+                <input class="_70" type="text" name="" id="prodname">
+            </div>
+
+        </div>
+        <div class="two">Two</div>
+        <div class="three">
+            <div><label for="namelon">Full name: </label><input class="full" type="text" name="" id="namelon"></div>
+        </div>
+        <div class="four">Four</div>
+        <div class="five">Five</div>
+        <div class="six">Six</div>
+        <div class="seven">Seven</div>
+    </div>
+</body>
+
+</html>
