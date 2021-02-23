@@ -7,7 +7,7 @@ class WappT {
         this.targets = null
         this.Commoms = {
             AppName: () => "wapp translator",
-            ["${a} x ${b}"]: (str) => { return genTemplate(str)({ a: "aaa", b: "bbb" }); }
+            ["${a} x ${b}"]: (str) => { return this.genTemplate(str)({ a: "aaa", b: "bbb" }); }
         }
         this.buildedLangs = {}
         this.allLangs = {
@@ -30,7 +30,7 @@ class WappT {
                     relativeMsg: () => {
                         return this.buildedLangs[this.ln].premiumMsg
                     },
-                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: this.tst, data: this.info }); },
+                    ["${tst} ${data}"]: (str) => { return this.genTemplate(str)({ tst: this.tst, data: this.info }); },
                     title: () => {
                         let gender = "F"
                         switch (gender) {
@@ -60,7 +60,7 @@ class WappT {
                     relativeMsg: () => {
                         return this.buildedLangs[this.ln].premiumMsg
                     },
-                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: "tst2", data: "PTData" }); },
+                    ["${tst} ${data}"]: (str) => { return this.genTemplate(str)({ tst: "tst2", data: "PTData" }); },
                     title: () => {
                         let gender = "F"
                         switch (gender) {
@@ -91,7 +91,7 @@ class WappT {
                     relativeMsg: () => {
                         return this.buildedLangs[this.ln].premiumMsg
                     },
-                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: "tst3", data: "ESData" }); },
+                    ["${tst} ${data}"]: (str) => { return this.genTemplate(str)({ tst: "tst3", data: "ESData" }); },
                     title: () => {
                         let gender = "F"
                         switch (gender) {
@@ -121,7 +121,7 @@ class WappT {
                     relativeMsg: () => {
                         return this.buildedLangs[this.ln].premiumMsg
                     },
-                    ["${tst} ${data}"]: (str) => { return genTemplate(str)({ tst: "tst4", data: "ITData" }); },
+                    ["${tst} ${data}"]: (str) => { return this.genTemplate(str)({ tst: "tst4", data: "ITData" }); },
                     title: () => {
                         let gender = "F"
                         switch (gender) {
@@ -143,6 +143,24 @@ class WappT {
     listStrings() { console.log(this.cl.D.toString() + "#" + Object.values(this.cl.R).toString()); }
     * genID() { while (true) yield "gnrtID" + ++this.index; }
     resetToDefaults() { for (const [id, txt] of this.entries(this.targets)) this.gid(id).innerText = txt }
+    genTemplate = (function () {
+        let cache = {};
+        function gen(template) {
+            let fn = cache[template];
+            if (!fn) {
+                let sanitized = template
+                    .replace(/\$\{([\s]*[^;\s\{]+[\s]*)\}/g, function (_, match) {
+                        return `\$\{map.${match.trim()}\}`;
+                    })
+                    .replace(/(\$\{(?!map\.)[^}]+\})/g, '');
+    
+                fn = Function('map', `return \`${sanitized}\``);
+                cache[template] = fn
+            }
+            return fn;
+        }
+        return gen;
+    })();
     testLangs() {
         let arrLangs = Object.keys(this.allLangs)
         let pass = true
