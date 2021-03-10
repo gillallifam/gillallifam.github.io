@@ -17,7 +17,9 @@ class Vals {
             }
         }
         this.schema = {}
-        this.rgx = {}
+        this.rgx = {
+            onlyNumbers: /^\d+$/
+        }
         this.errors = {}
         this.avaliators = {}
     }
@@ -34,7 +36,7 @@ class Vals {
                         result.pass = false;
                         result.error = this.errors[oe] ? `${this.errors[oe](oe, r, v)}` : `${oe} ${r} ${v}`;
                         el.style.backgroundColor = this.options.colorError
-                        let cv = "An error here!"
+                        let cv = "An error here!"//?
                         if (this.errors[oe]) cv = this.errors[oe]()
                         el.setCustomValidity(cv);
                         el.reportValidity()
@@ -71,4 +73,25 @@ class Vals {
 
 function isObj(x) {
     return typeof x === 'object' && x !== null && !Array.isArray(x)
+}
+
+const allAvaliators = {//the boring part
+    isArray: (o, f) => Array.isArray(o) === f,
+    minElems: (a, n) => Array.isArray(a) && a.length >= n,
+    empty: (s, f) => (s === "") === f,
+    notEqual: (s1, s2) => s1 !== s2,
+    mustContains: (s, v) => s.toLowerCase().includes(v.toLowerCase()),
+    mustNotContains: (s, v) => !s.toLowerCase().includes(v.toLowerCase()),
+    maxLen: (s, v) => s.length <= v,
+    minLen: (s, v) => s.length >= v,
+    max: (n, v) => n <= v,
+    min: (n, v) => n >= v,
+    onlyNumbers: (s, b) => (this.rgx.onlyNumbers).test(s) === b,
+    minLen: (s, v) => s.length >= v,
+    isPositive: (n, b) => Number.isInteger(n) & n > 0,
+    isEmail: (m, b) => {
+        let p = m.split("@");
+        if (p.length != 2) return false;
+        return (this.rgx.emailUser.test(p[0]) && this.rgx.emailDomain.test(p[1]));
+    }
 }

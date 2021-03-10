@@ -11,7 +11,7 @@ class WappT {
         }
         this.buildedLangs = {}
         this.allLangs = {
-            EN: {
+            EN: {//D direct, R relative, F func, T template
                 D: ["Test", "House", "house", "Window", "Sky", "team", "start", "star", "fish", "Report", "help",
                     "Good day!", "Good afternoon!", "Good night!", "${tst} ${data}"],
                 R: {

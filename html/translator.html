@@ -39,44 +39,6 @@
 
     <script>
 
-console.log(1+'1');
-        const adventurer = {
-            name: 'Alice',
-            cat: {
-                name: 'Dinah',
-                age: 3
-            }
-        };
-
-        const dogNamea = adventurer.dogd?.age;
-        console.log(dogNamea);
-        console.log(adventurer.someNonExistentMethod?.());
-
-
-        var testModule = (function () {
-console.log(this);
-            let counter = 10;
-
-            let myPrivateMethod = function (foo) {
-                console.log(foo);
-            };
-
-            return {
-                incrementCounter: function () {
-                    return counter++;
-                },
-
-                resetCounter: function () {
-                    console.log("counter value prior to reset: " + counter);
-                    counter = 0;
-                }
-            };
-
-        })();
-
-        testModule.incrementCounter();
-        testModule.resetCounter();
-
         var pageName = "Translator"
         var isDeveloper = localStorage.getItem("isDeveloper")
         var popTester = null
@@ -102,7 +64,6 @@ console.log(this);
             wappt.getTargets(); setLang('EN')
             if (isDeveloper === 'y') {
                 for (const e of document.querySelectorAll(".development")) { e.style.display = "inline" }
-                //console.time("boot")
                 loadScript("../js/popTester.js")
                 loadScript("../js/testsTranslator.js")
             }

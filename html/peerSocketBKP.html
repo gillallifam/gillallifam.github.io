@@ -15,45 +15,113 @@
     <h2>Clients</h2>
     <p id="cliNames">No clients</p>
     <script>
+        /* let headers = new Headers()
+        let username = "admin"
+        let password = 123456
+        headers.set('Authorization', 'Basic ' + btoa(username + ":" + password));
+        headers.set('Access-Control-Allow-Origin', '*');
+        fetch('http://192.168.0.3:9099/pass', {
+            method:'GET',
+            mode: 'cors',
+            headers: headers,
+        }).then(async function (res) {
+            console.log(res);
+        }) */
+        /* let pass = localStorage.getItem("userPass")
+        if (!pass) alert("password") */
+        window.addEventListener("beforeunload", function (e) {
+            // Do something
+            e.preventDefault()
+        }, false);
+        var mapClients = new Map()
         var bkpStore = localforage.createInstance({
             name: "bkpStore",
-            storeName: 'client',
+            storeName: 'clients',
         });
         let cliNames = document.getElementById("cliNames")
-        let storeCliNames = new Set()
-        var clients = new Map()
-        const peer = new Peer("BKPServer1", {
-            host: '172.100.11.87',
-            port: 9099,
-            path: '/service/socket'
-        });
+        var serverId = "BKPServer1"
+        let p0
 
-        console.log(peer);
-        peer.on('connection', function (conn) {
-            
-            storeCliNames.add(conn.peer)
-            cliNames.innerHTML = Array.from(storeCliNames).join(", ")
-            clients.set(conn.peer, conn)
-            conn.on('data', async function (data) {
-                switch (data.msg) {
-                    case "ping":
-                        conn.send({ msg: "ping" })
-                        break;
-                    case "bkpData":
-                        bkpStore.setItem(data.cliId, data.payLoad)
-                        conn.send({ msg: data.msg, status: "success" })
-                        break;
-                    case "getData":
-                        let result = await bkpStore.getItem(data.cliId)
-                        conn.send({ msg: data.msg, status: "success", payLoad: result })
-                        break;
-                    default:
-                        break;
-                }
+        async function init() {
+            p0 = await socketConn(serverId)
+            //console.log(p0);
+            p0.on("disconnected", () => {
+                let rcnt = setInterval(() => {
+                    console.log("Connecting to Peer.");
+                    try {
+                        p0.reconnect()
+                        if (!p0.disconnected) {
+                            console.log("Reconnected to server.");
+
+                            clearInterval(rcnt)
+                        }
+                    } catch (error) {
+                        console.log("Checking server.");
+                    }
+
+                }, 5000);
+            })
+            p0.on('connection', function (conn) {
+                mapClients.set(conn.peer, { conn, lastSeen: Date.now() })
+                let cliName = conn.peer
+                cliNames.innerHTML = Array.from(mapClients.keys()).join(",")
+                conn.on('data', async function (data) {
+                    //console.log(data);
+                    switch (data.msg) {
+                        case "alive":
+                            conn.send({ msg: "y" })
+                            break;
+                        case "ping":
+                            console.log("Ping from " + conn.peer);
+                            conn.send({ msg: "ping", time: Date.now() })
+                            break;
+                        case "bkpData":
+                            console.log("Received " + data.payLoad.length + " bytes " + conn.peer);
+                            bkpStore.setItem(data.cliId, data.payLoad)
+                            conn.send({ msg: data.msg, status: "success" })
+                            break;
+                        case "getData":
+                            console.log("Send data to:", conn.peer);
+                            let result = await bkpStore.getItem(data.cliId)
+                            conn.send({ msg: data.msg, status: "success", payLoad: result })
+                            break;
+                        default:
+                            break;
+                    }
+                });
+                conn.on('close', async function () {
+                    console.log("closed", cliName);
+                    mapClients.delete(cliName)
+                })
             });
-        });
-        peer.on('close', function () { console.log("Peer closed"); });
-        console.log("Aguardando clientes.");
+            p0.on('close', function () { console.log("Peer closed"); });
+            console.log("Aguardando clientes.");
+
+        }
+        init()
+
+        function broadCast() {
+            for (const item of mapClients) {
+                let { lastSeen, conn } = item[1]
+                if (lastSeen > Date.now() - 3600000) {
+                    console.log(conn);
+                    conn.send({ msg: "ping", time: Date.now(), sender: "broadcast" })
+                }
+            }
+        }
+
+
+        async function socketConn(cnnName) {
+            return new Promise((res, rej) => {
+                const peer = new Peer(cnnName, {
+                    host: '192.168.0.3',
+                    port: 9099,
+                    path: '/service/socket'
+                });
+                if (peer) res(peer)
+                rej(null)
+            })
+        }
     </script>
 
 </body>

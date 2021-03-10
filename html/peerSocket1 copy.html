@@ -31,13 +31,10 @@
     <button id="pingServer">Ping</button>
     <!-- <div class="mover"></div> -->
     <script>
-        
+
 
         console.log("====================");
-        //console.log(k, v);
-        //console.log(orgObj.a[k]);
-        //if (typeof orgObj.a === type) console.log("Type valid!");
-        //console.log(orgObj.a, type, ps);
+
 
         /* const nFormat = Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" })
 
@@ -68,23 +65,24 @@
         const formatter3 = new Intl.ListFormat('pt-BR', { style: 'narrow', type: 'unit' });
         console.log(formatter3.format(vehicles)); */
 
-        let root = document.documentElement;
+        /* let root = document.documentElement;
 
         root.addEventListener("mousemove", e => {
             root.style.setProperty('--mouse-x', e.clientX + "px");
             root.style.setProperty('--mouse-y', e.clientY + "px");
             //console.log(root.style.getPropertyValue("--mouse-x"));
-        });
-        const rtf1 = new Intl.RelativeTimeFormat('pt-BR', { style: 'narrow' });
+        }); */
+
+        /* const rtf1 = new Intl.RelativeTimeFormat('pt-BR', { style: 'narrow' });
 
         //console.log(rtf1.format(90, 'days'));
         //console.log(navigator.languages);
         console.log(Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(100));
         const names = ["a", "b", "c", "d", "e", "f"]
         const { length, 0: first, 3: pick, [length - 1]: last } = names
-        console.log(length, first, pick, last);
+        console.log(length, first, pick, last); */
 
-        console.time("time")
+        /* console.time("time")
         xmlhttp = new XMLHttpRequest();
         xmlhttp.open("HEAD", "http://127.0.0.1:8080/html/peerSocket1.html", true);
         xmlhttp.onreadystatechange = function () {
@@ -95,10 +93,10 @@
             }
         }
 
-        xmlhttp.send(null);
+        xmlhttp.send(null); */
 
-        function sendData2(data) {
-            let websocket = new WebSocket("ws://localhost:8090")
+        /* function sendData2(data) {
+            let websocket = new WebSocket("ws://localhost:9099")
             websocket.onopen = (o) => {
                 //console.log(o);
                 websocket.send(data)
@@ -108,7 +106,7 @@
             };
         }
 
-        sendData2("hello")
+        sendData2("hello") */
         /* setTimeout(() => {
             sendData2("dssddsd")
         }, 1000); */
@@ -121,56 +119,65 @@
         var conn = null
         var cliId = "cli01"
         document.title = cliId
+        var totalItems = 10
 
-        /* fetch('http://172.100.11.87:9099/servers').then(async function (response) {
+        const peer = new Peer(cliId, {
+            host: 'localhost',
+            port: 9099,
+            path: '/service/socket'
+        });
+
+
+        fetch('http://localhost:9099/servers').then(async function (response) {
             let data = await response.json()
+            console.log(data);
             bkpServer = data[0]
-            conn = peer.connect("BKPServer1");
-            conn.on('open', function () {
-                console.log("Conectado ao servidor de BKP. " + bkpServer);
-            });
-            conn.on('data', function (data) {
-                switch (data.msg) {
-                    case "ping":
-                        console.log("ping");
-                        break;
-                    case "bkpData":
-                        console.log(data);
-                        break;
-                    case "getData":
-                        console.log(data);
-                        break;
-                    default:
-                        break;
-                }
-            });
-            conn.on('close', function () {
-                console.log("Disconnected from server");
-            });
-        }) */
-        pingServer.onclick = () => {
-            if (conn) conn.send({ cliId, msg: "ping" });
+        })
+        pingServer.onclick = async () => {
+            taskSend({ cliId, msg: "ping" })
         }
 
         sendData.onclick = () => {
             let compressed = LZString.compressToUTF16(JSON.stringify(bkpData))
-            if (conn) conn.send({ cliId, msg: "bkpData", payLoad: compressed });
+            taskSend({ cliId, msg: "bkpData", payLoad: compressed })
         }
 
         getData.onclick = () => {
-            if (conn) conn.send({ cliId, msg: "getData" });
+            taskSend({ cliId, msg: "getData" })
         }
 
         const bkpData = []
         for (let i = 0; i < totalItems; i++) {
             bkpData.push({ a: 1, b: makeid(10), c: { d: 3 }, e: i + makeid(8), f: i * i })
         }
-        /* const peer = new Peer(cliId, {
-            host: '172.100.11.87',
-            port: 9099,
-            path: '/service/socket'
-        });
-        peer.on('close', function () { console.log("Peer closed"); }); */
+
+        async function dataHandler(conn, data) {
+            switch (data.msg) {
+                case "ping":
+                    console.log(data);
+                    break;
+                case "bkpData":
+                    console.log(data);
+                    break;
+                case "getData":
+                    console.log(JSON.parse(LZString.decompressFromUTF16(data.payLoad)));
+                    break;
+                default:
+                    break;
+            }
+            conn.close()
+        }
+
+        function taskSend(data) {
+            let cnn = peer.connect(bkpServer)
+            cnn.on('open', function () {
+                cnn.send(data);
+                cnn.on('data', function (res) {
+                    dataHandler(cnn, res)
+                })
+            });
+        }
+
     </script>
 
 </body>
