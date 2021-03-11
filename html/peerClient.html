@@ -17,58 +17,26 @@
     <button id="setName">set</button>
     <script>
 
-        let myMap = new Map()
-        console.log(Date.now());
-        myMap.set("a", { name: "a", seen: "1615391639177" })
-        myMap.set("b", { name: "b", seen: "1615391666327" })
-        myMap.set("c", { name: "c", seen: "1615392393421" })
-
-        function seenByTime(map, seconds) {
-            time = (Date.now() - (seconds * 1000))
-            let arr = []
-            for (const item of map) {
-                let [key, value] = item
-                if (value.seen > time) arr.push(key)
-            }
-            return arr
-        }
-
-        console.log(seenByTime(myMap, 100));//seconds
-
-        /* window.onbeforeunload = function (e) {
-            console.log(e);
-            connP.close()
-            //alert("Closing")
-            return "Do you really want to close?";
-        }; */
-
-        /* window.addEventListener("beforeunload", function (e) {
-            // Do something
-            connP.close()
-            alert("Closing")
-            e.preventDefault()
-        }, false); */
-        //console.log(location.host);
         const setName = document.getElementById("setName")
         const inpName = document.getElementById("inpName")
         const sendData = document.getElementById("sendData")
         const getData = document.getElementById("getData")
         const pingServer = document.getElementById("pingServer")
         let bkpServer = ""
+        var mapClients = new Map()
         var cliId = localStorage.getItem("id") || makeid(6)
         inpName.value = cliId
         document.title = cliId
         var totalItems = 1000
         let pP, connP, svLive
 
-        fetch('http://192.168.0.3:9099/servers').then(async function (res) {
+        fetch('http://192.168.0.2:9099/servers').then(async function (res) {
             let data = await res.json()
             console.log(data);
             let servers = []
             for (const key of Object.keys(data)) {
                 if (data[key]) servers.push(key)
             }
-            //bkpServer = servers[random]
             bkpServer = servers[0]
             console.log(servers);
             init()
@@ -76,12 +44,12 @@
 
         async function init() {
             pP = await socketConn(cliId + "-p")
-            pP.on('connection', function (conn) {
-                //console.log(conn);
-                conn.on("data", function (res) {
-                    dataHandler(res, conn)
+            pP.on('connection', function (inConn) {
+                console.log("connection", inConn.peer);
+                mapClients.set(inConn.peer, inConn)
+                inConn.on("data", function (res) {
+                    dataHandler(res, inConn)
                 })
-
             })
             pP.on("disconnected", () => {
                 let rcnt1 = setInterval(async () => {
@@ -90,7 +58,6 @@
                         pP.reconnect()
                         if (!pP.disconnected) {
                             clearInterval(rcnt1)
-                            //connP = await connConfig(pP)
                             console.log("Reconnected to peer.");
                         }
                     } catch (error) {
@@ -101,16 +68,15 @@
             connP = await connConfig(pP)
 
             setInterval(() => {
-                taskSend({ cliId, msg: "alive" })
+                taskSend({ cliId, action: "alive" })
             }, 60000);
         }
-
 
         async function taskSend(data) {
             if (!bkpServer) { console.log("No bkp server."); return; }
             let pTask = pP || await socketConn(cliId + "-t")
             let tout = setTimeout(() => {
-                connP.close();
+                //connP.close();
                 console.error("Task failed: Timeout.")
             }, 2000);
             if (connP && connP.open) {
@@ -138,16 +104,16 @@
 
             pingServer.onclick = async () => {
                 console.log(Date.now());
-                taskSend({ cliId, msg: "ping" })
+                taskSend({ cliId, action: "ping" })
             }
 
             sendData.onclick = () => {
                 let compressed = LZString.compressToUTF16(JSON.stringify(bkpData))
-                taskSend({ cliId, msg: "bkpData", payLoad: compressed })
+                taskSend({ cliId, action: "bkpData", payLoad: compressed })
             }
 
             getData.onclick = () => {
-                taskSend({ cliId, msg: "getData" })
+                taskSend({ cliId, action: "getData" })
             }
 
             for (let i = 0; i < totalItems; i++) {
@@ -156,20 +122,22 @@
         }
 
         setClicks()
-        async function dataHandler(data, extConn) {
-            switch (data.msg) {
+
+        async function dataHandler(data, inConn) {
+            if (inConn) handleExt(data, inConn)
+            else handleBkpServer(data)
+        }
+
+        function handleBkpServer(data) {
+            switch (data.action) {
                 case "alive":
                     svLive = Date.now()
                     break;
                 case "ping":
-                    if (extConn) extConn.send({ msg: "ping", time: Date.now() })
-                    else console.log(data);
+                    console.log(data);
                     break;
                 case "bkpData":
                     console.log(data);
-                    break;
-                case "productList":
-                    extConn.send({ "msg": "productList", payLoad: bkpData })
                     break;
                 case "getData":
                     if (data.payLoad)
@@ -177,21 +145,53 @@
                     else
                         console.log("No data.");
                     break;
+                case "msg":
+                    if (data.type === "a") connP.send({ id: data.id, action: "received" })
+                    else console.log(data);
+                    break;
                 case "alertMsg":
                     console.log(data);
                     break
                 default:
+                    console.error("Unknow action:", data);
                     break;
             }
-            setTimeout(() => {
-                if (extConn) extConn.close()
-            }, 5000);
+        }
+
+        function handleExt(data, inConn) {
+            //console.log(inConn);
+            switch (data.action) {
+                case "ping":
+                    inConn.send({ action: "ping", time: Date.now() })
+                    break;
+                case "productList":
+                    console.log(data);
+                    inConn.send({ action: "productList", payLoad: bkpData })
+                    break;
+                case "promotions":
+                    console.log(data);
+                    let proms = [...bkpData]
+                    proms.length = 10
+                    inConn.send({ action: "promotions", payLoad: proms })
+                    break;
+                case "msg":
+                    console.log(data);
+                    inConn.send({ action: "msg", status: "received" })
+                    break;
+                case "delivery":
+                    console.log(data);
+                    inConn.send({ action: "delivery", status: "received" })
+                    break
+                default:
+                    console.error("Unknow action:", data);
+                    break;
+            }
         }
 
         async function socketConn(cnnName) {
             return new Promise((res, rej) => {
                 const peer = new Peer(cnnName, {
-                    host: '192.168.0.3',
+                    host: '192.168.0.2',
                     port: 9099,
                     path: '/service/socket'
                 });
@@ -203,13 +203,13 @@
         async function connConfig(peer) {
             let c = peer.connect(bkpServer)
             c.on('data', function (res) {
-                dataHandler(res)
+                dataHandler(res, null)
                 if (!pP) { connP.close(); connP = null; }
             })
             c.on('close', async () => {
                 if (pP) {
                     let ctout = setInterval(async () => {
-                        console.log("conn reconnect");
+                        console.log("Reconnecting");
                         connP = null
                         connP = await connConfig(pP)
                         if (connP) { clearInterval(ctout) }

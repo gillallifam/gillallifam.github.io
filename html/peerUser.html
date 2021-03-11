@@ -10,74 +10,71 @@
 </head>
 
 <body>
-    
+
     <button id="pingServer">Ping</button>
     <button id="productList">Products</button>
+    <button id="delivery">Delivery</button>
     <input id="inpName" type="text" placeholder="name" />
     <button id="setName">set</button>
-    <script>
+    <input id="inpTarget" type="text" placeholder="target" />
+    <button id="setTarget">set</button>
+    <br>
+    <input id="inpMsg" type="text" placeholder="msg" />
+    <button id="sendMsg">send</button>
 
+    <script>
 
         const setName = document.getElementById("setName")
         const inpName = document.getElementById("inpName")
+        const setTarget = document.getElementById("setTarget")
+        const inpTarget = document.getElementById("inpTarget")
         const pingServer = document.getElementById("pingServer")
         const productList = document.getElementById("productList")
-        let bkpServer = "gill1-p"
+        const delivery = document.getElementById("delivery")
+        const sendMsg = document.getElementById("sendMsg")
+        const inpMsg = document.getElementById("inpMsg")
+
+
         var cliId = localStorage.getItem("userid") || makeid(6)
+        let pTask, pP, connP, canTalk = true
         inpName.value = cliId
         document.title = cliId
-        var totalItems = 1000
-        let pP, connP, svLive
-
-        async function init() {
-            pP = await socketConn(cliId + "-p")
-
-            pP.on("disconnected", () => {
-                let rcnt1 = setInterval(async () => {
-                    console.log("Connecting to Peer.");
-                    try {
-                        pP.reconnect()
-                        if (!pP.disconnected) {
-                            clearInterval(rcnt1)
-                            //connP = await connConfig(pP)
-                            console.log("Reconnected to peer.");
-                        }
-                    } catch (error) {
-                        console.error("Peer error.");
-                    }
-                }, 5000);
-            })
-            connP = await connConfig(pP)
-
-            setInterval(() => {
-                taskSend({ cliId, msg: "alive" })
-            }, 60000);
+        var target = localStorage.getItem("target")
+        if (location.search) {
+            //console.log(location.search);//todo multi params
+            target = location.search.substr(1).split("=")[1];
+            localStorage.setItem("target", target)
+            taskSend({ cliId, action: "productList", time: Date.now() })
         }
-
-        init()
+        inpTarget.value = target
+        var totalItems = 1000
 
 
         async function taskSend(data) {
-            if (!bkpServer) { console.log("No bkp server."); return; }
-            let pTask = pP || await socketConn(cliId + "-t")
+            if (!target || !canTalk) { console.log("Please wait!"); return }
+            canTalk = false
+            pTask = pTask || await socketConn(cliId + "-t")
+            //console.log(pTask);
             let tout = setTimeout(() => {
-                connP.close();
+                //connP.close();
+                //connP = null
                 console.error("Task failed: Timeout.")
-            }, 2000);
+                canTalk = true
+            }, 3000);
             if (connP && connP.open) {
-                connP.send(data); clearTimeout(tout);
+                //console.log(`Sending to ${connP.peer}`);
+                clearTimeout(tout)
+                connP.send(data);
             } else {
-                console.log("Connecting to bkp server.");
                 connP = await connConfig(pTask)
                 connP.on('open', function () {
-                    console.log("open");
+                    //console.log(`Connected to ${connP.peer}`);
                     clearTimeout(tout)
                     connP.send(data);
                 })
             }
         }
 
-        const bkpData = []
         function setClicks() {
             setName.onclick = async () => {
                 if (inpName.value !== "") {
@@ -87,35 +84,49 @@
                 }
             }
 
+            setTarget.onclick = async () => {
+                if (inpTarget.value !== "") {
+                    target = inpTarget.value
+                    localStorage.setItem("target", target)
+                }
+            }
+
             pingServer.onclick = async () => {
                 console.log(Date.now());
-                taskSend({ cliId, msg: "ping" })
+                taskSend({ cliId, action: "ping" })
             }
+
             productList.onclick = async () => {
-                taskSend({ cliId, msg: "productList" })
+                taskSend({ cliId, action: "productList", name: "", category: "" })
+            }
+
+            delivery.onclick = async () => {
+                //taskSend({ cliId, action: "delivery", body: "Um x-bacon.", time: Date.now() })
+                taskSend({ cliId, action: "promotions", time: Date.now() })
+            }
+
+            sendMsg.onclick = async () => {
+                if (inpMsg.value) taskSend({ cliId, action: "msg", text: inpMsg.value, time: Date.now() })
             }
         }
 
         setClicks()
+
         async function dataHandler(data) {
-            switch (data.msg) {
-                case "alive":
-                    svLive = Date.now()
-                    break;
+            switch (data.action) {
                 case "ping":
-                    console.log(data);
-                    break;
-                case "bkpData":
                     console.log(data);
                     break;
                 case "productList":
                     console.log(data.payLoad);
-                    break;    
-                case "getData":
-                    if (data.payLoad) console.log(JSON.parse(LZString.decompressFromUTF16(data.payLoad)));
-                    else console.log("No data.");
                     break;
-                case "alertMsg":
+                case "promotions":
+                    console.log(data.payLoad);
+                    break;
+                case "msg":
+                    console.log(data);
+                    break;
+                case "delivery":
                     console.log(data);
                     break
                 default:
@@ -123,26 +134,30 @@
             }
         }
 
-        async function socketConn(cnnName) {
+        async function socketConn(peerName) {
             return new Promise((res, rej) => {
-                const peer = new Peer(cnnName, {
-                    host: '192.168.0.3',
+                const peer = new Peer(peerName, {
+                    host: '192.168.0.2',
                     port: 9099,
                     path: '/service/socket'
                 });
+                peer.on('close', function () { pTask == null });
                 if (peer) res(peer)
                 rej(null)
             })
         }
 
         async function connConfig(peer) {
-            let c = peer.connect(bkpServer)
+            let c = peer.connect(target + "-p")
             c.on('data', function (res) {
                 dataHandler(res)
-                if (!pP) { connP.close(); connP = null; }
+                setTimeout(() => {
+                    //connP.close();
+                    canTalk = true
+                }, 5000);
             })
             c.on('close', async () => {
-                console.log("Conn closed", bkpServer);
+                console.log(`Connection ${target} closed.`);
             })
             return c
         }
