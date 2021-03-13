@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RTC2</title>
+</head>
+
+<body>
+    <input id="paste" placeholder="Paste Offer/Candidates here"><br>
+    <button id="copy" disabled>Copy Answer/Candidates to Clipboard</button><br>
+    <table>
+        <tr>
+            <td>local</td>
+            <td>remote</td>
+        </tr>
+        <tr>
+            <td><video id="local" autoplay></video></td>
+            <td><video id="remote" autoplay></video></td>
+        </tr>
+    </table>
+
+    <script>
+        // Use an offscreen canvas as the video source.
+        /* const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        let color = 0;
+        const draw = () => {
+            color = (color - 2 + 255) % 255;
+            context.fillStyle = `rgb(0, 0, ${color})`;
+            context.fillRect(0, 0, 300, 150);
+            requestAnimationFrame(draw);
+        }
+        draw(); */
+
+        /* const localVideo = document.getElementById('local');
+        const stream = canvas.captureStream();
+        localVideo.srcObject = stream; */
+
+        const peerConnection = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+
+        //stream.getTracks().forEach(t => peerConnection.addTrack(t, stream));
+        let dataChannel
+        peerConnection.ondatachannel = receiveChannelCallback;
+
+        function receiveChannelCallback(event) {
+            dataChannel = event.channel;
+            dataChannel.onmessage = onReceiveMessageCallback;
+            dataChannel.onopen = onReceiveChannelStateChange;
+            dataChannel.onclose = onReceiveChannelStateChange;
+        }
+
+        function onReceiveMessageCallback(event) {
+            //trace('Received Message');
+            console.log(event.data);
+        }
+        function onReceiveChannelStateChange() {
+            var readyState = dataChannel.readyState;
+            //trace('Receive channel state is: ' + readyState);
+        }
+
+        // Save a list of ice candidates to send to the peer
+        const iceCandidates = [];
+        peerConnection.onicecandidate = e => {
+            if (e.candidate) {
+                iceCandidates.push(e.candidate);
+            }
+        };
+
+        const copyButton = document.getElementById('copy');
+
+        document.getElementById('paste').onpaste = async (e) => {
+            //console.log(e.clipboardData.getData('text/plain'));
+            const { userid: from, offer, iceCandidates } = JSON.parse(e.clipboardData.getData('text/plain'));
+            console.log("offer from " + from);
+            peerConnection.onicegatheringstatechange = () => {
+                if (peerConnection.iceGatheringState === 'complete') {
+                    copyButton.disabled = false;
+                    console.log('Answer ready, click copy button.');
+                }
+            };
+
+            await peerConnection.setRemoteDescription(offer);
+            //console.log(offer);
+            const answer = await peerConnection.createAnswer();
+            let userid = "User2"
+            await peerConnection.setLocalDescription(answer);
+
+            copyButton.onclick = () => {
+                navigator.clipboard.writeText(JSON.stringify({ userid, answer, iceCandidates }));
+                console.log('Copied answer/candidates. Paste in Offerer example.');
+            };
+
+            iceCandidates.forEach(c => peerConnection.addIceCandidate(c));
+        };
+    </script>
+
+    <style>
+        video {
+            width: 150px;
+            height: 100px;
+        }
+
+        input {
+            width: 250px;
+        }
+    </style>
+
+</body>
+
+</html>

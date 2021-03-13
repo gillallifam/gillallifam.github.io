@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+    <script src="../js/peerjs.min.js"></script>
     <script src="../js/lz-string.min.js"></script>
     <script src="../js/cli-commom.js"></script>
 </head>
@@ -15,7 +15,26 @@
     <button id="pingServer">Ping</button>
     <input id="inpName" type="text" placeholder="name" />
     <button id="setName">set</button>
+    <br>
+    <div id="usersConnecteds"></div>
+    <br />
+    <button onclick="broadCast();">Broadcast</button>
     <script>
+
+        /* async function makePeer(params) {
+            const peerConnection1 = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+            console.log(peerConnection1);
+            const offer = await peerConnection1.createOffer();
+            console.log(offer);
+
+            const peerConnection2 = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+            await peerConnection2.setRemoteDescription(offer);
+            const answer = await peerConnection2.createAnswer();
+            await peerConnection2.setLocalDescription(answer);
+
+            console.log(answer);
+        }
+        makePeer() */
 
         const setName = document.getElementById("setName")
         const inpName = document.getElementById("inpName")
@@ -30,26 +49,51 @@
         var totalItems = 1000
         let pP, connP, svLive
 
-        fetch('http://192.168.0.2:9099/servers').then(async function (res) {
+        fetch(`http://${peerServer}:${peerPort}/servers`).then(async function (res) {
             let data = await res.json()
-            console.log(data);
+            //console.log(data);
             let servers = []
             for (const key of Object.keys(data)) {
                 if (data[key]) servers.push(key)
             }
             bkpServer = servers[0]
-            console.log(servers);
+            //console.log(servers);
             init()
         })
+
+        function seenByTime(map, seconds) {
+            let time = (Date.now() - (seconds * 1000))
+            let arr = []
+            for (const item of map) {
+                let [key, value] = item
+                if (value.seen > time) arr.push(key)
+            }
+            return arr
+        }
+
+        function broadCast() {
+            let group = seenByTime(mapClients, 3600)
+            //console.log(mapClients);
+            console.log(group);
+            let id = timedId()
+            for (const m of group) {
+                if (mapClients.get(m).inConn.open === true) {
+                    mapClients.get(m).inConn.send({ id: id, action: "ping", origin: "broadcast" })
+                } else {
+                    mapClients.delete(m)
+                }
+            }
+        }
 
         async function init() {
             pP = await socketConn(cliId + "-p")
             pP.on('connection', function (inConn) {
                 console.log("connection", inConn.peer);
-                mapClients.set(inConn.peer, inConn)
+                mapClients.set(inConn.peer, { inConn, seen: Date.now() })
                 inConn.on("data", function (res) {
                     dataHandler(res, inConn)
                 })
+                document.getElementById("usersConnecteds").innerText = [...mapClients.keys()]
             })
             pP.on("disconnected", () => {
                 let rcnt1 = setInterval(async () => {
@@ -74,7 +118,7 @@
 
         async function taskSend(data) {
             if (!bkpServer) { console.log("No bkp server."); return; }
-            let pTask = pP || await socketConn(cliId + "-t")
+            let pTask = pP || await socketConn(cliId + "-p")
             let tout = setTimeout(() => {
                 //connP.close();
                 console.error("Task failed: Timeout.")
@@ -130,6 +174,9 @@
 
         function handleBkpServer(data) {
             switch (data.action) {
+                case "confirm":
+                    console.log(data);
+                    break;
                 case "alive":
                     svLive = Date.now()
                     break;
@@ -146,7 +193,7 @@
                         console.log("No data.");
                     break;
                 case "msg":
-                    if (data.type === "a") connP.send({ id: data.id, action: "received" })
+                    if (data.type === "a") connP.send({ id: data.id, action: "confirm" })
                     else console.log(data);
                     break;
                 case "alertMsg":
@@ -159,8 +206,10 @@
         }
 
         function handleExt(data, inConn) {
-            //console.log(inConn);
             switch (data.action) {
+                case "confirm":
+                    console.log(data);
+                    break;
                 case "ping":
                     inConn.send({ action: "ping", time: Date.now() })
                     break;
@@ -176,7 +225,7 @@
                     break;
                 case "msg":
                     console.log(data);
-                    inConn.send({ action: "msg", status: "received" })
+                    inConn.send({ id: data.id, action: "confirm" })
                     break;
                 case "delivery":
                     console.log(data);
@@ -191,8 +240,8 @@
         async function socketConn(cnnName) {
             return new Promise((res, rej) => {
                 const peer = new Peer(cnnName, {
-                    host: '192.168.0.2',
-                    port: 9099,
+                    host: peerServer,
+                    port: peerPort,
                     path: '/service/socket'
                 });
                 if (peer) res(peer)

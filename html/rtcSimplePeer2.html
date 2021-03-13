@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>rtcSimplePeer2</title>
+  <script src="./js/simplepeer.min.js"></script>
+</head>
+
+<body>
+  <style>
+    #outgoing {
+      width: 600px;
+      word-wrap: break-word;
+      white-space: normal;
+    }
+  </style>
+  <!-- <form>
+
+    <textarea id="incoming"></textarea>
+    <button type="submit">submit</button>
+  </form> -->
+  <pre id="outgoing"></pre>
+  <script>
+
+    const userid = 'Server1'
+    const users = {
+      User1: "123456",
+      User2: "654321"
+    }
+
+    let webSocket = new WebSocket("ws://localhost:3456/")
+    webSocket.onopen = function (event) {
+      console.log("WebSocket is open now.");
+      webSocket.send(JSON.stringify({ action: "activate", userid: "Server1", userpass: "123456" }))
+    };
+
+    webSocket.onmessage = function (msg) {
+      let ldata = JSON.parse(msg.data)
+      switch (ldata.action) {
+        case "offer":
+          console.log('offer');
+          let offer = ldata.offer
+          if (users[offer.userid] && users[offer.userid] === offer.userpass) {
+            console.log("Access ok.", offer.userid);
+            createPeer(offer)
+          } else {
+            console.error(offer.userid, "Access denied.");
+          }
+          break;
+
+        default:
+          break;
+      }
+    };
+
+    const peers = {}
+
+    function createPeer(offer) {
+      console.log(offer);
+      let p = new SimplePeer({
+        initiator: false,
+        trickle: false
+      })
+
+      p.on('connect', () => {
+        console.log('CONNECT')
+        p.send('whatever' + Math.random())
+      })
+
+      p.on('data', data => {
+        console.log('data: ' + data)
+      })
+      p.on('error', err => console.log('error', err))
+
+      p.on('signal', data => {
+        console.log(data);
+        data.target = offer.userid
+        data.userid = userid
+        webSocket.send(JSON.stringify({ action: "answer", answer: data }))
+        document.querySelector('#outgoing').textContent = JSON.stringify(data)
+      })
+      peers[offer.userid] = p
+      p.signal(offer)
+    }
+  </script>
+</body>
+
+</html>

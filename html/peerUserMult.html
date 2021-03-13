@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../js/peerjs.min.js"></script>
+    <script src="../js/cli-commom.js"></script>
+</head>
+
+<body>
+
+    <button id="btNewUser">new</button>
+
+
+    <script>
+
+
+        let newUser = makeid(6)
+        console.log(newUser);
+
+        const btNewUser = document.getElementById("btNewUser")
+
+
+        let pTask, connP, canTalk = true
+        var target = "gill1"
+        var totalItems = 1000
+
+
+        async function taskSend(data, tries = 1) {
+
+            canTalk = false
+            //console.log(pTask);
+            let tout = setTimeout(() => {
+
+                if (tries) {
+                    canTalk = true
+                    taskSend(data, --tries)
+                }
+                else {
+                    canTalk = true
+                    console.error("Task failed!");
+                }
+            }, nBetween(1, 1000));
+
+
+            pTask = await socketConn()
+            connP = await connConfig(pTask)
+            connP.on('open', function () {
+                //console.log(`Connected to ${connP.peer}`);
+                clearTimeout(tout)
+                connP.send(data);
+                pTask.disconnect()
+            })
+
+        }
+
+        function setClicks() {
+            btNewUser.onclick = async () => {
+                taskSend({ cliId: newUser, action: "ping", time: Date.now() }, 1)
+            }
+        }
+
+        setClicks()
+
+        async function dataHandler(data, pname) {
+            switch (data.action) {
+                case "confirm":
+                    console.log(data);
+                    break;
+                case "ping":
+                    if (data.origin === "broadcast") connP.send({ id: data.id, action: "confirm", peer: pname })
+                    console.log(data);
+                    break;
+                case "productList":
+                    console.log(data.payLoad);
+                    break;
+                case "promotions":
+                    console.log(data.payLoad);
+                    break;
+                case "msg":
+                    console.log(data);
+                    break;
+                case "delivery":
+                    console.log(data);
+                    break
+                default:
+                    break;
+            }
+        }
+
+        async function socketConn() {
+            //console.log("Connecting to peer server.");
+            return new Promise((res, rej) => {
+                newUser = makeid(6)
+                const peer = new Peer("useruser" + "-" + makeid(32), {
+                    host: peerServer,
+                    port: peerPort,
+                    path: '/service/socket',
+                    userpass: '15263'
+                });
+                //console.log(peer);
+                peer.on('close', function () { pTask == null });
+                if (peer) res(peer)
+                rej(null)
+            })
+        }
+
+        async function connConfig(peer) {
+            //console.log(peer);
+            let c = peer.connect(target + "-p")
+            c.on('data', function (res) {
+                dataHandler(res, "userid")
+                setTimeout(() => {
+                    //connP.close();
+                    canTalk = true
+                }, 5000);
+            })
+            c.on('close', async () => {
+                console.log(`Connection ${target} closed.`);
+            })
+            return c
+        }
+    </script>
+
+</body>
+
+</html>

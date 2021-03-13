@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>rtcSimplePeer1</title>
+  <script src="./js/simplepeer.min.js"></script>
+</head>
+
+<body>
+  <style>
+    #outgoing {
+      width: 600px;
+      word-wrap: break-word;
+      white-space: normal;
+    }
+  </style>
+  <form>
+    <input type="text" id="username" value="User1">
+    <input type="password" id="userpass" value="123456" autocomplete="">
+    <button id="btgo" type="button">connect</button>
+  </form>
+  <button id="sockSend" type="button" onclick="sockSend();">ssend</button>
+  <pre id="outgoing"></pre>
+  <script>
+    var p = null
+    var myPeers = {}
+
+    function connect(target) {
+      //if (myPeers[target]) myPeers[target].close()
+    }
+
+    function sockSend() {
+      p.send(JSON.stringify({ action: "tst", time: Date.now() }))
+    }
+
+    let webSocket = new WebSocket("ws://localhost:3456/")
+    webSocket.onopen = function (event) {
+      console.log("Connected to signaller.");
+      webSocket.send(JSON.stringify({ action: "activate", userid: "User1", userpass: "123456" }))
+    };
+
+    webSocket.onmessage = function (msg) {
+      //console.log(msg.data.data);
+      let data = JSON.parse(msg.data)
+      console.log(data);
+      switch (data.action) {
+        case "answer":
+          //console.log(p);
+          myPeers[data.userid] = p
+          p.signal(data.answer)
+          setTimeout(() => webSocket.close(), 200);
+          break;
+
+        default:
+          break;
+      }
+    };
+
+    webSocket.onclose = function (x) {
+      console.log("Server sock closed");
+      console.log(x);
+    }
+
+    document.getElementById("btgo").onclick = () => {
+
+      p = new SimplePeer({
+        initiator: true,
+        trickle: false
+      })
+
+      p.on('signal', data => {
+        console.log(data);
+        data.userid = document.getElementById("username").value
+        data.userpass = document.getElementById("userpass").value
+        data.target = "Server1"
+        document.querySelector('#outgoing').textContent = JSON.stringify(data)
+        setTimeout(() => {
+          webSocket.send(JSON.stringify({ action: "offer", offer: data }))
+        }, 200);
+      })
+
+      document.querySelector('form').addEventListener('submit', ev => {
+        ev.preventDefault()
+        p.signal(JSON.parse(document.querySelector('#incoming').value))
+      })
+
+      p.on('connect', () => {
+        console.log('CONNECT')
+        p.send('whatever' + Math.random())
+      })
+
+      p.on('data', data => {
+        console.log('data: ' + data)
+      })
+
+      p.on('close', () => { console.log("peer closed", p); })
+
+      p.on('error', err => console.log('error', err))
+    }
+
+  </script>
+</body>
+
+</html>

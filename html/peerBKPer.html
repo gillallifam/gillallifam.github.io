@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BKP Server</title>
-    <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+    <script src="../js/peerjs.min.js"></script>
     <script src="../js/lz-string.min.js"></script>
     <script src="../js/localforage.min.js"></script>
     <script src="../js/cli-commom.js"></script>
@@ -68,11 +68,13 @@
             p0.on('connection', function (conn) {
                 mapClients.set(conn.peer, { conn, seen: Date.now() })
                 let cliName = conn.peer
+                //console.log(mapClients.keys());
                 cliNames.innerHTML = Array.from(mapClients.keys()).map((c) => `<button id='${c}' onclick=cliClick('${c}'); >${c.substring(0, c.length - 2)}</button>`)
                 conn.on('data', async function (data) {
                     //console.log(data);
                     switch (data.action) {
-                        case "received":
+                        case "confirm":
+                            //console.log(new Date(parseInt(data.id.split("-")[0])));
                             console.log(data);
                             break;
                         case "alive":
@@ -83,14 +85,15 @@
                             conn.send({ action: "ping", time: Date.now() })
                             break;
                         case "bkpData":
+                            //console.log(data);
                             console.log("Received " + data.payLoad.length + " bytes " + conn.peer);
                             bkpStore.setItem(data.cliId, data.payLoad)
-                            conn.send({ action: data.msg, status: "success" })
+                            conn.send({ action: data.action, status: "success" })
                             break;
                         case "getData":
                             console.log("Send data to:", conn.peer);
                             let result = await bkpStore.getItem(data.cliId)
-                            conn.send({ action: data.msg, status: "success", payLoad: result })
+                            conn.send({ action: data.action, status: "success", payLoad: result })
                             break;
                         case "msg":
                             console.log(data);
@@ -112,7 +115,7 @@
 
         function cliClick(c) {
             //console.log(mapClients);
-            mapClients.get(c).conn.send({ id: makeid(16), action: "msg", type: "a", text: "Olá", time: Date.now() })
+            mapClients.get(c).conn.send({ id: timedId(), action: "msg", type: "a", text: "Olá", time: Date.now() })
         }
 
         function broadCast() {
@@ -126,8 +129,8 @@
         async function socketConn(cnnName) {
             return new Promise((res, rej) => {
                 const peer = new Peer(cnnName, {
-                    host: '192.168.0.2',
-                    port: 9099,
+                    host: peerServer,
+                    port: peerPort,
                     path: '/service/socket'
                 });
                 if (peer) res(peer)
