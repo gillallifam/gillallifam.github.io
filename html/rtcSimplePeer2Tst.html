@@ -35,12 +35,13 @@
       switch (data.action) {
         case "offer":
           //console.log('offer');
-          let offer = data.offer
-          if (users[offer.userid] && users[offer.userid] === offer.passhash) {
-            //console.log("Access ok.", offer.userid);
-            createPeer(offer)
+          console.log(data);
+          let cfg = data.cfg
+          if (users[cfg.sender] && users[cfg.sender] === cfg.passhash) {
+            console.log("Access ok.", cfg.sender);
+            createPeer(data.offer, data.cfg)
           } else {
-            console.error(offer.userid, "Access denied.");
+            console.error(cfg.sender, "Access denied.");
           }
           break;
 
@@ -51,8 +52,8 @@
 
     const peers = {}
 
-    function createPeer(offer) {
-      //console.log(offer);
+    function createPeer(offer, cfg) {
+      console.log(offer);
       let p = new SimplePeer({
         initiator: false,
         trickle: false
@@ -77,13 +78,16 @@
       p.on('error', err => console.log('error', err))
 
       p.on('signal', data => {
-        //console.log(data);
-        data.target = offer.userid
-        data.userid = userid
-        webSocket.send(JSON.stringify({ action: "answer", answer: data }))
+        console.log("lsdkaldksadksa");
+        console.log(data);
+        cfg.target = cfg.sender
+        cfg.sender = userid
+        console.log(cfg);
+        webSocket.send(JSON.stringify({ action: "answer", answer: data, cfg }))
         document.querySelector('#outgoing').textContent = JSON.stringify(data)
       })
-      peers[offer.userid] = p
+      peers[cfg.sender] = p
+      //console.log(peers);
       p.signal(offer)
     }
 

@@ -18,7 +18,8 @@
   </style>
   <form>
     <input type="text" id="username" value="User1">
-    <input type="password" id="userpass" value="123456" autocomplete="">
+    <input type="password" id="userpass" value="123456"
+      autocomplete="">
     <button id="btgo" type="button">connect</button>
   </form>
   <button id="sockSend" type="button" onclick="sockSend();">ssend</button>
@@ -27,79 +28,128 @@
     var p = null
     var myPeers = {}
 
-    function connect(target) {
-      //if (myPeers[target]) myPeers[target].close()
+    async function sigConnect(target, userid, hash) {
+      if (myPeers[target]) {
+        myPeers[target].close()
+        myPeers[target].null
+      }
+      let srvSocket
+      try {
+        srvSocket = new WebSocket("ws://localhost:3456/")
+        //console.log(srvSocket);
+      } catch (error) {
+        console.log(error);
+      }
+
+      srvSocket.onopen = function (event) {
+        console.log("Connected to signaller.");
+        srvSocket.send(JSON.stringify({ action: "activate", userid: userid, passhash: hash }))
+      };
+
+      srvSocket.onmessage = function (msg) {
+        let data = JSON.parse(msg.data)
+        switch (data.action) {
+          case "access":
+            if (data.status) {
+              p = new SimplePeer({
+                initiator: true,
+                trickle: false
+              })
+
+              p.on('signal', data => {
+                //console.log(data);
+                data.userid = userid
+                data.passhash = hash
+                data.target = target
+                document.querySelector('#outgoing').textContent = JSON.stringify(data)
+                setTimeout(() => {
+                  srvSocket.send(JSON.stringify({ action: "offer", offer: data }))
+                }, 200);
+              })
+
+              document.querySelector('form').addEventListener('submit', ev => {
+                ev.preventDefault()
+                p.signal(JSON.parse(document.querySelector('#incoming').value))
+              })
+
+              p.on('connect', () => {
+                console.log('Connect to peer ' + target)
+              })
+
+              p.on('data', msg => {
+                //console.log(p);
+                //console.log("???");
+                //console.log(msg);
+                let data = JSON.parse(msg)
+                console.log(data)
+              })
+
+              p.on('close', () => {
+                console.log("peer closed", target);
+                myPeers[target].null
+              })
+
+              p.on('error', err => {
+                console.log('error', err)
+                myPeers[target].null
+              })
+            }
+            break;
+          case "answer":
+            myPeers[data.userid] = p
+            p.signal(data.answer)
+            setTimeout(() => srvSocket.close(), 200);
+            break;
+
+          case "offline":
+            console.log(data.peer + " is offline");
+            srvSocket.close()
+            break
+
+          default:
+            break;
+        }
+      };
+
+      srvSocket.onclose = function (e) {
+        console.log("Sig sock closed");
+        //console.log(e);
+      }
     }
 
     function sockSend() {
-      p.send(JSON.stringify({ action: "tst", time: Date.now() }))
+      p.send(JSON.stringify({ action: "msg", text: "Olá!" }))
     }
 
-    let webSocket = new WebSocket("ws://localhost:3456/")
-    webSocket.onopen = function (event) {
-      console.log("Connected to signaller.");
-      webSocket.send(JSON.stringify({ action: "activate", userid: "User1", userpass: "123456" }))
-    };
+    document.getElementById("btgo").onclick = async () => {
+      //data.userid = document.getElementById("username").value
+      //data.passhash = document.getElementById("userpass").value
+      let user = document.getElementById("username").value
+      let hash = await sha256(document.getElementById("userpass").value)
+      sigConnect("Server1", user, hash)
 
-    webSocket.onmessage = function (msg) {
-      //console.log(msg.data.data);
-      let data = JSON.parse(msg.data)
-      console.log(data);
-      switch (data.action) {
-        case "answer":
-          //console.log(p);
-          myPeers[data.userid] = p
-          p.signal(data.answer)
-          setTimeout(() => webSocket.close(), 200);
-          break;
+      //return
+      //console.log(srvSocket);
 
-        default:
-          break;
-      }
-    };
-
-    webSocket.onclose = function (x) {
-      console.log("Server sock closed");
-      console.log(x);
     }
 
-    document.getElementById("btgo").onclick = () => {
+    async function sha256(message) {
+      // encode as UTF-8
+      const msgBuffer = new TextEncoder().encode(message);
 
-      p = new SimplePeer({
-        initiator: true,
-        trickle: false
-      })
+      // hash the message
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
 
-      p.on('signal', data => {
-        console.log(data);
-        data.userid = document.getElementById("username").value
-        data.userpass = document.getElementById("userpass").value
-        data.target = "Server1"
-        document.querySelector('#outgoing').textContent = JSON.stringify(data)
-        setTimeout(() => {
-          webSocket.send(JSON.stringify({ action: "offer", offer: data }))
-        }, 200);
-      })
+      // convert ArrayBuffer to Array
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
 
-      document.querySelector('form').addEventListener('submit', ev => {
-        ev.preventDefault()
-        p.signal(JSON.parse(document.querySelector('#incoming').value))
-      })
-
-      p.on('connect', () => {
-        console.log('CONNECT')
-        p.send('whatever' + Math.random())
-      })
-
-      p.on('data', data => {
-        console.log('data: ' + data)
-      })
-
-      p.on('close', () => { console.log("peer closed", p); })
-
-      p.on('error', err => console.log('error', err))
+      // convert bytes to hex string
+      const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('');
+      console.log(hashHex);
+      return hashHex;
     }
 
+    
   </script>
 </body>
 

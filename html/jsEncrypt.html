@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jsEncrypt</title>
+    <script src="./js/jsencrypt.min.js"></script>
+</head>
+
+<body>
+    <script>
+        // Create the encryption object and set the key.
+        var crypt = new JSEncrypt();
+        crypt.setPublicKey(`
+        -----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCkB7Dk3EXfa/lwxSIJGY19zbTz
+2FQdpABDJGWCfGKajp53LBfHKc7CLxNDpAIuBztbP0xDkngo/vfw3KxEwpfkbljq
+BLGTdg0qCBOOqa7Vl17AN0etDr/5iDH6g/kMPF7WlR4H8zB3c6ULmLePLw553iYw
+H1WVqJVI4HxrqFC58wIDAQAB
+-----END PUBLIC KEY-----`);
+        crypt.setPrivateKey(`-----BEGIN RSA PRIVATE KEY-----
+MIICXQIBAAKBgQCkB7Dk3EXfa/lwxSIJGY19zbTz2FQdpABDJGWCfGKajp53LBfH
+Kc7CLxNDpAIuBztbP0xDkngo/vfw3KxEwpfkbljqBLGTdg0qCBOOqa7Vl17AN0et
+Dr/5iDH6g/kMPF7WlR4H8zB3c6ULmLePLw553iYwH1WVqJVI4HxrqFC58wIDAQAB
+AoGAG2vduqTIWY1nad7KzdKjwMA+2/TyOvJLyO2wupuosEXfX/TTFMx8cCIGimxE
+oQU8ewid6z31MIVPVcjOU8BkO9mxYle/+EOwuWpgwMcyYqY/z44H0otF4TGhviyJ
+7WVxv4DrlqCxLRXzK2zN55zj17k/PZfbomILYUqoK9Bqt+ECQQD/0zOfRB3TjUMs
+jtxNTiV0VXnCsk+szl3dRkWNLVCmpmQGtcmbhOl9hn8nwLIGi4+Fn1BJ6mvCZjJF
+2jQ+p7wfAkEApCRqMiekGD37uJr2B8/GRe8/9puFIFJVTNOY9vr7D+YhLfkH8H1X
+Zf2d63cuaERfhnE3tiw1ovELD24xOvZHrQJBALcSOefog/unJIIXfdmoaa81l9vX
+ZKMCTzORHSapXgTUH9KZdrvfQoP8orQc9okuiDeUSY2Lvy+vmJxaSXbo6/sCQA24
++aPdyos4S14gnmcCyNm56cgNMnEEURtOKWCklO68V5PHWRGS+QaO0HAKE7gl1zKf
+LoAtbAKGUl1k4frC8jUCQQDj/qgx1oRnkg/FpZYSDH7dtn0OeJ/wou7KYnEcA772
+ToN/hKL9Lx3DoSMuGSw2gOwV7BkimqtUT70HepThnK67
+-----END RSA PRIVATE KEY-----`);
+
+        //Eventhough the methods are called setPublicKey and setPrivateKey, remember
+        //that they are only alias to setKey, so you can pass them both a private or
+        //a public openssl key, just remember that setting a public key allows you to only encrypt.
+
+        var text = `//Eventhough the methods are called setPublicKey and setPrivateKey, remember        //that they are only alias to aa`;
+        // Encrypt the data with the public key.
+        console.time("enc")
+        var enc = crypt.encrypt(text);
+        console.timeEnd("enc")
+        console.log(enc);
+        // Now decrypt the crypted text with the private key.
+        console.time("dec")
+        var dec = crypt.decrypt(enc);
+        console.timeEnd("dec")
+        // Now a simple check to see if the round-trip worked.
+        if (dec === text) {
+            console.log('It works!!!');
+        } else {
+            console.log('Something went wrong....');
+        }
+    </script>
+</body>
+
+</html>
