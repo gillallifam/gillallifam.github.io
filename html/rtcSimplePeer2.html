@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>rtcSimplePeer2</title>
+  <title>SPServe1</title>
   <script src="./js/simplepeer.min.js"></script>
 </head>
 
@@ -28,10 +28,10 @@
 
     const connecteds = {}
 
-    let webSocket = new WebSocket(`ws://localhost:3456/?userid=${userid}`)
+    let webSocket = new WebSocket(`ws://localhost:3456/?userid=${userid}&passhash=8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92`)
     webSocket.onopen = function (event) {
       console.log("Connected to signaller.");
-      webSocket.send(JSON.stringify({ action: "activate", userid: "Server1", passhash: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92" }))
+      //webSocket.send(JSON.stringify({ action: "activate", userid: "Server1", passhash: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92" }))
     };
 
     webSocket.onmessage = function (msg) {
@@ -39,10 +39,12 @@
 
       switch (data.action) {
         case "autorization":
-          console.log(data);
+          //console.log(data);
           if (users[data.userid] && users[data.userid] === data.passhash) {
             console.log("User allowed.", data.userid);
             data.status = true
+            //console.log("Sendind ws");
+            //console.log(data);
             webSocket.send(JSON.stringify(data))
             //console.log(users);
           }
@@ -84,8 +86,8 @@
         console.log(data);
         switch (data.action) {
           case "msg":
-            console.log(data.text);
-            p.send(JSON.stringify({ action: "confirm", id: "554545" }))
+            //console.log(data.text);
+            p.send(JSON.stringify({ action: "confirm", id: data.id }))
             break;
           default:
             console.error("Unknow action");

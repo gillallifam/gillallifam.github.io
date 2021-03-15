@@ -9,8 +9,9 @@ const users = {
 }
 
 const connecteds = {}
- 
+
 app.ws('/', function (ws, req) {
+    ws.connName = req.query.userid
     //console.log(ws);
     //console.log(req.socket.remoteAddress);
     console.log(req.query);
@@ -31,24 +32,7 @@ app.ws('/', function (ws, req) {
         }
     }
 
-    //console.log("fsdfdsfsdfdsff");
-
-    /* if (users[req.query.userid] && users[req.query.userid] === req.query.passhash) {
-        //connecteds[data.userid] = ws
-        console.log("pass");
-        if (connecteds[req.query.target]) {
-            console.log("target connected");
-            connecteds[req.query.target].send(JSON.stringify(
-                { action: 'autorization', userid: req.query.userid, passhash: req.query.passhash, status: false }
-            ))
-        }
-        //console.log(Object.keys(connecteds));
-    } else {
-        console.log("not pass");
-        ws.send(JSON.stringify({ action: "access", status: false }))
-        ws.close()
-        ws.destroy()
-    } */
+    console.log(Object.keys(connecteds));
 
     ws.on('message', function (msg) {
         let data = JSON.parse(msg)
@@ -56,20 +40,22 @@ app.ws('/', function (ws, req) {
             case "autorization":
                 console.log(data);
                 if (data.status) {
-                    console.log("offer connection"); 
+                    console.log("offer connection");
+                    connecteds[data.userid].send(JSON.stringify({ action: "access", status: true }))
                 } else {
                     ws.send(JSON.stringify({ action: "access", status: false }))
                     ws.close()
                     ws.destroy()
+                    connecteds[req.query.userid] = null
                 }
                 break
-            case "activate":
-                if (users[data.userid] && users[data.userid] === data.passhash) {
+            /* case "activate":
+                if (users[data.userid] && users[data.userid] === data.passhash) { 
                     connecteds[data.userid] = ws
                 }
                 console.log(Object.keys(connecteds));
                 ws.send(JSON.stringify({ action: "access", status: true }))
-                break;
+                break; */
             case "offer":
                 //console.log(data);
                 let offer = data.offer

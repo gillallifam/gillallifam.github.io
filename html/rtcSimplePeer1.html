@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>rtcSimplePeer1</title>
+  <title>SPClient1</title>
   <script src="./js/simplepeer.min.js"></script>
 </head>
 
@@ -18,11 +18,10 @@
   </style>
   <form>
     <input type="text" id="username" value="User1">
-    <input type="password" id="userpass" value="123456"
-      autocomplete="">
+    <input type="password" id="userpass" value="123456" autocomplete="">
     <button id="btgo" type="button">connect</button>
   </form>
-  <button id="sockSend" type="button" onclick="sockSend();">ssend</button>
+  <button id="sockSend" type="button" onclick="sockSend();">Send to peer</button>
   <pre id="outgoing"></pre>
   <script>
     var p = null
@@ -43,11 +42,12 @@
 
       srvSocket.onopen = function (event) {
         console.log("Connected to signaller.");
-        srvSocket.send(JSON.stringify({ action: "activate", userid: userid, passhash: passhash }))
+        //srvSocket.send(JSON.stringify({ action: "activate", userid: userid, passhash: passhash }))
       };
 
       srvSocket.onmessage = function (msg) {
         let data = JSON.parse(msg.data)
+        //console.log(data);
         switch (data.action) {
           case "access":
             if (data.status) {
@@ -115,8 +115,10 @@
     }
 
     function sockSend() {
-      if(p){
-         p.send(JSON.stringify({ action: "msg", text: "Olá!" }))
+      if (p) {
+        p.send(JSON.stringify({ id: Date.now(), action: "msg", text: "Olá!" }))
+      } else {
+        console.log("peer offline.");
       }
     }
 
@@ -148,7 +150,7 @@
       return hashHex;
     }
 
-    
+
   </script>
 </body>
 
