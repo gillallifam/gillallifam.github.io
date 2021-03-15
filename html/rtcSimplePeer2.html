@@ -21,10 +21,14 @@
     const userid = 'Server1'
     const users = {
       User1: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
-      User2: "481f6cc0511143ccdd7e2d1b1b94faf0a700a8b49cd13922a70b5ae28acaa8c5"
+      User2: "481f6cc0511143ccdd7e2d1b1b94faf0a700a8b49cd13922a70b5ae28acaa8c5",
+      User3: "481f6cc0511143ccdd7e2d1b1b94faf0a700a8b49cd13922a70b5ae28acaa8c5",
+      Server1: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
     }
 
-    let webSocket = new WebSocket("ws://localhost:3456/")
+    const connecteds = {}
+
+    let webSocket = new WebSocket(`ws://localhost:3456/?userid=${userid}`)
     webSocket.onopen = function (event) {
       console.log("Connected to signaller.");
       webSocket.send(JSON.stringify({ action: "activate", userid: "Server1", passhash: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92" }))
@@ -32,7 +36,17 @@
 
     webSocket.onmessage = function (msg) {
       let data = JSON.parse(msg.data)
+
       switch (data.action) {
+        case "autorization":
+          console.log(data);
+          if (users[data.userid] && users[data.userid] === data.passhash) {
+            console.log("User allowed.", data.userid);
+            data.status = true
+            webSocket.send(JSON.stringify(data))
+            //console.log(users);
+          }
+          break
         case "offer":
           //console.log('offer');
           let offer = data.offer
@@ -59,11 +73,15 @@
       })
 
       p.on('connect', () => {
-        console.log('Conneted to ' + offer.userid)
+        //console.log(p);
+        connecteds[offer.userid] = p
+        console.log('Connected to ' + offer.userid)
+        console.log(connecteds);
       })
 
       p.on('data', msg => {
         let data = JSON.parse(msg)
+        console.log(data);
         switch (data.action) {
           case "msg":
             console.log(data.text);

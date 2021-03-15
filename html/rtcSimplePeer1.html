@@ -28,14 +28,14 @@
     var p = null
     var myPeers = {}
 
-    async function sigConnect(target, userid, hash) {
+    async function sigConnect(target, userid, passhash) {
       if (myPeers[target]) {
         myPeers[target].close()
         myPeers[target].null
       }
       let srvSocket
       try {
-        srvSocket = new WebSocket("ws://localhost:3456/")
+        srvSocket = new WebSocket(`ws://localhost:3456?userid=${userid}&target=${target}&passhash=${passhash}`)
         //console.log(srvSocket);
       } catch (error) {
         console.log(error);
@@ -43,7 +43,7 @@
 
       srvSocket.onopen = function (event) {
         console.log("Connected to signaller.");
-        srvSocket.send(JSON.stringify({ action: "activate", userid: userid, passhash: hash }))
+        srvSocket.send(JSON.stringify({ action: "activate", userid: userid, passhash: passhash }))
       };
 
       srvSocket.onmessage = function (msg) {
@@ -59,7 +59,7 @@
               p.on('signal', data => {
                 //console.log(data);
                 data.userid = userid
-                data.passhash = hash
+                data.passhash = passhash
                 data.target = target
                 document.querySelector('#outgoing').textContent = JSON.stringify(data)
                 setTimeout(() => {
@@ -77,16 +77,13 @@
               })
 
               p.on('data', msg => {
-                //console.log(p);
-                //console.log("???");
-                //console.log(msg);
                 let data = JSON.parse(msg)
                 console.log(data)
               })
 
               p.on('close', () => {
                 console.log("peer closed", target);
-                myPeers[target].null
+                //myPeers[target].null
               })
 
               p.on('error', err => {
@@ -102,7 +99,7 @@
             break;
 
           case "offline":
-            console.log(data.peer + " is offline");
+            console.log(data.peer + " is offline or do not exist.");
             srvSocket.close()
             break
 
@@ -118,7 +115,9 @@
     }
 
     function sockSend() {
-      p.send(JSON.stringify({ action: "msg", text: "Olá!" }))
+      if(p){
+         p.send(JSON.stringify({ action: "msg", text: "Olá!" }))
+      }
     }
 
     document.getElementById("btgo").onclick = async () => {
@@ -145,7 +144,7 @@
 
       // convert bytes to hex string
       const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('');
-      console.log(hashHex);
+      //console.log(hashHex);
       return hashHex;
     }
 
