@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery1</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body,
+        div,
+        img {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            font: inherit;
+            vertical-align: baseline;
+        }
+
+        body {
+            line-height: 1;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 5px;
+            align-items: center;
+            justify-content: space-evenly;
+            gap: 5px 5px;
+        }
+
+        #hdr {
+            text-align: center;
+            color: aliceblue;
+        }
+
+        .item {
+            width: 250px;
+            animation: fadein 2s;
+        }
+
+        @keyframes fadein {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        #fbMenu {
+            position: fixed;
+            z-index: 1;
+            top: 5px;
+            left: 5px;
+            cursor: pointer;
+        }
+
+        #myNav1 {
+            left: 0;
+        }
+
+        .overlay {
+            height: 100%;
+            width: 0%;
+            position: fixed;
+            z-index: 3;
+            top: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            overflow-x: hidden;
+            transition: 0.3s;
+        }
+
+        .overlay-content {
+            position: relative;
+            top: 3%;
+            width: 100%;
+            text-align: center;
+        }
+
+        .overlay a,
+        .bottomOverlay a {
+            padding: 8px;
+            text-decoration: none;
+            font-size: 18px;
+            color: aliceblue;
+            display: block;
+            cursor: pointer;
+        }
+
+        .overlay .closebtnLeft {
+            position: absolute;
+            padding: 2px;
+            top: 5px;
+            left: 10px;
+            font-size: 30px;
+        }
+
+        #fbConfig {
+            position: fixed;
+            z-index: 1;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+        }
+
+        #myNav2 {
+            right: 0;
+        }
+
+        .overlay .closebtnRight {
+            position: absolute;
+            padding: 2px;
+            top: 5px;
+            right: 10px;
+            font-size: 30px;
+        }
+
+        .bottomOverlay {
+            height: 0%;
+            width: 100%;
+            margin: auto;
+            position: fixed;
+            z-index: 2;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            overflow-x: hidden;
+            transition: 0.3s;
+        }
+
+        #fbBottom {
+            position: fixed;
+            z-index: 1;
+            bottom: 5px;
+            right: 5px;
+            cursor: pointer;
+        }
+
+        .bottomOverlay .closebtnBottom {
+            position: absolute;
+            padding: 2px;
+            bottom: 5px;
+            right: 10px;
+            font-size: 30px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: white;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: black;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: grey;
+        }
+
+        .imgHolder {
+            position: relative;
+            text-align: center;
+            color: white;
+            animation: fadein 2s;
+        }
+
+        .imgHolded {
+            width: 100%;
+        }
+
+        .imgLegend {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            font-size: 22px;
+            transform: translate(-50%);
+        }
+
+        #workerArea,
+        #loginArea {
+            display: none;
+        }
+
+        #loginArea {
+            text-align: center;
+            margin-top: 10%;
+            margin-left: 50%;
+            top: 40%;
+            transform: translate(-50%);
+        }
+
+        @media only screen and (max-width: 400px) {
+            .imgHolder {
+                width: 30%;
+            }
+
+            .item {
+                width: 30%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loginArea">
+        <h3>Waiter</h3>
+        <input type="text" id="inpName" value="" placeholder="user">
+        <br>
+        <br>
+        <input type="password" id="inpPass" placeholder="password">
+        <br>
+        <br>
+        <button class="w3-button" id="userlogin" type="button" onclick="login()">Login</button>
+    </div>
+
+    <div id="workerArea">
+        <img id="fbMenu" src="https://icongr.am/clarity/menu.svg?size=32" alt="icomenu" onclick="showMenu();">
+        <div id="myNav1" class="overlay">
+            <a class="closebtnLeft" onclick="closeNav1(this);">&times;</a>
+            <div class="overlay-content">
+                <div id="hdr">
+                    <h3>Menu</h3>
+                </div>
+                <a>All</a>
+                <a>Breakfast</a>
+            </div>
+        </div>
+
+        <img id="fbConfig" src="https://icongr.am/clarity/cog.svg?size=32" alt="icoconfig" onclick="showConfigs();">
+        <div id="myNav2" class="overlay">
+            <a class="closebtnRight" onclick="closeNav1(this);">&times;</a>
+
+            <div class="overlay-content">
+                <div id="hdr">
+                    <h3>Waiter</h3>
+                </div>
+                <a>Options</a>
+                <a>Logout</a>
+                <!-- <div id="loginArea">
+                <input type="text" id="inpName" value="" placeholder="user">
+                <br>
+                <input type="password" id="inpPass" placeholder="password">
+                <br>
+                <button class="w3-button" id="userlogin" type="button" onclick="login()">Login</button>
+            </div>
+
+            <div id="logoutArea">
+                <button class="w3-button" id="userlogout" type="button" onclick="logout()">Logout</button>
+            </div> -->
+            </div>
+        </div>
+
+        <div id="prodGallery" class="container">
+            <div class="imgHolder">
+                <img class="imgHolded" src="https://source.unsplash.com/random/250x250" alt="Example image">
+                <div class="imgLegend">Legend</div>
+            </div>
+            <img class="item" src="https://source.unsplash.com/random/250x251" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/252x253" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/250x254" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/251x252" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/250x255" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/251x250" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/252x251" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/253x252" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/254x253" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/255x254" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/249x252" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/250x251" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/252x253" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/250x254" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/251x252" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/250x255" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/251x250" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/252x251" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/253x252" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/254x253" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/255x254" alt="Example image">
+            <img class="item" src="https://source.unsplash.com/random/249x252" alt="Example image">
+        </div>
+
+        <img id="fbBottom" src="https://icongr.am/clarity/form.svg?size=32" alt="icoBottom" onclick="showBottom();">
+        <div id="bottomov" class="bottomOverlay">
+            <a class="closebtnBottom" onclick="closeNav3(this);">&times;</a>
+            <div class="overlay-content">
+                <a>Order 9999</a>
+            </div>
+        </div>
+
+        <template>
+            <div class="imgHolder">
+                <img class="item" src="">
+                <div class="imgLegend">Legend</div>
+            </div>
+        </template>
+
+    </div>
+
+    <script>
+        let wA = document.getElementById("workerArea")
+        let lA = document.getElementById("loginArea")
+
+        if (false) wA.style.display = "block"
+        else lA.style.display = "block"
+
+        function login() {
+            lA.style.display = "none"
+            wA.style.display = "block"
+        }
+
+        setTimeout(() => {
+            let img = document.createElement("img")
+            img.src = "https://source.unsplash.com/random/248x248"
+            let pd = document.getElementById("prodGallery")
+            pd.insertBefore(img, pd.querySelectorAll("img")[6]);
+            img.onload = function (params) {
+                img.classList.add("item")
+            }
+        }, 2000);
+
+        function showMenu() {
+            document.getElementById("myNav1").style.width = "100%";
+        }
+
+        function showConfigs() {
+            document.getElementById("myNav2").style.width = "100%";
+        }
+
+        function closeNav1(el) {
+            el.parentNode.style.width = "0%";
+        }
+        let bottomov = document.getElementById("bottomov")
+        function showBottom() {
+            bottomov.style.height = "50%";
+        }
+
+        function closeNav3() {
+            bottomov.style.height = 0;
+        }
+
+    </script>
+</body>
+
+</html>

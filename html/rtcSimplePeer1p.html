@@ -43,19 +43,15 @@
       if (myPeers[target]) {
         myPeers[target].null
       }
-      let sckTO = null
       let srvSocket
       try {
-        srvSocket = new WebSocket(`ws://${svip}:8080/public?userid=${userid}&target=${target}&passhash=${passhash}`)
+        srvSocket = new WebSocket(`ws://${svip}/public:3456?userid=${userid}&target=${target}&passhash=${passhash}`)
       } catch (error) {
         console.log(error);
       }
 
       srvSocket.onopen = function (event) {
-        console.log("Signalling.");
-        sckTO = setTimeout(() => {
-          srvSocket.close()
-        }, 10000);
+        console.log("Connected to signaller.");
       };
 
       srvSocket.onmessage = function (msg) {
@@ -64,22 +60,18 @@
         switch (data.action) {
           case "access":
             if (data.status) {
-              console.time("p init")
               p = new SimplePeer({
                 initiator: true,
                 trickle: false
               })
 
               p.on('signal', data => {
-                //console.log('signal', data);
-                console.timeEnd("p init")
                 data.userid = userid
                 data.passhash = passhash
                 data.target = target
-                srvSocket.send(JSON.stringify({ action: "offer", offer: data }))
-                /* setTimeout(() => {
-                  
-                }, 200); */
+                setTimeout(() => {
+                  srvSocket.send(JSON.stringify({ action: "offer", offer: data }))
+                }, 200);
               })
 
               document.querySelector('form').addEventListener('submit', ev => {
@@ -88,7 +80,6 @@
               })
 
               p.on('connect', () => {
-                clearTimeout(sckTO)
                 console.log('Connect to peer ' + target)
                 myPeers[target] = p
                 console.log(myPeers);
@@ -102,6 +93,7 @@
               p.on('close', () => {
                 console.log("peer closed", target);
                 myPeers[target] = null
+                sigConnect(target, userid, passhash)
               })
 
               p.on('error', err => {
@@ -130,33 +122,21 @@
       }
     }
 
-    /* function openSocket(ms) {
-      let svip = "192.168.0.2"
-      return new Promise((res, rej) => {
-        let wst = setTimeout(rej, ms)
-        let ws = new WebSocket(`ws://${svip}:3456/rererrer?userid=${"socktest"}&passhash=8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92`)
-        ws.onopen = function () {
-          res(ws)
-          clearTimeout(wst)
-        };
-      });
-    } */
-
     function sendMsg() {
       if (myPeers[targetName.value]) {
         myPeers[targetName.value].send(JSON.stringify({ id: Date.now(), action: "msg", text: msgtoPeer.value, from: user }))
       } else {
-        console.log("Not connected!");
+        console.log("Not connected!"); 
       }
     }
 
     document.getElementById("btgo").onclick = async () => {
       user = location.hash.substr(1) || document.getElementById("username").value
-      //let hash = await sha256(document.getElementById("userpass").value)
-      sigConnect(targetName.value, user, "d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92")
+      let hash = await sha256(document.getElementById("userpass").value)
+      sigConnect(targetName.value, user, hash)
     }
 
-    /* async function sha256(message) {
+    async function sha256(message) {
       // encode as UTF-8
       const msgBuffer = new TextEncoder().encode(message);
 
@@ -168,9 +148,9 @@
 
       // convert bytes to hex string
       const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('');
-      console.log(hashHex);
+      //console.log(hashHex);
       return hashHex;
-    } */
+    }
 
 
   </script>
