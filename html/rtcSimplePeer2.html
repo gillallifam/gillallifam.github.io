@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPServer</title>
+  <script src="./js/simplepeer.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+  <style>
+    #outgoing {
+      width: 600px;
+      word-wrap: break-word;
+      white-space: normal;
+    }
+
+    body {
+      overscroll-behavior-y: none;
+    }
+  </style>
+</head>
+
+<body>
+  <input type="text" id="serverName" value="Server1">
+  <button id="startServer" type="button" onclick="start()">start</button>
+  <div id="log"></div>
+  <pre id="outgoing"></pre>
+  <script>
+
+
+
+
+    let log = document.getElementById("log")
+    const connecteds = {}
+    let allowAny = true
+    const users = {
+      User1: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      User2: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      User3: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      Server1: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      Server2: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+    }
+
+
+
+    async function start() {
+      let svip = "192.168.0.2"
+      const userid = document.getElementById("serverName").value
+      document.title = userid
+      //let wws = await openSocket(3000)
+      //console.log(wws);
+      let serverSock = new WebSocket(`ws://${svip}:8080/private?userid=${userid}&passhash=8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92`)
+      serverSock.onopen = function (event) {
+        console.log("Connected to server.");
+      };
+
+      serverSock.onmessage = function (msg) {
+        let data = JSON.parse(msg.data)
+        //console.log("wsM",data);
+        switch (data.action) {
+          case "access":
+            if (!data.status) {
+              console.log(data.msg);
+              serverSock.close()
+            } else {
+              console.log("Authorized.");
+              document.getElementById("startServer").style.backgroundColor = "green"
+              document.getElementById("startServer").style.color = "white"
+            }
+            break
+          case "autorization":
+            if (allowAny || (users[data.userid] && users[data.userid] === data.passhash)) {
+              console.log("User allowed.", data.userid);
+              data.status = true
+              //console.log(data);
+              serverSock.send(JSON.stringify(data))
+            } else {
+              console.log("User blocked.", data.userid);
+              data.status = false
+              serverSock.send(JSON.stringify(data))
+            }
+            break
+          case "offer":
+            let offer = data.offer
+            createPeer(offer, userid, serverSock)
+            break;
+
+          default:
+            break;
+        }
+      };
+    }
+
+    //start()
+
+    function createPeer(offer, userid, serverSock) {
+      let p = new SimplePeer({
+        initiator: false,
+        trickle: false
+      })
+
+      p.on('connect', () => {
+        //console.log(p);
+        Toastify({ text: `${offer.userid} connected.`, className: "info", }).showToast();
+        connecteds[offer.userid] = p
+        let l = document.createElement("button")
+        l.id = offer.userid
+        l.innerText = offer.userid
+        log.appendChild(l)
+        log.prepend(l)
+        l.onclick = function () {
+          p.send(JSON.stringify({ id: Date.now(), action: "alive", name: offer.userid }))
+        }
+      })
+
+      p.on('data', msg => {
+        let data = JSON.parse(msg)
+        console.log(data);
+        switch (data.action) {
+          case "msg":
+            Toastify({ text: data.text, className: "info", }).showToast();
+            p.send(JSON.stringify({ action: "confirm", id: data.id, from: offer.userid }))
+            break;
+          default:
+            console.error("Unknow action");
+            break;
+        }
+      })
+      p.on('close', () => {
+        console.error("peer closed", offer.userid);
+        delete connecteds[offer.userid]
+        document.getElementById(offer.userid)?.remove()
+      })
+
+      p.on('error', err => {
+        console.log('error', err.code)
+        //connecteds[offer.userid] = null
+      })
+
+      p.on('signal', data => {
+        data.target = offer.userid
+        data.userid = userid
+        serverSock.send(JSON.stringify({ action: "answer", answer: data }))
+        //document.querySelector('#outgoing').textContent = JSON.stringify(data)
+      })
+      p.signal(offer)
+    }
+  
+  </script>
+</body>
+
+</html>

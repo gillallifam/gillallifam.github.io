@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../js/peerjs.min.js"></script>
+    <script src="../js/lz-string.min.js"></script>
+    <script src="../js/cli-commom.js"></script>
+</head>
+
+<body>
+    <button id="sendData">sendData</button>
+    <button id="getData">getData</button>
+    <button id="pingServer">Ping</button>
+    <input id="inpName" type="text" placeholder="name" />
+    <button id="setName">set</button>
+    <br>
+    <div id="usersConnecteds"></div>
+    <br />
+    <button onclick="broadCast();">Broadcast</button>
+    <script>
+
+        /* async function makePeer(params) {
+            const peerConnection1 = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+            console.log(peerConnection1);
+            const offer = await peerConnection1.createOffer();
+            console.log(offer);
+
+            const peerConnection2 = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+            await peerConnection2.setRemoteDescription(offer);
+            const answer = await peerConnection2.createAnswer();
+            await peerConnection2.setLocalDescription(answer);
+
+            console.log(answer);
+        }
+        makePeer() */
+
+        const setName = document.getElementById("setName")
+        const inpName = document.getElementById("inpName")
+        const sendData = document.getElementById("sendData")
+        const getData = document.getElementById("getData")
+        const pingServer = document.getElementById("pingServer")
+        let bkpServer = ""
+        var mapClients = new Map()
+        var cliId = localStorage.getItem("id") || makeid(6)
+        inpName.value = cliId
+        document.title = cliId
+        var totalItems = 1000
+        let pP, connP, svLive
+
+        fetch(`http://${peerServer}:${peerPort}/servers`).then(async function (res) {
+            let data = await res.json()
+            //console.log(data);
+            let servers = []
+            for (const key of Object.keys(data)) {
+                if (data[key]) servers.push(key)
+            }
+            bkpServer = servers[0]
+            //console.log(servers);
+            init()
+        })
+
+        function seenByTime(map, seconds) {
+            let time = (Date.now() - (seconds * 1000))
+            let arr = []
+            for (const item of map) {
+                let [key, value] = item
+                if (value.seen > time) arr.push(key)
+            }
+            return arr
+        }
+
+        function broadCast() {
+            let group = seenByTime(mapClients, 3600)
+            //console.log(mapClients);
+            console.log(group);
+            let id = timedId()
+            for (const m of group) {
+                if (mapClients.get(m).inConn.open === true) {
+                    mapClients.get(m).inConn.send({ id: id, action: "ping", origin: "broadcast" })
+                } else {
+                    mapClients.delete(m)
+                }
+            }
+        }
+
+        async function init() {
+            pP = await socketConn(cliId + "-p")
+            pP.on('connection', function (inConn) {
+                console.log("connection", inConn.peer);
+                mapClients.set(inConn.peer, { inConn, seen: Date.now() })
+                inConn.on("data", function (res) {
+                    dataHandler(res, inConn)
+                })
+                document.getElementById("usersConnecteds").innerText = [...mapClients.keys()]
+            })
+            pP.on("disconnected", () => {
+                let rcnt1 = setInterval(async () => {
+                    console.log("Connecting to Peer.");
+                    try {
+                        pP.reconnect()
+                        if (!pP.disconnected) {
+                            clearInterval(rcnt1)
+                            console.log("Reconnected to peer.");
+                        }
+                    } catch (error) {
+                        console.error("Peer error.");
+                    }
+                }, 5000);
+            })
+            connP = await connConfig(pP)
+
+            setInterval(() => {
+                taskSend({ cliId, action: "alive" })
+            }, 60000);
+        }
+
+        async function taskSend(data) {
+            if (!bkpServer) { console.log("No bkp server."); return; }
+            let pTask = pP || await socketConn(cliId + "-p")
+            let tout = setTimeout(() => {
+                //connP.close();
+                console.error("Task failed: Timeout.")
+            }, 2000);
+            if (connP && connP.open) {
+                connP.send(data); clearTimeout(tout);
+            } else {
+                console.log("Connecting to bkp server.");
+                connP = await connConfig(pTask)
+                connP.on('open', function () {
+                    clearTimeout(tout)
+                    connP.send(data);
+                })
+            }
+            //console.log(connP);
+        }
+
+        const bkpData = []
+        function setClicks() {
+            setName.onclick = async () => {
+                if (inpName.value !== "") {
+                    localStorage.setItem("id", inpName.value)
+                    cliId = inpName.value
+                    location.reload()
+                }
+            }
+
+            pingServer.onclick = async () => {
+                console.log(Date.now());
+                taskSend({ cliId, action: "ping" })
+            }
+
+            sendData.onclick = () => {
+                let compressed = LZString.compressToUTF16(JSON.stringify(bkpData))
+                taskSend({ cliId, action: "bkpData", payLoad: compressed })
+            }
+
+            getData.onclick = () => {
+                taskSend({ cliId, action: "getData" })
+            }
+
+            for (let i = 0; i < totalItems; i++) {
+                bkpData.push({ a: 1, b: makeid(10), c: { d: 3 }, e: i + makeid(8), f: i * i })
+            }
+        }
+
+        setClicks()
+
+        async function dataHandler(data, inConn) {
+            if (inConn) handleExt(data, inConn)
+            else handleBkpServer(data)
+        }
+
+        function handleBkpServer(data) {
+            switch (data.action) {
+                case "confirm":
+                    console.log(data);
+                    break;
+                case "alive":
+                    svLive = Date.now()
+                    break;
+                case "ping":
+                    console.log(data);
+                    break;
+                case "bkpData":
+                    console.log(data);
+                    break;
+                case "getData":
+                    if (data.payLoad)
+                        console.log(JSON.parse(LZString.decompressFromUTF16(data.payLoad)));
+                    else
+                        console.log("No data.");
+                    break;
+                case "msg":
+                    if (data.type === "a") connP.send({ id: data.id, action: "confirm" })
+                    else console.log(data);
+                    break;
+                case "alertMsg":
+                    console.log(data);
+                    break
+                default:
+                    console.error("Unknow action:", data);
+                    break;
+            }
+        }
+
+        function handleExt(data, inConn) {
+            switch (data.action) {
+                case "confirm":
+                    console.log(data);
+                    break;
+                case "ping":
+                    inConn.send({ action: "ping", time: Date.now() })
+                    break;
+                case "productList":
+                    console.log(data);
+                    inConn.send({ action: "productList", payLoad: bkpData })
+                    break;
+                case "promotions":
+                    console.log(data);
+                    let proms = [...bkpData]
+                    proms.length = 10
+                    inConn.send({ action: "promotions", payLoad: proms })
+                    break;
+                case "msg":
+                    console.log(data);
+                    inConn.send({ id: data.id, action: "confirm" })
+                    break;
+                case "delivery":
+                    console.log(data);
+                    inConn.send({ action: "delivery", status: "received" })
+                    break
+                default:
+                    console.error("Unknow action:", data);
+                    break;
+            }
+        }
+
+        async function socketConn(cnnName) {
+            return new Promise((res, rej) => {
+                const peer = new Peer(cnnName, {
+                    host: peerServer,
+                    port: peerPort,
+                    path: '/service/socket'
+                });
+                if (peer) res(peer)
+                rej(null)
+            })
+        }
+
+        async function connConfig(peer) {
+            let c = peer.connect(bkpServer)
+            c.on('data', function (res) {
+                dataHandler(res, null)
+                if (!pP) { connP.close(); connP = null; }
+            })
+            c.on('close', async () => {
+                if (pP) {
+                    let ctout = setInterval(async () => {
+                        console.log("Reconnecting");
+                        connP = null
+                        connP = await connConfig(pP)
+                        if (connP) { clearInterval(ctout) }
+                    }, 5000);
+                }
+            })
+            return c
+        }
+    </script>
+
+</body>
+
+</html>

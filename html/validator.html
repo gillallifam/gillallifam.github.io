@@ -101,7 +101,8 @@
         <label for="msg">Message</label>
         <textarea id="msg" name="msg">Not talk, NOT talk, fight club and make soap.</textarea>
         <br>
-        <label for="chka">A</label>
+        <br>
+        <!-- <label for="chka">A</label>
         <input type="checkbox" name="chka" id="chka">
         <label for="chkb">B</label>
         <input type="checkbox" name="chkb" id="chkb">
@@ -109,13 +110,13 @@
         <input type="radio" name="g1" id="_1234" value="g1a" />
         <input type="radio" name="g1" id="_2345" value="g1b" />
         <input type="radio" name="g2" id="_3456" value="g2a" />
-        <input type="radio" name="g2" id="_4567" value="g2b" />
+        <input type="radio" name="g2" id="_4567" value="g2b" /> -->
 
         <button>Submit</button>
     </form>
     <div id="snackbar"></div>
     <script>
-        
+
         let formTest = document.getElementById("formTest")
 
         let vals = new Vals(formTest, {
@@ -130,33 +131,25 @@
             job: { notEqual: "unemployed" },
             hobbies: { minElems: 1 }
         }
-        vals.avaliators = {//the boring part
-            isArray: (o, f) => Array.isArray(o) === f,
-            minElems: (a, n) => Array.isArray(a) && a.length >= n,
-            empty: (s, f) => (s === "") === f,
-            notEqual: (s1, s2) => s1 !== s2,
-            mustContains: (s, v) => s.toLowerCase().includes(v.toLowerCase()),
-            mustNotContains: (s, v) => !s.toLowerCase().includes(v.toLowerCase()),
-            maxLen: (s, v) => s.length <= v,
-            minLen: (s, v) => s.length >= v,
-            max: (n, v) => n <= v,
-            min: (n, v) => n >= v,
-            onlyNumbers: (s, b) => (this.rgx.onlyNumbers).test(s) === b,
-            minLen: (s, v) => s.length >= v,
-            isPositive: (n, b) => Number.isInteger(n) & n > 0,
-            isEmail: (m, b) => {
-                let p = m.split("@");
-                if (p.length != 2) return false;
-                return (this.rgx.emailUser.test(p[0]) && this.rgx.emailDomain.test(p[1]));
-            }
+
+        console.log(vals.schema);
+        let avNames = []
+        for (const k1 of Object.values(vals.schema)) {
+            avNames.push(...Object.keys(k1))
         }
+
+        for (const name of avNames) {
+            vals.avaliators[name] = allAvaliators[name]
+        }
+        console.log(vals.avaliators);
+
         vals.errors = {
             name: (element, rule, value) => { return `That's not here!` },
             msg: (element, rule, value) => { return `You do not talk about Fight Club.` },
             hobbies: (element) => { return `There's something you like?` },
         }
 
-        console.log(vals);
+        //console.log(vals);
 
     </script>
 

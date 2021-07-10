@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPClient</title>
+  <script src="./js/simplepeer.min.js"></script>
+</head>
+
+<body>
+  <style>
+    #outgoing {
+      width: 600px;
+      word-wrap: break-word;
+      white-space: normal;
+    }
+  </style>
+  <form>
+    <input type="text" id="targetName" value="Server1">
+    <br>
+    <br>
+    <input type="text" id="username" value="User1">
+    <input type="password" id="userpass" value="123456" autocomplete="">
+    <button id="btgo" type="button">connect</button>
+    <br>
+    <br>
+  </form>
+  <input type="text" id="msgtoPeer" value="Hello!">
+  <button id="sendMsg" type="button" onclick="sendMsg()">Msg</button>
+
+  <pre id="outgoing"></pre>
+  <script>
+    let user
+    var p = null
+    var myPeers = {}
+    let svip = "192.168.0.2"
+
+    var targetName = document.getElementById("targetName")
+    var msgtoPeer = document.getElementById("msgtoPeer")
+
+    async function sigConnect(target, userid, passhash) {
+      if (myPeers[target]) {
+        myPeers[target].null
+      }
+      let srvSocket
+      try {
+        srvSocket = new WebSocket(`ws://${svip}/public:3456?userid=${userid}&target=${target}&passhash=${passhash}`)
+      } catch (error) {
+        console.log(error);
+      }
+
+      srvSocket.onopen = function (event) {
+        console.log("Connected to signaller.");
+      };
+
+      srvSocket.onmessage = function (msg) {
+        let data = JSON.parse(msg.data)
+        //console.log(data);
+        switch (data.action) {
+          case "access":
+            if (data.status) {
+              p = new SimplePeer({
+                initiator: true,
+                trickle: false
+              })
+
+              p.on('signal', data => {
+                data.userid = userid
+                data.passhash = passhash
+                data.target = target
+                setTimeout(() => {
+                  srvSocket.send(JSON.stringify({ action: "offer", offer: data }))
+                }, 200);
+              })
+
+              document.querySelector('form').addEventListener('submit', ev => {
+                ev.preventDefault()
+                p.signal(JSON.parse(document.querySelector('#incoming').value))
+              })
+
+              p.on('connect', () => {
+                console.log('Connect to peer ' + target)
+                myPeers[target] = p
+                console.log(myPeers);
+              })
+
+              p.on('data', msg => {
+                let data = JSON.parse(msg)
+                console.log(data)
+              })
+
+              p.on('close', () => {
+                console.log("peer closed", target);
+                myPeers[target] = null
+                sigConnect(target, userid, passhash)
+              })
+
+              p.on('error', err => {
+                console.error('error', err)
+                console.log('Do no connect to peer.');
+              })
+            }
+            break;
+          case "answer":
+            p.signal(data.answer)
+            setTimeout(() => srvSocket.close(), 200);
+            break;
+
+          case "offline":
+            console.log(data.peer + " is offline or do not exist.");
+            srvSocket.close()
+            break
+
+          default:
+            break;
+        }
+      };
+
+      srvSocket.onclose = function (e) {
+        console.log("Sig sock closed");
+      }
+    }
+
+    function sendMsg() {
+      if (myPeers[targetName.value]) {
+        myPeers[targetName.value].send(JSON.stringify({ id: Date.now(), action: "msg", text: msgtoPeer.value, from: user }))
+      } else {
+        console.log("Not connected!"); 
+      }
+    }
+
+    document.getElementById("btgo").onclick = async () => {
+      user = location.hash.substr(1) || document.getElementById("username").value
+      let hash = await sha256(document.getElementById("userpass").value)
+      sigConnect(targetName.value, user, hash)
+    }
+
+    async function sha256(message) {
+      // encode as UTF-8
+      const msgBuffer = new TextEncoder().encode(message);
+
+      // hash the message
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+
+      // convert ArrayBuffer to Array
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+      // convert bytes to hex string
+      const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('');
+      //console.log(hashHex);
+      return hashHex;
+    }
+
+
+  </script>
+</body>
+
+</html>

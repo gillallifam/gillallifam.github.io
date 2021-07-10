@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPMC</title>
+  <script src="./js/simplepeer.min.js"></script>
+</head>
+
+<body>
+  <input type="text" id="targetName" value="Server1">
+  <button id="btgo" type="button">new</button>
+  <button id="btgo10" type="button">new 10</button>
+  <button id="btgo100" type="button">new 100</button>
+  <button id="broadcast" type="button">broadcast</button>
+  <button id="descocast" type="button">descocast</button>
+
+
+  <script>
+    let user
+    var p = null
+    var myPeers = {}
+    let svip = "192.168.0.2"
+
+    var targetName = document.getElementById("targetName").value
+
+    async function sigConnect(target, userid, passhash) {
+      if (myPeers[target]) {
+        myPeers[target].null
+      }
+      let srvSocket
+      try {
+        srvSocket = new WebSocket(`ws://${svip}:8080/public?userid=${userid}&target=${target}&passhash=${passhash}`)
+      } catch (error) {
+        console.log(error);
+      }
+
+      srvSocket.onopen = function (event) {
+        console.log("Connected to signaller.");
+      };
+
+      srvSocket.onmessage = function (msg) {
+        let data = JSON.parse(msg.data)
+        //console.log(data);
+        switch (data.action) {
+          case "access":
+            //console.log(data);
+            if (data.status) {
+              console.time("p init")
+              p = new SimplePeer({
+                initiator: true,
+                trickle: false,
+                channelName: 'channel-' + userid
+              })
+
+              p.on('signal', data => {
+                console.timeEnd("p init")
+                data.userid = userid
+                data.passhash = passhash
+                data.target = target
+                //setTimeout(() => {
+                  srvSocket.send(JSON.stringify({ action: "offer", offer: data }))
+                //}, 200);
+              })
+
+              p.on('connect', () => {
+                console.log('Connect to peer ' + target)
+                myPeers[userid] = p
+                console.log(myPeers);
+              })
+
+              p.on('data', msg => {
+                let data = JSON.parse(msg)
+                console.log(data)
+              })
+
+              p.on('close', () => {
+                console.log("peer closed", target);
+                myPeers[target] = null
+              })
+
+              p.on('error', err => {
+                console.error('error', err.code)
+                console.log('Do no connect to peer.');
+              })
+            }
+            break;
+          case "answer":
+            p.signal(data.answer)
+            setTimeout(() => srvSocket.close(), 200);
+            break;
+
+          case "offline":
+            console.log(data.peer + " is offline or do not exist.");
+            srvSocket.close()
+            break
+
+          default:
+            break;
+        }
+      };
+
+      srvSocket.onclose = function (e) {
+        console.log("Sig sock closed");
+      }
+    }
+    function wait(params) {
+
+    }
+
+    function sendMsg() {
+      if (myPeers[targetName]) {
+        myPeers[targetName].send(JSON.stringify({ id: Date.now(), action: "msg", text: msgtoPeer.value, from: user }))
+      } else {
+        console.log("peer offline.");
+      }
+    }
+
+    document.getElementById("broadcast").onclick = async () => {
+      let count = 0
+      for (const peer of Object.keys(myPeers)) {
+        //console.log(++count, peer);
+        if (myPeers[peer]) myPeers[peer].send(JSON.stringify({ id: Date.now(), action: "msg", text: "text", from: user }))
+        await sleep(20)
+      }
+    }
+
+    document.getElementById("descocast").onclick = async () => {
+      for (const peer of Object.keys(myPeers)) {
+        if (myPeers[peer]) {
+          myPeers[peer].destroy()
+          delete myPeers[peer]
+        }
+        await sleep(20)
+      }
+    }
+
+    document.getElementById("btgo").onclick = async () => {
+      targetName = document.getElementById("targetName").value
+      sigConnect(targetName, makeid(10), 'd969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92')
+    }
+
+    document.getElementById("btgo10").onclick = async () => {
+      targetName = document.getElementById("targetName").value
+      //let hash = await sha256("123456")
+      for (let i = 0; i < 10; i++) {
+        sigConnect(targetName, makeid(10), 'd969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92')
+        await sleep(1500)
+      }
+    }
+
+    document.getElementById("btgo100").onclick = async () => {
+      targetName = document.getElementById("targetName").value
+      //let hash = await sha256("123456")
+      for (let i = 0; i < 100; i++) {
+        sigConnect(targetName, makeid(10), 'd969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92')
+        await sleep(1500)
+      }
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    
+
+    function makeid(length) {
+      var result = '';
+      var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      var charactersLength = characters.length;
+      for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      }
+      return result;
+    }
+
+    
+
+
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../js/peerjs.min.js"></script>
+
+    <script src="../js/cli-commom.js"></script>
+</head>
+
+<body>
+
+    <button id="pingServer">Ping</button>
+    <button id="productList">Products</button>
+    <button id="delivery">Delivery</button>
+    <input id="inpName" type="text" placeholder="name" />
+    <button id="setName">set</button>
+    <input id="inpTarget" type="text" placeholder="target" />
+    <button id="setTarget">set</button>
+    <br>
+    <br>
+    <input id="inpMsg" type="text" placeholder="msg" />
+    <button id="sendMsg">send</button>
+
+    <script>
+
+        var transport = new QuicTransport("host");
+
+        console.log(transport);
+        const setName = document.getElementById("setName")
+        const inpName = document.getElementById("inpName")
+        const setTarget = document.getElementById("setTarget")
+        const inpTarget = document.getElementById("inpTarget")
+        const pingServer = document.getElementById("pingServer")
+        const productList = document.getElementById("productList")
+        const delivery = document.getElementById("delivery")
+        const sendMsg = document.getElementById("sendMsg")
+        const inpMsg = document.getElementById("inpMsg")
+
+
+        //var cliId = localStorage.getItem("userid") || makeid(6)
+        //inpName.value = localStorage.getItem("userid") || makeid(6)
+        inpName.value = makeid(6)
+        let pTask, connP, canTalk = true
+        //inpName.value = cliId
+        document.title = inpName.value
+        var target = localStorage.getItem("target")
+        if (location.search) {
+            //console.log(location.search);//todo multi params 
+            target = location.search.substr(1).split("=")[1];
+            localStorage.setItem("target", target)
+            //taskSend({ cliId, action: "productList", time: Date.now() })
+            //taskSend({ cliId, action: "promotions", time: Date.now() })
+            setTimeout(() => {
+                taskSend({ cliId: inpName.value, action: "ping", time: Date.now() }, 3)
+            }, nBetween(1, 500));
+        }
+        inpTarget.value = target
+        var totalItems = 1000
+
+
+        async function taskSend(data, tries = 3) {
+            if (!target || !canTalk) { console.log("Please wait!"); return }
+            canTalk = false
+            //console.log(pTask);
+            let tout = setTimeout(() => {
+
+                if (tries) {
+                    canTalk = true
+                    taskSend(data, --tries)
+                }
+                else {
+                    canTalk = true
+                    console.error("Task failed!");
+                }
+            }, nBetween(1, 1000));
+
+            if (connP && connP.open) {
+                //console.log(`Sending to ${connP.peer}`);
+                clearTimeout(tout)
+                connP.send(data);
+            } else {
+                pTask = await socketConn()
+                connP = await connConfig(pTask)
+                connP.on('open', function () {
+                    //console.log(`Connected to ${connP.peer}`);
+                    clearTimeout(tout)
+                    connP.send(data);
+                    pTask.disconnect()
+                })
+            }
+        }
+
+        function setClicks() {
+            setName.onclick = async () => {
+                /* if (inpName.value !== "") {
+                    localStorage.setItem("userid", inpName.value)
+                    //cliId = inpName.value
+                    location.reload()
+                } */
+            }
+
+            setTarget.onclick = async () => {
+                if (inpTarget.value !== "") {
+                    connP.close()
+                    pTask.destroy()
+                    pTask = null
+                    target = inpTarget.value
+                    localStorage.setItem("target", target)
+                }
+            }
+
+            pingServer.onclick = async () => {
+                console.log(Date.now());
+                taskSend({ cliId: inpTarget.value, action: "ping" }, 3)
+            }
+
+            productList.onclick = async () => {
+                taskSend({ cliId: inpTarget.value, action: "productList", name: "", category: "" })
+            }
+
+            delivery.onclick = async () => {
+                //taskSend({ cliId, action: "delivery", body: "Um x-bacon.", time: Date.now() })
+                taskSend({ cliId: inpTarget.value, action: "promotions", time: Date.now() })
+            }
+
+            sendMsg.onclick = async () => {
+                if (inpMsg.value) taskSend({ cliId: inpTarget.value, action: "msg", text: inpMsg.value, id: timedId() })
+            }
+        }
+
+        setClicks()
+
+        async function dataHandler(data) {
+            switch (data.action) {
+                case "confirm":
+                    console.log(data);
+                    break;
+                case "ping":
+                    if (data.origin === "broadcast") connP.send({ id: data.id, action: "confirm", peer: pTask.peer })
+                    console.log(data);
+                    break;
+                case "productList":
+                    console.log(data.payLoad);
+                    break;
+                case "promotions":
+                    console.log(data.payLoad);
+                    break;
+                case "msg":
+                    console.log(data);
+                    break;
+                case "delivery":
+                    console.log(data);
+                    break
+                default:
+                    break;
+            }
+        }
+
+        async function socketConn() {
+            //console.log("Connecting to peer server.");
+            return new Promise((res, rej) => {
+                const peer = new Peer(inpName.value + "-t", {
+                    host: peerServer,
+                    port: peerPort,
+                    path: '/service/socket'
+                });
+                peer.on('close', function () { pTask == null });
+                if (peer) res(peer)
+                rej(null)
+            })
+        }
+
+        async function connConfig(peer) {
+            let c = peer.connect(target + "-p")
+            c.on('data', function (res) {
+                dataHandler(res)
+                setTimeout(() => {
+                    //connP.close();
+                    canTalk = true
+                }, 5000);
+            })
+            c.on('close', async () => {
+                console.log(`Connection ${target} closed.`);
+            })
+            return c
+        }
+    </script>
+
+</body>
+
+</html>

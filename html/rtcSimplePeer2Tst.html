@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>rtcSimplePeer2</title>
+  <script src="./js/simplepeer.min.js"></script>
+</head>
+
+<body>
+  <style>
+    #outgoing {
+      width: 600px;
+      word-wrap: break-word;
+      white-space: normal;
+    }
+  </style>
+  <pre id="outgoing"></pre>
+  <script>
+    const userid = 'Server1'
+    const users = {
+      User1: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      User2: "481f6cc0511143ccdd7e2d1b1b94faf0a700a8b49cd13922a70b5ae28acaa8c5"
+    }
+
+    let webSocket = new WebSocket("ws://localhost:3456/")
+    webSocket.onopen = function (event) {
+      console.log("Connected to signaller.");
+      webSocket.send(JSON.stringify({ action: "activate", userid: "Server1", passhash: "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92" }))
+    };
+
+    webSocket.onmessage = function (msg) {
+      let data = JSON.parse(msg.data)
+      switch (data.action) {
+        case "offer":
+          //console.log('offer');
+          console.log(data);
+          let cfg = data.cfg
+          if (users[cfg.sender] && users[cfg.sender] === cfg.passhash) {
+            console.log("Access ok.", cfg.sender);
+            createPeer(data.offer, data.cfg)
+          } else {
+            console.error(cfg.sender, "Access denied.");
+          }
+          break;
+
+        default:
+          break;
+      }
+    };
+
+    const peers = {}
+
+    function createPeer(offer, cfg) {
+      console.log(offer);
+      let p = new SimplePeer({
+        initiator: false,
+        trickle: false
+      })
+
+      p.on('connect', () => {
+        console.log('Conneted to ' + offer.userid)
+      })
+
+      p.on('data', msg => {
+        let data = JSON.parse(msg)
+        switch (data.action) {
+          case "msg":
+            console.log(data.text);
+            p.send(JSON.stringify({ action: "confirm", id: "554545" }))
+            break;
+          default:
+            console.error("Unknow action");
+            break;
+        }
+      })
+      p.on('error', err => console.log('error', err))
+
+      p.on('signal', data => {
+        console.log("lsdkaldksadksa");
+        console.log(data);
+        cfg.target = cfg.sender
+        cfg.sender = userid
+        console.log(cfg);
+        webSocket.send(JSON.stringify({ action: "answer", answer: data, cfg }))
+        document.querySelector('#outgoing').textContent = JSON.stringify(data)
+      })
+      peers[cfg.sender] = p
+      //console.log(peers);
+      p.signal(offer)
+    }
+
+    /* async function sha256(message) {
+      // encode as UTF-8
+      const msgBuffer = new TextEncoder().encode(message);
+
+      // hash the message
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+
+      // convert ArrayBuffer to Array
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+      // convert bytes to hex string
+      const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('');
+      console.log(hashHex);
+      return hashHex;
+    }
+
+    sha256("654321") */
+  </script>
+</body>
+
+</html>

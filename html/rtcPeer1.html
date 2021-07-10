@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RTC1</title>
+</head>
+
+<body>
+    <button onclick="goServer();">connect</button>
+    <button id="copy" disabled>Copy Offer/Candidates to Clipboard</button><br>
+    <input id="paste" placeholder="Paste Answer/Candidates here" disabled>
+    <table>
+        <tr>
+            <td>local</td>
+            <td>remote</td>
+        </tr>
+        <tr>
+            <td><video id="local" autoplay></video></td>
+            <td><video id="remote" autoplay></video></td>
+        </tr>
+    </table>
+
+    <script>
+
+
+        var p = null
+        var myPeers = {}
+        function goServer(params) {
+            //document.cookie = 'UserAuth=8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92;';
+            //console.log(document.cookie);
+            sigConnect("Server1", "User12", "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92")
+        }
+        async function sigConnect(target, userid, passhash) {
+            if (myPeers[target]) {
+                myPeers[target].close()
+                myPeers[target].null
+            }
+            let srvSocket
+            try {
+                srvSocket = new WebSocket(`ws://localhost:3456?userid=${userid}&passhash=${passhash}`)
+                console.log(srvSocket);
+            } catch (error) {
+                console.log(error);
+            }
+
+            srvSocket.onopen = function (event) {
+                console.log("Connected to signaller.");
+                srvSocket.send(JSON.stringify({ action: "activate", userid, passhash }))
+            };
+
+            srvSocket.onmessage = async function (msg) {
+                let data = JSON.parse(msg.data)
+                switch (data.action) {
+                    case "access":
+                        if (data.status) {
+                            console.log("logado");
+                            p = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+                            let offer = await p.createOffer();
+                            await p.setLocalDescription(offer);
+                            //console.log(p);
+                            let cfg = { sender: userid, passhash, target }
+                            //console.log(offer);
+                            //console.log(cfg);
+                            setTimeout(() => {
+                                srvSocket.send(JSON.stringify({ action: "offer", offer, cfg }))
+                            }, 500);
+                        }else{
+                            console.log("Acesso negado!");
+                        }
+                        break
+                    case "answer":
+                        console.log("adsaldsaldksal");
+                        console.log(data);
+                        myPeers[data.cfg.userid] = p
+                        await p.setRemoteDescription(data.answer);
+
+                        /* const { userid: from, answer, iceCandidates } = JSON.parse(data);
+                        console.log("Response from " + from);
+                        await p.setRemoteDescription(answer);
+                        iceCandidates.forEach(c => p.addIceCandidate(c));
+                        console.log(p) */;
+
+
+                        /* p.createDataChannel("553543543543543556556567567", {});
+                        dataChannel.onopen = onDataChannelStateChange;
+                        dataChannel.onclose = onDataChannelStateChange; */
+                        console.log(myPeers);
+                        //p.signal(data.answer)
+                        setTimeout(() => srvSocket.close(), 200);
+                        break;
+
+                    case "offline":
+                        console.log(data.peer + " is offline");
+                        srvSocket.close()
+                        break
+
+                    default:
+                        break;
+                }
+            };
+
+            srvSocket.onclose = function (e) {
+                console.log("Sig sock closed");
+                //console.log(e);
+            }
+        }
+
+
+        const peerConnection = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+        dataChannel = peerConnection.createDataChannel("label", {});
+        dataChannel.onopen = onDataChannelStateChange;
+        dataChannel.onclose = onDataChannelStateChange;
+        //console.log(dataChannel);
+
+
+        function onDataChannelStateChange() {
+            var readyState = dataChannel.readyState;
+            if (readyState === 'open') {
+                console.log('dataChannel open');
+                let cnt = 0
+                setInterval(() => {
+                    cnt++
+                    dataChannel.send("ola " + cnt)
+                }, 1000);
+            } else {
+                console.log(readyState);
+            }
+        }
+
+        //stream.getTracks().forEach(t => peerConnection.addTrack(t, stream));
+
+        // Save a list of ice candidates to send to the peer
+        const iceCandidates = [];
+        peerConnection.onicecandidate = e => {
+            if (e.candidate) {
+                iceCandidates.push(e.candidate);
+            }
+        };
+
+
+        (async () => {
+            const copyButton = document.getElementById('copy');
+
+            peerConnection.onicegatheringstatechange = () => {
+                if (peerConnection.iceGatheringState === 'complete') {
+                    copyButton.disabled = false;
+                    console.log('Offer ready, click copy button.');
+                }
+            };
+
+
+            const offer = await peerConnection.createOffer();
+            let userid = "User1"
+            //offer.userid = "User1"
+            //console.log(offer);
+            //console.log(JSON.stringify(offer));
+            //console.log(makeHash(JSON.stringify(offer)));
+            await peerConnection.setLocalDescription(offer);
+
+            const pasteInput = document.getElementById('paste');
+
+            copyButton.onclick = () => {
+                console.log(offer);
+                //console.log(JSON.stringify({ userid, offer, iceCandidates }));
+                navigator.clipboard.writeText(JSON.stringify({ userid, offer, iceCandidates }));
+                console.log('Offer copied/candidates. Paste in Answerer example.');
+
+                pasteInput.disabled = false;
+            };
+
+            pasteInput.onpaste = async (e) => {
+                const { userid: from, answer, iceCandidates } = JSON.parse(e.clipboardData.getData('text/plain'));
+                console.log("Response from " + from);
+                //console.log(answer, iceCandidates);
+                await peerConnection.setRemoteDescription(answer);
+                iceCandidates.forEach(c => peerConnection.addIceCandidate(c));
+                //dataChannel.send("ddadadsadsadsa")
+                console.log(peerConnection);
+            };
+        })();
+
+        async function sha256(message) {
+            // encode as UTF-8
+            const msgBuffer = new TextEncoder().encode(message);
+
+            // hash the message
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+
+            // convert ArrayBuffer to Array
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+            // convert bytes to hex string
+            const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('');
+            console.log(hashHex);
+            return hashHex;
+        }
+
+        //sha256("123456")
+    </script>
+
+    <style>
+        video {
+            width: 150px;
+            height: 100px;
+        }
+
+        input {
+            width: 250px;
+        }
+    </style>
+
+
+</body>
+
+</html>
