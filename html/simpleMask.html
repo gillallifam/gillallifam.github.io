@@ -6,29 +6,68 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Mask</title>
+    <link rel="stylesheet" href="../css/sakura-vader.css">
     <script src="../js/simpleMask.js"></script>
+    <style>
+        code{
+            background-color: #dd7d7d00;
+        }
+        /* button:active{
+            font-weight: 900;
+        } */
+    </style>
 </head>
 
 <body>
-    <h1>A simple, small and easy to use JS string and input masker.</h1>
-    <h2>Stop making your site ashamed of your ugly masks.</h2>
+    <h1>SimpleMask</h1>
+    <h2>A simple, small and easy to use JS string and input masker.</h2>
+    <h3>Stop making your site ashamed of your ugly masks.</h3>
     <br>
+    <h3>Use mask!</h3>
+    <span>D=Digit, A=Alphanumeric, L=Leter</span><br>
     <input type="text" id="testMask" name="testMask" placeholder="text">
-    <p id="currentMaskDisplay"></p>
+    <span id="currentMaskDisplay"></span>
+    <p>Samples</p>
     <div id="btRow">
-        <button>LLL-LL-DD</button>
-        <button>AAA-DD-LLL</button>
+        <button type="button">LLL</button>
+        <button type="button">DD/DD/DDDD</button>
+        <button type="button">DD.LLL.DDDD</button>
+        <button type="button">DDD.DD.DDDD</button>
+        <button type="button">DD/DDDD</button>
+        <button type="button">DD-DD-DDDD</button>
+        <button type="button">$ DDD.DD</button>
+        <button type="button">$ DDD,DDD</button>
+        <button type="button">DDD,DD $</button>
     </div>
+    <h2>Usage</h2>
+    <code>
+        "script src="../js/simpleMask.js">/script"
+
+        let masker = simpleMask()
+        masker.maskInput(yourInput, "AAA@LL-DD")
+        //or
+        console.log(masker.maskString("Hello", "LLLLL masked!"));
+    </code>
+    <h2>Download</h2>
+    <a href="https://raw.githubusercontent.com/gillallifam/gillallifam.github.io/main/js/simpleMask.js">simpleMask.js</a>
     
 </body>
 <script>
     let masker = simpleMask()
-    let currentMask = "LLL-LL-DD"
+    let currentMask = "DD/DD/DDDD"
     currentMaskDisplay.innerText = currentMask
-    btRow.onclick = function (e) {
-        currentMaskDisplay.innerText = e.target.innerText
-    }
     masker.maskInput(testMask, currentMask)
+
+    btRow.onclick = function (e) {
+        if (e.target.type != "button") return
+        currentMaskDisplay.innerText = e.target.innerText
+        currentMask = e.target.innerText
+        testMask.replaceWith(testMask.cloneNode(true));
+        masker.maskInput(testMask, currentMask)
+        testMask.focus()
+        testMask.value = ""
+    }
+    
 </script>
 
 </html>
