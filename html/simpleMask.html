@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Mask</title>
+    <script src="../js/simpleMask.js"></script>
+</head>
+
+<body>
+    <h1>A simple, small and easy to use JS string and input masker.</h1>
+    <h2>Stop making your site ashamed of your ugly masks.</h2>
+    <br>
+    <input type="text" id="testMask" name="testMask" placeholder="text">
+    <p id="currentMaskDisplay"></p>
+    <div id="btRow">
+        <button>LLL-LL-DD</button>
+        <button>AAA-DD-LLL</button>
+    </div>
+    
+</body>
+<script>
+    let masker = simpleMask()
+    let currentMask = "LLL-LL-DD"
+    currentMaskDisplay.innerText = currentMask
+    btRow.onclick = function (e) {
+        currentMaskDisplay.innerText = e.target.innerText
+    }
+    masker.maskInput(testMask, currentMask)
+</script>
+
+</html>
