@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data generator</title>
+    <link rel="stylesheet" href="../css/sakura.css">
+    <link rel="stylesheet" href="../css/scrollbar1.css">
+    <script src="../js/utils.js"></script>
+    <!-- <script src="../js/dataGenBank.js"></script> -->
+    <script src="../js/dataGenMain.js"></script>
+    <script src="../js/simpleMask.js"></script>
+</head>
+<style>
+    body {
+        width: 100%;
+        padding-left: 0 !important;
+    }
+
+    body {
+        max-width: 98%;
+        /* padding-left: 15px !important; */
+    }
+
+    #headersSource {
+        width: 100%;
+    }
+
+    h1 {
+        margin-top: 1px;
+    }
+
+    #genQnt {
+        width: 75px;
+    }
+
+    .bold {
+        font-weight: bolder;
+    }
+
+    .svTable {
+        margin-left: 5px;
+        cursor: pointer;
+    }
+</style>
+
+<body>
+    <h1>SIGEFI Gendata</h1>
+    <input type="text" name="sqlTableName" id="sqlTableName" placeholder="table name" value="default">
+    <span class="bold">Saved tables:</span>
+    <span id="savedTables"></span>
+    <input id="headersSource" type="text" placeholder="past headers">
+    <table id="tableDataType">
+        <thead id="headerNames">
+        </thead>
+        <tbody id="typeOptions">
+        </tbody>
+    </table>
+    <input type="number" name="genQnt" id="genQnt" value=1 min="1">
+    <button id="btGenerate">Gerar</button>
+    <button id="btSave">Salvar</button>
+    <button id="btDelete">Apagar</button>
+    <h4>User patterns</h4>
+    <p>D=Digit, C=AnyCase, U=UPPERCASE, L=lowercase, N=(Numbers, UPPERCASE), n=(Numbers, lowercase), A=AlphaNumeric</p>
+
+    <input type="text" name="addPattern" id="addPattern" placeholder="pattern" value="DD-DDD">
+    <button id="btAddPattern">Add pattern</button>
+    <button id="btRemPattern">Rem pattern</button>
+    <span>Saved patterns: </span>
+    <span id="userMasks"></span>
+
+</body>
+<script>
+    let genDOptions = JSON.parse(localStorage.getItem("genD-Options") || `{"tables":{}}`)
+
+    function showSavedTables() {
+        savedTables.innerHTML = ""
+        let myTables = Object.keys(genDOptions.tables)
+        for (const t of myTables) {
+            let tbspan = document.createElement("span")
+            tbspan.classList.add("svTable")
+            tbspan.innerText = t
+            savedTables.appendChild(tbspan)
+            tbspan.onclick = function () {
+                loadTable(t)
+            }
+        }
+    }
+
+    showSavedTables()
+
+    let pats = JSON.parse(localStorage.getItem("genD-MyPatterns"))
+    if (pats) {
+        userMasks.innerText = Object.values(pats.patterns).join(", ")
+    }
+
+    btAddPattern.onclick = function () {
+        let savedPatterns = localStorage.getItem("genD-MyPatterns") || `{"ic":0,"patterns":{}}`
+        let myPatterns = JSON.parse(savedPatterns)
+        //let mykeys = Object.keys(myPatterns)
+        let patternList = Object.values(myPatterns.patterns)
+        if (patternList.filter((v) => v === addPattern.value).length === 0) {
+            myPatterns.ic++
+            myPatterns.patterns["mygenPattern" + (myPatterns.ic)] = addPattern.value
+            localStorage.setItem("genD-MyPatterns", JSON.stringify(myPatterns))
+            console.log(addPattern.value);
+        }
+
+    }
+
+    btRemPattern.onclick = function () {
+        let myPatterns = JSON.parse(localStorage.getItem("genD-MyPatterns") || "{}")
+        //let mykeys = Object.keys(myPatterns)
+        for (const key in myPatterns.patterns) {
+            if (myPatterns.patterns[key] === addPattern.value) {
+                delete myPatterns.patterns[key]
+                break
+            }
+        }
+        localStorage.setItem("genD-MyPatterns", JSON.stringify(myPatterns))
+    }
+
+    btSave.onclick = function (bt) {
+        if (sqlTableName.value) {
+            let arrSelects = Array.from(tableDataType.querySelectorAll("select"))
+            let headers = arrSelects.map((sel) => sel.id)
+            let options = arrSelects.map((sel) => sel.options[sel.selectedIndex].value)
+            let saveData = { headers, options }
+            //console.log(saveData);
+            if (headers.length) {
+                genDOptions.tables[sqlTableName.value] = saveData
+                localStorage.setItem("genD-Options", JSON.stringify(genDOptions))
+            }
+            showSavedTables()
+        }
+    }
+
+    function loadTable(table) {
+        let useTable = table || sqlTableName.value
+        sqlTableName.value = useTable
+        if (genDOptions.tables[useTable]) {
+            let data = localStorage.getItem("genD-Options")
+            if (data) {
+                let obj = JSON.parse(data)
+                headersSource.value = obj.tables[sqlTableName.value].headers.join(",")
+                prepTable(headersSource.value)
+                genDOptions.tables[useTable].headers.forEach((header, index) => {
+                    let sel = tableDataType.querySelector("#" + header)
+                    sel.value = genDOptions.tables[useTable].options[index]
+                });
+            }
+        }
+    }
+
+    function deleteTable(table) {
+        delete genDOptions.tables[table]
+        sqlTableName.value = ""
+        headerNames.innerHTML = ""
+        typeOptions.innerHTML = ""
+        headersSource.value = ""
+        localStorage.setItem("genD-Options", JSON.stringify(genDOptions))
+        showSavedTables()
+    }
+
+    btDelete.onclick = function (params) {
+        //deleteTable(sqlTableName.value)
+    }
+
+    let generatedSql = ""
+    btGenerate.onclick = function (bt) {
+        let arrSelects = Array.from(tableDataType.querySelectorAll("select"))
+        let allHeaders = arrSelects.map((sel) => sel.id)
+        generatedSql = ""
+        let allData = []
+        for (let i = 0; i < genQnt.value; i++) {
+            let data = []
+            let person = GENERATORS.genPerson()
+            let pmunicip = GENERATORS.genMunicip()
+            for (const sel of arrSelects) {
+                let value = sel.options[sel.selectedIndex].value
+                let text = sel.options[sel.selectedIndex].text
+                if (["genName", "genNomeMae", "genNomePai", "genSex"].includes(value)) {
+                    switch (value) {
+                        case "genName":
+                            data.push(person.name.join(" "))
+                            break;
+                        case "genNomeMae":
+                            data.push(person.mae.join(" "))
+                            break;
+                        case "genNomePai":
+                            data.push(person.pai.join(" "))
+                            break;
+                        case "genSex":
+                            data.push(person.sex)
+                            break;
+                    }
+                    continue
+                }
+                if (["genMunicip", "genMunicipIBGE", "genMunicipUF"].includes(value)) {
+                    switch (value) {
+                        case "genMunicip":
+                            data.push(pmunicip.nome)
+                            break;
+                        case "genMunicipIBGE":
+                            data.push(pmunicip.codigo_ibge)
+                            break;
+                        case "genMunicipUF":
+                            data.push(pmunicip.uf)
+                            break;
+                    }
+                    continue
+                }
+                if (value.includes("genPattern")) { data.push(GENERATORS.genPattern(text)); continue }
+                data.push(GENERATORS[value]())
+            }
+            if (data) {
+                allData.push(data)
+                //let outJSON = dataToJSON(allHeaders, data)
+                //let outSQL = dataToSQL(allHeaders, data)
+                //console.log(allHeaders);
+                //console.log(data);
+
+                /* allHeaders.forEach((header, index) => {
+                    outObj[header] = data[index]
+                }) */
+                //console.log(outJSON);
+                //console.log(outSQL);
+                //generatedSql += `insert into ${sqlTableName.value} (${allHeaders.join(",")}) values (${data.map((c) => { return `'${c}'` })});\n`;//,'${}'
+            }
+        }
+        //console.log(generatedSql);
+        console.log(dataToJSON(allHeaders, allData));
+        console.log(dataToSQL(allHeaders, allData));
+    }
+
+    function dataToJSON(headers, allData) {
+        let r = []
+        for (const data of allData) {
+            let obj = {}
+            headers.forEach((header, index) => {
+                obj[header] = data[index]
+            })
+            r.push(obj)
+        }
+        return r
+    }
+
+    function dataToSQL(headers, allData) {
+        let r = ""
+        allData.forEach((d) => {
+            r += `insert into ${sqlTableName.value} (${headers.join(",")}) values (${d.map((c) => { return `'${c}'` })});\n`;//,'${}'
+        })
+        /* return `insert into ${sqlTableName.value} (${headers.join(",")}) values 
+        (${data.map((c) => { return `'${c}'` })});\n`;//,'${}' */
+        return r
+
+    }
+
+    function selectOptions(id) {
+        let sel = document.createElement("select")
+        sel.id = id
+        sel.innerHTML = `
+        <option value="genName">Nome</option>
+        <option value="genSex">Sexo</option>
+        <option value="genNomeMae">Nome mae</option>
+        <option value="genNomePai">Nome Pai</option>
+        <option value="genDataNasc">Nascimento</option>
+        <option value="genEtnia">Etnia</option>
+        <option value="genCNS">CNS</option>
+        <option value="genCPF">CPF</option>
+        <option value="genCEP">CEP</option>
+        <option value="genMunicip">Municipio</option>
+        <option value="genMunicipIBGE">Mun. IBGE</option>
+        <option value="genMunicipUF">Mun. UF</option>
+        <option value="genAddressFull">Endereço</option>
+        <option value="genProntuario">Prontuario</option>
+        <option value="genIdentif">Identidade</option>`
+
+        let myPatterns = JSON.parse(localStorage.getItem("genD-MyPatterns") || "{}")
+        for (const key of Object.keys(myPatterns.patterns)) {
+            //console.log(key);
+            let opt = document.createElement("option")
+            opt.value = key
+            opt.innerText = myPatterns.patterns[key]
+            sel.appendChild(opt)
+        }
+        return sel
+    }
+
+    headersSource.addEventListener('paste', (event) => {
+        let headers = event.clipboardData.getData('text');
+        prepTable(headers)
+    })
+
+    function prepTable(headers) {
+        let parts = headers.split(",")
+        headerNames.innerHTML = ""
+        typeOptions.innerHTML = ""
+        for (const part of parts) {
+            let th = document.createElement("th")
+            th.innerText = part
+            headerNames.appendChild(th)
+            let td = document.createElement("th")
+            td.appendChild(selectOptions(part))
+            typeOptions.appendChild(td)
+        }
+    }
+
+    const masker = simpleMask()
+    class Generators {
+        genPattern(pattern) {
+            let r = ""
+            let pickers = {
+                "D": () => pickDigit(),
+                "C": () => pickAnyCase(),
+                "U": () => pickUpper(),
+                "L": () => pickLower(),
+                "N": () => pickUpperNum(),
+                "n": () => pickLowerNum(),
+                "A": () => pickAny(),
+            }
+            for (const c of pattern) { if (pickers[c]) { r += pickers[c](); continue; } else r += c }
+            return r
+        }
+
+        genProntuario() {
+            return masker.maskString(makeNumid(10), "DD-DDD-DDDDD")
+        }
+
+        genCNS() {
+            return masker.maskString(makeNumid(15), "DDD DDDD DDDD DDDD")
+        }
+        /* genCodIBGE() {
+            return "" + makeNumid(7)
+        } */
+
+        genCPF() {
+            return masker.maskString(makeNumid(11), "DDD.DDD.DDD-DD")
+        }
+
+        genCEP() {
+            return masker.maskString(makeNumid(8), "DDDDD-DDD")
+        }
+        genAddressFull() {
+            return `${addressType()} ${addressName()}, ${nBetween(1, 4999)}`
+        }
+        genDataNasc(yMin = 1970, yMax = 2020) {
+            let year = nBetween(yMin, yMax)
+            let month = nBetween(1, 12)
+            let monthDays = daysInMonth(month, year)
+            let day = nBetween(1, monthDays)
+            return year + "/" + applyPadStart(month) + "/" + applyPadStart(day)
+        }
+        genIdentif() {
+            let raw = makeUpperId(2) + makeNumid(9)
+            return masker.maskString(raw, "LL-DDD.DDD.DDD")
+        }
+        genSex() {
+            let sexTypes = ["M", "F", "O"]
+            return sexTypes[nBetween(0, sexTypes.length - 1)]
+        }
+        genEtnia() {
+            let types = ["branco", "pardo", "preto", "amarelo", "indio"]
+            return types[nBetween(0, types.length - 1)]
+        }
+        genMunicip() {
+            return municipios[nBetween(0, municipios.length - 1)];
+        }
+        genPerson() {
+            let mae = [genNameF(), genSNameSingle(), genSNameSingle()]
+            let pai = [genNameM(), genSNameSingle(), genSNameSingle()]
+            let sex = GENERATORS.genSex()
+            let name = [genName(sex), mae[nBetween(1, 2)], pai[nBetween(1, 2)]]
+            let email = genEmail(name.join(" "))
+            console.log(email);
+            return { name, sex, email, mae, pai }
+        }
+        genUnique(qnt, fnc) {
+            let r = []
+            while (r.length < qnt) {
+                let item = fnc()
+                if (!r.includes(item)) r.push(item)
+            }
+            return r
+        }
+    }
+    const GENERATORS = new Generators()
+
+   
+
+    function genPastable(columns, holder = "holder") {
+        let pastable = ""
+        for (const col of columns) pastable += `${holder}.${col} = \n`;
+        console.log(pastable);
+    }
+
+    async function genData2() {
+        const columnNames = ["pacname", "pacprontuario", "paccns", "pacdatanasc", "paccpf",
+            "pacidentidade", "pacsexo", "pacsetnia", "pacnomemae", "pacnomeresp", "pacendereco",
+            "pacendcep", "pacmunicipio", "pacmunicibge", "pacmunicuf"]
+        //genPastable(columnNames, "h")
+
+        let holder = {}
+        let data = ""
+        let tableName = "paciente"
+        for (let i = 0; i < 1; i++) {
+            let psn = GENERATORS.genPerson()
+            let municip = GENERATORS.genMunicip()
+            holder.pacname = psn.name.join(" ")
+            holder.pacprontuario = GENERATORS.genProntuario()
+            holder.paccns = GENERATORS.genCNS()
+            holder.pacdatanasc = GENERATORS.genDataNasc()
+            holder.paccpf = GENERATORS.genCPF()
+            holder.pacidentidade = GENERATORS.genIdentif()
+            holder.pacsexo = psn.sex
+            holder.pacsetnia = GENERATORS.genEtnia()
+            holder.pacnomemae = psn.mae.join(" ")
+            holder.pacnomeresp = psn.pai.join(" ")
+            holder.pacendereco = GENERATORS.genAddressFull()
+            holder.pacendcep = GENERATORS.genCEP()
+            holder.pacmunicipio = municip.nome
+            holder.pacmunicibge = municip.codigo_ibge
+            holder.pacmunicuf = municip.uf
+            if (Object.values(holder).filter((v) => v == null).length) console.error("Object contains null data");
+            else data += `insert into ${tableName} (${columnNames.join(",")}) values (${columnNames.map((c) => { return `'${holder[c]}'` })});\n`;//,'${}'
+        }
+        if (data) console.log(data);
+    }
+
+    genData2()
+
+</script>
+
+</html>

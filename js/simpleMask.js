@@ -8,15 +8,15 @@ function simpleMask() {
     let unMask = (s) => s.replace(/[^\w\s]/gi, '')
     let maskString = (s, mask) => {
         let raw = unMask(s)
-        let pos = -1, res = ""
-        for (const simb of mask) {
+        let pos = -1, r = ""
+        for (let simb of mask) {
             if (Ks.includes(simb)) {
                 pos++
                 if (!raw[pos]) break
-                if (hdr[simb](raw[pos])) res += raw[pos];
-            } else res += simb;
+                if (hdr[simb](raw[pos])) r += raw[pos];
+            } else r += simb;
         }
-        return res
+        return r
     }
     let maskInput = function (input, mask) {
         input.addEventListener('keyup', function (e) {
