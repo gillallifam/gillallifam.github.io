@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../css/sakura.css">
     <link rel="stylesheet" href="../css/scrollbar1.css">
     <script src="../js/utils.js"></script>
+    <script src="../js/tiny-toast.js"></script>
     <!-- <script src="../js/dataGenBank.js"></script> -->
     <script src="../js/dataGenMain.js"></script>
     <script src="../js/simpleMask.js"></script>
@@ -44,10 +45,25 @@
         margin-left: 5px;
         cursor: pointer;
     }
+
+    #appTitle {
+        display: inline;
+    }
+
+    .tinyToast {
+        background-color: rgb(0, 0, 0) !important;
+        /* left: 0 !important;
+        right: 0 !important; */
+        text-align: center;
+        color: cornsilk !important;
+        border-radius: 3px !important;
+    }
 </style>
 
 <body>
-    <h1>SIGEFI Gendata</h1>
+    <h1 id="appTitle">SIGEFI Gendata</h1>
+    <span>Country br</span> <span>scope general</span>
+    <br>
     <input type="text" name="sqlTableName" id="sqlTableName" placeholder="table name" value="default">
     <span class="bold">Saved tables:</span>
     <span id="savedTables"></span>
@@ -62,6 +78,10 @@
     <button id="btGenerate">Gerar</button>
     <button id="btSave">Salvar</button>
     <button id="btDelete">Apagar</button>
+    <button id="btSaveJson" onclick="saveJSON();">JSON</button>
+    <button id="btSaveSql" onclick="saveSql();">SQL</button>
+    <button id="btCopySql" onclick="copySql();">C</button>
+    <p id="sample"></p>
     <h4>User patterns</h4>
     <p>D=Digit, C=AnyCase, U=UPPERCASE, L=lowercase, N=(Numbers, UPPERCASE), n=(Numbers, lowercase), A=AlphaNumeric</p>
 
@@ -79,7 +99,7 @@
         savedTables.innerHTML = ""
         let myTables = Object.keys(genDOptions.tables)
         for (const t of myTables) {
-            let tbspan = document.createElement("span")
+            let tbspan = document.createElement("button")
             tbspan.classList.add("svTable")
             tbspan.innerText = t
             savedTables.appendChild(tbspan)
@@ -111,7 +131,7 @@
     }
 
     btRemPattern.onclick = function () {
-        let myPatterns = JSON.parse(localStorage.getItem("genD-MyPatterns") || "{}")
+        let myPatterns = JSON.parse(localStorage.getItem("genD-MyPatterns") || `{"ic":0,"patterns":{}}`)
         //let mykeys = Object.keys(myPatterns)
         for (const key in myPatterns.patterns) {
             if (myPatterns.patterns[key] === addPattern.value) {
@@ -168,12 +188,14 @@
         //deleteTable(sqlTableName.value)
     }
 
-    let generatedSql = ""
-    btGenerate.onclick = function (bt) {
+    let generatedData = []
+    let tableHeaders = []
+    btGenerate.onclick = async function (bt) {
+        generatedData.length = 0
         let arrSelects = Array.from(tableDataType.querySelectorAll("select"))
         let allHeaders = arrSelects.map((sel) => sel.id)
-        generatedSql = ""
-        let allData = []
+        tableHeaders = allHeaders
+        //let allData = []
         for (let i = 0; i < genQnt.value; i++) {
             let data = []
             let person = GENERATORS.genPerson()
@@ -181,7 +203,7 @@
             for (const sel of arrSelects) {
                 let value = sel.options[sel.selectedIndex].value
                 let text = sel.options[sel.selectedIndex].text
-                if (["genName", "genNomeMae", "genNomePai", "genSex"].includes(value)) {
+                if (["genName", "genNomeMae", "genNomePai", "genSex", "genTel"].includes(value)) {
                     switch (value) {
                         case "genName":
                             data.push(person.name.join(" "))
@@ -194,6 +216,10 @@
                             break;
                         case "genSex":
                             data.push(person.sex)
+                            break;
+                        case "genTel":
+                            console.log(pmunicip);
+                            data.push(`(${pmunicip.ddd}) ${GENERATORS.genTel()}`)
                             break;
                     }
                     continue
@@ -213,29 +239,43 @@
                     continue
                 }
                 if (value.includes("genPattern")) { data.push(GENERATORS.genPattern(text)); continue }
-                data.push(GENERATORS[value]())
+                data.push(await GENERATORS[value]())
             }
             if (data) {
-                allData.push(data)
-                //let outJSON = dataToJSON(allHeaders, data)
-                //let outSQL = dataToSQL(allHeaders, data)
-                //console.log(allHeaders);
-                //console.log(data);
-
-                /* allHeaders.forEach((header, index) => {
-                    outObj[header] = data[index]
-                }) */
-                //console.log(outJSON);
-                //console.log(outSQL);
-                //generatedSql += `insert into ${sqlTableName.value} (${allHeaders.join(",")}) values (${data.map((c) => { return `'${c}'` })});\n`;//,'${}'
+                generatedData.push(data)
             }
         }
-        //console.log(generatedSql);
-        console.log(dataToJSON(allHeaders, allData));
-        console.log(dataToSQL(allHeaders, allData));
+        tinyToast.show('Data generated! Download as json or sql.').hide(2000)
+        //console.log(JSON.stringify(generatedData[0]));
+        sample.innerText = JSON.stringify(generatedData[0])
+        //console.log(generatedData);
+    }
+
+    function saveJSON() {
+        let pack = dataToJSON(tableHeaders, generatedData)
+        if (!pack) return
+        downloadContent(sqlTableName.value + ".json", JSON.stringify(pack))
+    }
+
+    function copySql() {
+        console.log(generatedSQL);
+        navigator.clipboard.writeText(generatedSQL).then(function () {
+            console.log('Async: Copying to clipboard was successful!');
+        }, function (err) {
+            console.error('Async: Could not copy text: ', err);
+        });
+    }
+
+    let generatedSQL = ""
+    function saveSql() {
+        let pack = dataToSQL(tableHeaders, generatedData)
+        generatedSQL = pack
+        if (!pack) return
+        downloadContent(sqlTableName.value + ".sql", pack)
     }
 
     function dataToJSON(headers, allData) {
+        if (!allData) return
         let r = []
         for (const data of allData) {
             let obj = {}
@@ -248,14 +288,12 @@
     }
 
     function dataToSQL(headers, allData) {
+        if (!allData) return
         let r = ""
         allData.forEach((d) => {
             r += `insert into ${sqlTableName.value} (${headers.join(",")}) values (${d.map((c) => { return `'${c}'` })});\n`;//,'${}'
         })
-        /* return `insert into ${sqlTableName.value} (${headers.join(",")}) values 
-        (${data.map((c) => { return `'${c}'` })});\n`;//,'${}' */
         return r
-
     }
 
     function selectOptions(id) {
@@ -263,11 +301,22 @@
         sel.id = id
         sel.innerHTML = `
         <option value="genName">Nome</option>
+        <option value="genNameShort">Nome curto</option>
         <option value="genSex">Sexo</option>
         <option value="genNomeMae">Nome mae</option>
         <option value="genNomePai">Nome Pai</option>
         <option value="genDataNasc">Nascimento</option>
+        <option value="genCor">Cor</option>
         <option value="genEtnia">Etnia</option>
+        <option value="genUserRole">Função</option>
+        <option value="genPersonEmail">Email</option>
+        <option value="genTel">Telefone</option>
+        <option value="genHash">Hash</option>
+        <option value="genZero">Zero</option>
+        <option value="genOne">One</option>
+        <option value="genBoolTrue">True</option>
+        <option value="genBoolFalse">False</option>
+        <option value="genBoolRandom">Rand bool</option>
         <option value="genCNS">CNS</option>
         <option value="genCPF">CPF</option>
         <option value="genCEP">CEP</option>
@@ -278,7 +327,7 @@
         <option value="genProntuario">Prontuario</option>
         <option value="genIdentif">Identidade</option>`
 
-        let myPatterns = JSON.parse(localStorage.getItem("genD-MyPatterns") || "{}")
+        let myPatterns = JSON.parse(localStorage.getItem("genD-MyPatterns") || `{"ic":0,"patterns":{}}`)
         for (const key of Object.keys(myPatterns.patterns)) {
             //console.log(key);
             let opt = document.createElement("option")
@@ -310,10 +359,12 @@
 
     const masker = simpleMask()
     class Generators {
+        person = {}
         genPattern(pattern) {
             let r = ""
             let pickers = {
-                "D": () => pickDigit(),
+                "D": () => pickDigitInt(),
+                "d": () => pickDigitAny(),
                 "C": () => pickAnyCase(),
                 "U": () => pickUpper(),
                 "L": () => pickLower(),
@@ -325,6 +376,57 @@
             return r
         }
 
+        genName(gen = "#") {
+            switch (gen) {
+                case "F":
+                    return femNames[nBetween(0, femNames.length - 1)]
+                case "M":
+                    return masNames[nBetween(0, masNames.length - 1)]
+                default:
+                    return nBetween(0, 1) ? femNames[nBetween(0, femNames.length - 1)] : masNames[nBetween(0, masNames.length - 1)]
+            }
+        }
+        genNameShort() {
+            return this.person.name[0]
+        }
+        genNameF() {
+            return femNames[nBetween(0, femNames.length - 1)]
+        }
+        genNameM() {
+            return masNames[nBetween(0, masNames.length - 1)]
+        }
+
+        genSNameSingle() {
+            return `${sNames[nBetween(0, sNames.length - 1)]}`
+        }
+
+        genSNames() {
+            return `${sNames[nBetween(0, sNames.length - 1)]} ${sNames[nBetween(0, sNames.length - 1)]}`
+        }
+
+        genEmail(fname) {
+            let parts = fname.split(" ")
+            let name = ""
+            let partLen = 23
+            for (const p of parts) {
+                partLen = partLen - name.length
+                name += p.substr(0, partLen)
+            }
+            return `${name.toLowerCase()}@${fruits[nBetween(0, fruits.length - 1)]}.${domains[nBetween(0, domains.length - 1)]}`
+        }
+
+        genPersonEmail() {
+            return this.person.email
+        }
+
+        async genHash() {
+            return await getHash("123456")
+        }
+
+        genUserRole() {
+            return userRoles[nBetween(0, userRoles.length - 1)]
+        }
+
         genProntuario() {
             return masker.maskString(makeNumid(10), "DD-DDD-DDDDD")
         }
@@ -332,9 +434,6 @@
         genCNS() {
             return masker.maskString(makeNumid(15), "DDD DDDD DDDD DDDD")
         }
-        /* genCodIBGE() {
-            return "" + makeNumid(7)
-        } */
 
         genCPF() {
             return masker.maskString(makeNumid(11), "DDD.DDD.DDD-DD")
@@ -343,8 +442,16 @@
         genCEP() {
             return masker.maskString(makeNumid(8), "DDDDD-DDD")
         }
+
+        genAddressType() {
+            return logradTypes[nBetween(0, logradTypes.length - 1)]
+        }
+        genAddressName() {
+            let r = nBetween(0, 99)
+            return r < 10 ? "" + nBetween(1, 99) : streetNames[nBetween(0, streetNames.length - 1)]
+        }
         genAddressFull() {
-            return `${addressType()} ${addressName()}, ${nBetween(1, 4999)}`
+            return `${this.genAddressType()} ${this.genAddressName()}, ${nBetween(1, 4999)}`
         }
         genDataNasc(yMin = 1970, yMax = 2020) {
             let year = nBetween(yMin, yMax)
@@ -358,24 +465,47 @@
             return masker.maskString(raw, "LL-DDD.DDD.DDD")
         }
         genSex() {
-            let sexTypes = ["M", "F", "O"]
+            let sexTypes = ["Masculino", "Feminino", "Outros"]
             return sexTypes[nBetween(0, sexTypes.length - 1)]
+        }
+        genTel() {
+            return this.genPattern("9DDDD-DDDD")
+        }
+        genCor() {
+            let types = ["branca", "parda", "preta", "amarela", "indigena"]
+            return types[nBetween(0, types.length - 1)]
         }
         genEtnia() {
             let types = ["branco", "pardo", "preto", "amarelo", "indio"]
             return types[nBetween(0, types.length - 1)]
         }
         genMunicip() {
-            return municipios[nBetween(0, municipios.length - 1)];
+            this.municip = municipios[nBetween(0, municipios.length - 1)];
+            return this.municip
         }
         genPerson() {
-            let mae = [genNameF(), genSNameSingle(), genSNameSingle()]
-            let pai = [genNameM(), genSNameSingle(), genSNameSingle()]
+            let mae = [GENERATORS.genNameF(), GENERATORS.genSNameSingle(), GENERATORS.genSNameSingle()]
+            let pai = [GENERATORS.genNameM(), GENERATORS.genSNameSingle(), GENERATORS.genSNameSingle()]
             let sex = GENERATORS.genSex()
-            let name = [genName(sex), mae[nBetween(1, 2)], pai[nBetween(1, 2)]]
-            let email = genEmail(name.join(" "))
-            console.log(email);
-            return { name, sex, email, mae, pai }
+            let name = [GENERATORS.genName(sex), mae[nBetween(1, 2)], pai[nBetween(1, 2)]]
+            let email = GENERATORS.genEmail(name.join(" "))
+            this.person = { name, sex, email, mae, pai }
+            return this.person
+        }
+        genZero() {
+            return 0
+        }
+        genOne() {
+            return 1
+        }
+        genBoolTrue() {
+            return true
+        }
+        genBoolFalse() {
+            return false
+        }
+        genBoolRandom() {
+            return (Math.random() > 0.5) ? true : false
         }
         genUnique(qnt, fnc) {
             let r = []
@@ -388,48 +518,11 @@
     }
     const GENERATORS = new Generators()
 
-   
 
-    function genPastable(columns, holder = "holder") {
-        let pastable = ""
-        for (const col of columns) pastable += `${holder}.${col} = \n`;
-        console.log(pastable);
-    }
-
-    async function genData2() {
-        const columnNames = ["pacname", "pacprontuario", "paccns", "pacdatanasc", "paccpf",
-            "pacidentidade", "pacsexo", "pacsetnia", "pacnomemae", "pacnomeresp", "pacendereco",
-            "pacendcep", "pacmunicipio", "pacmunicibge", "pacmunicuf"]
-        //genPastable(columnNames, "h")
-
-        let holder = {}
-        let data = ""
-        let tableName = "paciente"
-        for (let i = 0; i < 1; i++) {
-            let psn = GENERATORS.genPerson()
-            let municip = GENERATORS.genMunicip()
-            holder.pacname = psn.name.join(" ")
-            holder.pacprontuario = GENERATORS.genProntuario()
-            holder.paccns = GENERATORS.genCNS()
-            holder.pacdatanasc = GENERATORS.genDataNasc()
-            holder.paccpf = GENERATORS.genCPF()
-            holder.pacidentidade = GENERATORS.genIdentif()
-            holder.pacsexo = psn.sex
-            holder.pacsetnia = GENERATORS.genEtnia()
-            holder.pacnomemae = psn.mae.join(" ")
-            holder.pacnomeresp = psn.pai.join(" ")
-            holder.pacendereco = GENERATORS.genAddressFull()
-            holder.pacendcep = GENERATORS.genCEP()
-            holder.pacmunicipio = municip.nome
-            holder.pacmunicibge = municip.codigo_ibge
-            holder.pacmunicuf = municip.uf
-            if (Object.values(holder).filter((v) => v == null).length) console.error("Object contains null data");
-            else data += `insert into ${tableName} (${columnNames.join(",")}) values (${columnNames.map((c) => { return `'${holder[c]}'` })});\n`;//,'${}'
-        }
-        if (data) console.log(data);
-    }
-
-    genData2()
+    /* console.log(Object.getOwnPropertyNames(Generators.prototype).map((m) => {
+        return m.startsWith("gen") && m
+    })); */
+    //{"tables":{"paciente":{"headers":["pacname","pacprontuario","paccns","pacdatanasc","paccpf","pacidentidade","pacsexo","pacsetnia","pacnomemae","pacnomeresp","pacendereco","pacendcep","pacmunicipio","pacmunicibge","pacmunicuf"],"options":["genName","genProntuario","genCNS","genDataNasc","genCPF","genIdentif","genSex","genEtnia","genNomeMae","genNomePai","genAddressFull","genCEP","genMunicip","genMunicipIBGE","genMunicipUF"]}}}
 
 </script>
 

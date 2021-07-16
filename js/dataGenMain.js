@@ -11,67 +11,10 @@ const fruits = ["apple", "apricot", "avocado", "banana", "bilberry", "blackberry
 const streetNames = ["pau brasil", "margarida", "rosa", "cravo", 'ipe', "manaca", "buganvilia", "alamanda", "caliandra", "violeta", "jacaranda", "plumeria","Italia", "Brasil"]
 
 const logradTypes = ["rua", "avenida", "travessa", "via", "viela", "beco", "boulevard", "alameda","rodovia","marginal"]
+const userRoles = ["usuario", "assistente", "gerente", "supervisor","admin"]
 
 const municipios = [{"codigo_ibge":1300029,"nome":"Alvarães","latitude":-3.22727,"longitude":-64.8007,"capital":0,"codigo_uf":13,"siafi_id":"0289","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1300060,"nome":"Amaturá","latitude":-3.37455,"longitude":-68.2005,"capital":0,"codigo_uf":13,"siafi_id":"0291","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1300086,"nome":"Anamã","latitude":-3.56697,"longitude":-61.3963,"capital":0,"codigo_uf":13,"siafi_id":"0293","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1300102,"nome":"Anori","latitude":-3.74603,"longitude":-61.6575,"capital":0,"codigo_uf":13,"siafi_id":"0203","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1300144,"nome":"Apuí","latitude":-7.19409,"longitude":-59.896,"capital":0,"codigo_uf":13,"siafi_id":"0969","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1300201,"nome":"Atalaia do Norte","latitude":-4.37055,"longitude":-70.1967,"capital":0,"codigo_uf":13,"siafi_id":"0205","ddd":97,"fuso_horario":"America/Rio_Branco","uf":"AM"},{"codigo_ibge":1300300,"nome":"Autazes","latitude":-3.58574,"longitude":-59.1256,"capital":0,"codigo_uf":13,"siafi_id":"0207","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1300409,"nome":"Barcelos","latitude":-0.983373,"longitude":-62.9311,"capital":0,"codigo_uf":13,"siafi_id":"0209","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1300508,"nome":"Barreirinha","latitude":-2.79886,"longitude":-57.0679,"capital":0,"codigo_uf":13,"siafi_id":"0211","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1300607,"nome":"Benjamin Constant","latitude":-4.37768,"longitude":-70.0342,"capital":0,"codigo_uf":13,"siafi_id":"0213","ddd":97,"fuso_horario":"America/Rio_Branco","uf":"AM"},{"codigo_ibge":1300631,"nome":"Beruri","latitude":-3.89874,"longitude":-61.3616,"capital":0,"codigo_uf":13,"siafi_id":"0295","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1300680,"nome":"Boa Vista do Ramos","latitude":-2.97409,"longitude":-57.5873,"capital":0,"codigo_uf":13,"siafi_id":"0297","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1300706,"nome":"Boca do Acre","latitude":-8.74232,"longitude":-67.3919,"capital":0,"codigo_uf":13,"siafi_id":"0215","ddd":97,"fuso_horario":"America/Rio_Branco","uf":"AM"},{"codigo_ibge":1300805,"nome":"Borba","latitude":-4.39154,"longitude":-59.5874,"capital":0,"codigo_uf":13,"siafi_id":"0217","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1300839,"nome":"Caapiranga","latitude":-3.31537,"longitude":-61.2206,"capital":0,"codigo_uf":13,"siafi_id":"0299","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1300904,"nome":"Canutama","latitude":-6.52582,"longitude":-64.3953,"capital":0,"codigo_uf":13,"siafi_id":"0219","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1301001,"nome":"Carauari","latitude":-4.88161,"longitude":-66.9086,"capital":0,"codigo_uf":13,"siafi_id":"0221","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1301100,"nome":"Careiro","latitude":-3.76803,"longitude":-60.369,"capital":0,"codigo_uf":13,"siafi_id":"0223","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1301159,"nome":"Careiro da Várzea","latitude":-3.314,"longitude":-59.5557,"capital":0,"codigo_uf":13,"siafi_id":"0965","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1301209,"nome":"Coari","latitude":-4.09412,"longitude":-63.1441,"capital":0,"codigo_uf":13,"siafi_id":"0225","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1301308,"nome":"Codajás","latitude":-3.83053,"longitude":-62.0658,"capital":0,"codigo_uf":13,"siafi_id":"0227","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1301407,"nome":"Eirunepé","latitude":-6.65677,"longitude":-69.8662,"capital":0,"codigo_uf":13,"siafi_id":"0229","ddd":97,"fuso_horario":"America/Rio_Branco","uf":"AM"},{"codigo_ibge":1301506,"nome":"Envira","latitude":-7.43789,"longitude":-70.0281,"capital":0,"codigo_uf":13,"siafi_id":"0231","ddd":97,"fuso_horario":"America/Rio_Branco","uf":"AM"},{"codigo_ibge":1301605,"nome":"Fonte Boa","latitude":-2.52342,"longitude":-66.0942,"capital":0,"codigo_uf":13,"siafi_id":"0233","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1301654,"nome":"Guajará","latitude":-7.53797,"longitude":-72.5907,"capital":0,"codigo_uf":13,"siafi_id":"0967","ddd":97,"fuso_horario":"America/Rio_Branco","uf":"AM"},{"codigo_ibge":1301704,"nome":"Humaitá","latitude":-7.51171,"longitude":-63.0327,"capital":0,"codigo_uf":13,"siafi_id":"0235","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1301803,"nome":"Ipixuna","latitude":-7.04791,"longitude":-71.6934,"capital":0,"codigo_uf":13,"siafi_id":"0239","ddd":97,"fuso_horario":"America/Rio_Branco","uf":"AM"},{"codigo_ibge":1301852,"nome":"Iranduba","latitude":-3.27479,"longitude":-60.19,"capital":0,"codigo_uf":13,"siafi_id":9835,"ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1301902,"nome":"Itacoatiara","latitude":-3.13861,"longitude":-58.4449,"capital":0,"codigo_uf":13,"siafi_id":"0241","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1301951,"nome":"Itamarati","latitude":-6.43852,"longitude":-68.2437,"capital":0,"codigo_uf":13,"siafi_id":9837,"ddd":97,"fuso_horario":"America/Rio_Branco","uf":"AM"},{"codigo_ibge":1302009,"nome":"Itapiranga","latitude":-2.74081,"longitude":-58.0293,"capital":0,"codigo_uf":13,"siafi_id":"0243","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1302108,"nome":"Japurá","latitude":-1.88237,"longitude":-66.9291,"capital":0,"codigo_uf":13,"siafi_id":"0245","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1302207,"nome":"Juruá","latitude":-3.48438,"longitude":-66.0718,"capital":0,"codigo_uf":13,"siafi_id":"0247","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1302306,"nome":"Jutaí","latitude":-2.75814,"longitude":-66.7595,"capital":0,"codigo_uf":13,"siafi_id":"0249","ddd":97,"fuso_horario":"America/Rio_Branco","uf":"AM"},{"codigo_ibge":1302405,"nome":"Lábrea","latitude":-7.26413,"longitude":-64.7948,"capital":0,"codigo_uf":13,"siafi_id":"0251","ddd":97,"fuso_horario":"America/Rio_Branco","uf":"AM"},{"codigo_ibge":1302504,"nome":"Manacapuru","latitude":-3.29066,"longitude":-60.6216,"capital":0,"codigo_uf":13,"siafi_id":"0253","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1302553,"nome":"Manaquiri","latitude":-3.44078,"longitude":-60.4612,"capital":0,"codigo_uf":13,"siafi_id":9839,"ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1302603,"nome":"Manaus","latitude":-3.11866,"longitude":-60.0212,"capital":1,"codigo_uf":13,"siafi_id":"0255","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1302702,"nome":"Manicoré","latitude":-5.80462,"longitude":-61.2895,"capital":0,"codigo_uf":13,"siafi_id":"0257","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1302801,"nome":"Maraã","latitude":-1.85313,"longitude":-65.573,"capital":0,"codigo_uf":13,"siafi_id":"0259","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1302900,"nome":"Maués","latitude":-3.39289,"longitude":-57.7067,"capital":0,"codigo_uf":13,"siafi_id":"0261","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1303007,"nome":"Nhamundá","latitude":-2.20793,"longitude":-56.7112,"capital":0,"codigo_uf":13,"siafi_id":"0263","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1303106,"nome":"Nova Olinda do Norte","latitude":-3.90037,"longitude":-59.094,"capital":0,"codigo_uf":13,"siafi_id":"0265","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1303205,"nome":"Novo Airão","latitude":-2.63637,"longitude":-60.9434,"capital":0,"codigo_uf":13,"siafi_id":"0201","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1303304,"nome":"Novo Aripuanã","latitude":-5.12593,"longitude":-60.3732,"capital":0,"codigo_uf":13,"siafi_id":"0267","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1303403,"nome":"Parintins","latitude":-2.63741,"longitude":-56.729,"capital":0,"codigo_uf":13,"siafi_id":"0269","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1303502,"nome":"Pauini","latitude":-7.71311,"longitude":-66.992,"capital":0,"codigo_uf":13,"siafi_id":"0271","ddd":97,"fuso_horario":"America/Rio_Branco","uf":"AM"},{"codigo_ibge":1303536,"nome":"Presidente Figueiredo","latitude":-2.02981,"longitude":-60.0234,"capital":0,"codigo_uf":13,"siafi_id":9841,"ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1303569,"nome":"Rio Preto da Eva","latitude":-2.7045,"longitude":-59.6858,"capital":0,"codigo_uf":13,"siafi_id":9843,"ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1303601,"nome":"Santa Isabel do Rio Negro","latitude":-0.410824,"longitude":-65.0092,"capital":0,"codigo_uf":13,"siafi_id":"0237","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1303700,"nome":"Santo Antônio do Içá","latitude":-3.09544,"longitude":-67.9463,"capital":0,"codigo_uf":13,"siafi_id":"0273","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1303809,"nome":"São Gabriel da Cachoeira","latitude":-0.11909,"longitude":-67.084,"capital":0,"codigo_uf":13,"siafi_id":"0283","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1303908,"nome":"São Paulo de Olivença","latitude":-3.47292,"longitude":-68.9646,"capital":0,"codigo_uf":13,"siafi_id":"0275","ddd":97,"fuso_horario":"America/Rio_Branco","uf":"AM"},{"codigo_ibge":1303957,"nome":"São Sebastião do Uatumã","latitude":-2.55915,"longitude":-57.8731,"capital":0,"codigo_uf":13,"siafi_id":9845,"ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1304005,"nome":"Silves","latitude":-2.81748,"longitude":-58.248,"capital":0,"codigo_uf":13,"siafi_id":"0277","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1304062,"nome":"Tabatinga","latitude":-4.2416,"longitude":-69.9383,"capital":0,"codigo_uf":13,"siafi_id":9847,"ddd":97,"fuso_horario":"America/Rio_Branco","uf":"AM"},{"codigo_ibge":1304104,"nome":"Tapauá","latitude":-5.62085,"longitude":-63.1808,"capital":0,"codigo_uf":13,"siafi_id":"0279","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1304203,"nome":"Tefé","latitude":-3.36822,"longitude":-64.7193,"capital":0,"codigo_uf":13,"siafi_id":"0281","ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1304237,"nome":"Tonantins","latitude":-2.86582,"longitude":-67.7919,"capital":0,"codigo_uf":13,"siafi_id":9851,"ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1304260,"nome":"Uarini","latitude":-2.99609,"longitude":-65.1133,"capital":0,"codigo_uf":13,"siafi_id":9849,"ddd":97,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1304302,"nome":"Urucará","latitude":-2.52936,"longitude":-57.7538,"capital":0,"codigo_uf":13,"siafi_id":"0285","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"},{"codigo_ibge":1304401,"nome":"Urucurituba","latitude":-3.12841,"longitude":-58.1496,"capital":0,"codigo_uf":13,"siafi_id":"0287","ddd":92,"fuso_horario":"America/Porto_Velho","uf":"AM"}]
-//let xData = fruits.map((n) => `"${n.toLowerCase()}"`)
-//console.log(xData.join(","));
-//console.log(municipios);
 
-function addressType() {
-    return logradTypes[nBetween(0, logradTypes.length - 1)]
-}
-
-function addressName() {
-    let r = nBetween(0, 99)
-    return r < 10 ? "" + nBetween(1, 99) : streetNames[nBetween(0, streetNames.length - 1)]
-}
-
-function genAddressFull() {
-    return `${addressType()} ${addressName()}, ${nBetween(1, 4999)}`
-}
-
-//console.log(addressFull());
-
-function genName(gen = "#") {
-    switch (gen) {
-        case "F":
-            return femNames[nBetween(0, femNames.length - 1)]
-        case "M":
-            return masNames[nBetween(0, masNames.length - 1)]
-        default:
-            return nBetween(0, 1) ? femNames[nBetween(0, femNames.length - 1)] : masNames[nBetween(0, masNames.length - 1)]
-    }
-}
-function genNameF() {
-    return femNames[nBetween(0, femNames.length - 1)]
-}
-function genNameM() {
-    return masNames[nBetween(0, masNames.length - 1)]
-}
-
-function genSNames() {
-    return `${sNames[nBetween(0, sNames.length - 1)]} ${sNames[nBetween(0, sNames.length - 1)]}`
-}
-function genSNameSingle() {
-    return `${sNames[nBetween(0, sNames.length - 1)]}`
-}
-function genFullName() {
-    return `${genName()} ${genSNames()}`
-}
-function genEmail(fname) {
-    console.log(fname);
-    if (!fname) fname = genFullName()
-    let parts = fname.split(" ")
-    let name = ""
-    let partLen = 23
-    for (const p of parts) {
-        partLen = partLen - name.length
-        name += p.substr(0, partLen)
-    }
-    return `${name.toLowerCase()}@${fruits[nBetween(0, fruits.length - 1)]}.${domains[nBetween(0, domains.length - 1)]}`
-}
-/* let dataName = genFulName()
-console.log(dataName, genEmail(dataName)); */
 
 
 

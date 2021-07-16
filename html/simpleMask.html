@@ -9,21 +9,27 @@
     <link rel="stylesheet" href="../css/sakura.css">
     <script src="../js/simpleMask.js"></script>
     <style>
-        code{
+        code {
             background-color: #dd7d7d00;
             padding: 0;
             margin: 0;
         }
-        #codeHolder{
+
+        #codeHolder {
             background-color: rgb(8, 8, 8);
             border-left: 6px solid #01afaf;
         }
-        
-        #libName{
+
+        #libName {
             display: inline;
         }
-        #hidden{
+
+        #hidden {
             color: rgb(34, 31, 31);
+        }
+
+        input:invalid {
+            background-color: rgb(241, 25, 61);
         }
     </style>
 </head>
@@ -34,19 +40,22 @@
     <h2>A simple, small and easy to use JS string and input masker.</h2>
     <h5 id="hidden">Stop making your site ashamed of your ugly masks.</h5>
     <h3>Use mask!</h3>
-    <span>D=Digit, A=Alphanumeric, L=Leter</span><br>
+    <span>P=Positive, D=Digit, L=Lowercase, U=Uppercase, C=Anycase, N=Numbers and Uppercase, n=Numbers and Lowercase, A=Alphanumeric</span><br>
     <input type="text" id="testMask" name="testMask" placeholder="text">
     <span id="currentMaskDisplay"></span><br>
     <span>Samples</span>
     <div id="btRow">
-        <button type="button">LLL</button>
+        <button type="button">LL.L</button>
+        <button type="button">AA*A</button>
+        <button type="button">CC&C</button>
+        <button type="button">NN#N</button>
+        <button type="button">nn%n</button>
         <button type="button">DD/DD/DDDD</button>
         <button type="button">DD.LLL.DDDD</button>
         <button type="button">DDD.DD.DDDD</button>
-        <button type="button">DD/DDDD</button>
-        <button type="button">DD-DD-DDDD</button>
+        <button type="button">PP/PP</button>
+        <button type="button">UU-DD-DDDD</button>
         <button type="button">$ DDD.DD</button>
-        <button type="button">$ DDD,DDD</button>
         <button type="button">DDD,DD $</button>
     </div>
     <h2>Usage</h2>
@@ -55,28 +64,30 @@
             "script src="../js/simpleMask.js">/script"
     
             let masker = simpleMask()
-            masker.maskInput(yourInput, "inputMask")
+            masker.maskInput(yourInput, "inputMask", "bool createPattern")
             //or
             console.log(masker.maskString("Hello", "LLLLL masked!"))
         </code>
     </div>
-    
+
     <h2>Download</h2>
-    <a href="https://raw.githubusercontent.com/gillallifam/gillallifam.github.io/main/js/simpleMask.js">simpleMask.js</a>
-    
+    <a
+        href="https://raw.githubusercontent.com/gillallifam/gillallifam.github.io/main/js/simpleMask.js">simpleMask.js</a>
+
 </body>
 <script>
+
     let masker = simpleMask()
-    let currentMask = "DD/DD/DDDD"
+    let currentMask = "DDD.DDD.DDD-DD"
     currentMaskDisplay.innerText = currentMask
-    masker.maskInput(testMask, currentMask)
+    masker.maskInput(testMask, currentMask, true)
 
     btRow.onclick = function (e) {
         if (e.target.type != "button") return
         currentMaskDisplay.innerText = e.target.innerText
         currentMask = e.target.innerText
         testMask.replaceWith(testMask.cloneNode(true));
-        masker.maskInput(testMask, currentMask)
+        masker.maskInput(testMask, currentMask, true)
         testMask.focus()
         testMask.value = ""
     }

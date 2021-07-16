@@ -459,7 +459,11 @@ function makeUpperId(length) {
     return result;
 }
 
-function pickDigit() {
+function pickDigitInt() {
+    var chars = '123456789';
+    return chars.charAt(Math.floor(Math.random() * chars.length))
+}
+function pickDigitAny() {
     var chars = '0123456789';
     return chars.charAt(Math.floor(Math.random() * chars.length))
 }
@@ -610,6 +614,10 @@ async function getIP() {
 
 function stripSeparators(s) {
     return s.replace(/[^0-9]/g, '')
+}
+
+function stripSeparators2(s) {
+    return s.replace(/[^0-9A-Z-a-z]/g, '')
 }
 
 const _MS_PER_DAY = 1000 * 60 * 60 * 24;
