@@ -47,9 +47,10 @@ function simpleMask() {
         "A": (s) => /^[A-Za-z0-9]+$/.test(s),
     }
     let Ks = Object.keys(hdr)
-    let unMask = (s) => s.replace(/[^\w\s]/gi, '')
+    let unMask = (s) => s.replace(/[^\w\s]/gi, '').replaceAll(" ", "")
     let maskString = (s, mask) => {
         let raw = unMask(s)
+        console.log(raw);
         if (!raw) return ""
         let pos = -1, r = ""
         for (let simb of mask) {
@@ -59,7 +60,8 @@ function simpleMask() {
                 if (hdr[simb](raw[pos])) r += raw[pos];
             } else r += simb;
         }
-        if (/[\w\d]+/.test(r)) return r
+       
+        if (/[\w\d ]+/.test(r)) return r
         else return ""
     }
     let maskInput = function (input, mask, pattern) {
