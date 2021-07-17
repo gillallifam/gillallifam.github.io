@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Mask</title>
     <link rel="stylesheet" href="../css/sakura.css">
-    <script src="../js/simpleMask.js"></script>
+    <script src="../js/simpleMask.min.js"></script>
     <style>
         body {
             width: 100%;
@@ -80,21 +80,24 @@
             //or
             console.log(masker.maskString("Hello", "ULLLL masked!"))
 
-            //put that in your css and choose your error color
+            //put that in your css and choose your invalid styles
             input:invalid {
-                background-color: rgb(241, 25, 61);
+                color: red;
+                background-color: black;
             }
         </code>
     </div>
 
     <h2>Download</h2>
-    <a
+    <a target="_blank"
         href="https://raw.githubusercontent.com/gillallifam/gillallifam.github.io/main/js/simpleMask.js">simpleMask.js</a>
+    <a target="_blank"
+        href="https://raw.githubusercontent.com/gillallifam/gillallifam.github.io/main/js/simpleMask.min.js">simpleMask.min.js</a>
 
 </body>
 <script>
 
-    let masker = simpleMask()
+    let masker = simpleMask({ specialChars: ["\\", ".", "?", "[", "^", "]", "$", "(", ")", "=", "|", ":", "-"] })
     let currentMask = "DDD.DDD.DDD-DD"
     currentMaskDisplay.innerText = currentMask
     masker.maskInput(testMask, currentMask, true)

@@ -1,18 +1,18 @@
 
-function simpleMask() {
+function simpleMask(options) {
+
+    const regexSpecialCharacters = options.specialChars || [
+        "\\", ".", "+", "*", "?",
+        "[", "^", "]", "$", "(",
+        ")", "{", "}", "=", "!",
+        "<", ">", "|", ":", "-"
+    ];
 
     function extractSymbols(s) {
         return s.replace(/\w/g, '').split("").filter(function (x, n, s) {
             return s.indexOf(x) == n
         }).join("")
     }
-
-    const regexSpecialCharacters = [
-        "\\", ".", "+", "*", "?",
-        "[", "^", "]", "$", "(",
-        ")", "{", "}", "=", "!",
-        "<", ">", "|", ":", "-"
-    ];
 
     function replacer(str) {
         regexSpecialCharacters.forEach(rgxSpecChar =>
@@ -64,18 +64,18 @@ function simpleMask() {
         else return ""
     }
     let maskInput = function (input, mask, usePattern = true) {
-        let pat = selectPattern(mask)
-        let p1 = pat.substr(0, pat.length - 2)
-        let p2 = replacer(extractSymbols(mask))
-        console.log(p1 + p2 + "]+");
+        if (usePattern) {
+            let pat = selectPattern(mask)
+            let p1 = pat.substr(0, pat.length - 2)
+            let p2 = replacer(extractSymbols(mask))
+            input.setAttribute("pattern", p1 + p2 + "]+")
+        }
 
         input.addEventListener('keyup', function (e) {
             if (!(e.keyCode === 8)) {
                 e.target.value = maskString(e.target.value, mask)
             }
         });
-
-        if (usePattern) input.setAttribute("pattern", p1 + p2 + "]+")
     }
     return {
         maskString: maskString,
