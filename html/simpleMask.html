@@ -9,6 +9,16 @@
     <link rel="stylesheet" href="../css/sakura.css">
     <script src="../js/simpleMask.js"></script>
     <style>
+        body {
+            width: 100%;
+            padding-left: 0 !important;
+        }
+
+        body {
+            max-width: 98%;
+            /* padding-left: 15px !important; */
+        }
+
         code {
             background-color: #dd7d7d00;
             padding: 0;
@@ -29,7 +39,8 @@
         }
 
         input:invalid {
-            background-color: rgb(241, 25, 61);
+            color: red;
+            background-color: black;
         }
     </style>
 </head>
@@ -40,7 +51,8 @@
     <h2>A simple, small and easy to use JS string and input masker.</h2>
     <h5 id="hidden">Stop making your site ashamed of your ugly masks.</h5>
     <h3>Use mask!</h3>
-    <span>P=Positive, D=Digit, L=Lowercase, U=Uppercase, C=Anycase, N=Numbers and Uppercase, n=Numbers and Lowercase, A=Alphanumeric</span><br>
+    <span>P=Positive, D=Digit, L=Lowercase, U=Uppercase, C=Anycase, N=Numbers and Uppercase, n=Numbers and Lowercase,
+        A=Alphanumeric</span><br>
     <input type="text" id="testMask" name="testMask" placeholder="text">
     <span id="currentMaskDisplay"></span><br>
     <span>Samples</span>
@@ -51,9 +63,9 @@
         <button type="button">NN#N</button>
         <button type="button">nn%n</button>
         <button type="button">DD/DD/DDDD</button>
-        <button type="button">DD.LLL.DDDD</button>
+        <button type="button">(DD)LLL.DDDD</button>
         <button type="button">DDD.DD.DDDD</button>
-        <button type="button">PP/PP</button>
+        <button type="button">PP)(PP</button>
         <button type="button">UU-DD-DDDD</button>
         <button type="button">$ DDDD.DD</button>
         <button type="button">DDD,DD $</button>
@@ -67,6 +79,11 @@
             masker.maskInput(yourInput, "inputMask", "bool createPattern")
             //or
             console.log(masker.maskString("Hello", "ULLLL masked!"))
+
+            //put that in your css and choose your error color
+            input:invalid {
+                background-color: rgb(241, 25, 61);
+            }
         </code>
     </div>
 
@@ -78,7 +95,6 @@
 <script>
 
     let masker = simpleMask()
-    console.log(masker.unMask("x 546456464 x").replaceAll(" ", ""));
     let currentMask = "DDD.DDD.DDD-DD"
     currentMaskDisplay.innerText = currentMask
     masker.maskInput(testMask, currentMask, true)
