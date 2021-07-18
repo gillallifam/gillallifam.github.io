@@ -65,8 +65,8 @@ function simpleMask(options) {
     }
     let maskInput = function (input, mask, usePattern = true) {
         if (usePattern) {
-            let pat = selectPattern(mask)
-            let p1 = pat.substr(0, pat.length - 2)
+            let p0 = selectPattern(mask)
+            let p1 = p0.substr(0, p0.length - 2)
             let p2 = replacer(extractSymbols(mask))
             input.setAttribute("pattern", `${p1 + p2}]{${mask.length},}`)
             input.required = true
