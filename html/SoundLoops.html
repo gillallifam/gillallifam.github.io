@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+    <title>SndLoop</title>
+</head>
+
+<body>
+    <button onclick="start();" id="play">play</button>
+    <button onclick="stop();" id="stop">stop</button>
+    <button onclick="change();" id="stop">change</button>
+    <br>
+    <br>
+    <div id="soundsDiv"></div>
+    <script>
+
+        const soundsDiv = document.getElementById("soundsDiv")
+
+        const AmbBuilder = (themeCfg) => {
+            const SOUNDS = {}
+            let cfg = themeCfg
+            let mainSound = null
+            let interval = null
+            return {
+                addSound: (sndCfg) => {
+                    const { name, local, loop = false } = sndCfg
+                    const snd = new Audio(local)
+                    if (name === 'main') {
+                        snd.loop = true
+                        snd.volume = .5
+                        mainSound = snd
+                    } else {
+                        SOUNDS[name] = { ...sndCfg, snd }
+                    }
+                },
+                sounds: () => { return { mainSound, ...SOUNDS } },
+                cfg: () => themeCfg,
+                start: () => {
+                    mainSound.play()
+                    let count = 0
+                    interval = setInterval(() => {
+                        count++
+                        if (count % 5 == 0) {
+                            let mainVariance = Math.random() / 10 * (Math.round(Math.random()) ? 1 : -1)
+                            let actualMainVolume = mainSound.volume + mainVariance
+                            if (actualMainVolume > 1) actualMainVolume = 1
+                            if (actualMainVolume < .1) actualMainVolume = .1
+                            mainSound.volume = actualMainVolume
+                        }
+                        for (const cfg of Object.values(SOUNDS)) {
+                            let { name, local, snd, period = 0, chance = 5, volumes } = cfg
+                            const time = (period || nBetween(1, 100) > 100 - chance)
+
+                            if (count % time == 0) {
+                                if (volumes) {
+                                    const [min, max] = volumes
+                                    snd.volume = nBetween(min, max) / 100
+                                }
+
+                                if (cfg.max > 0) {
+                                    if (cfg.instances < cfg.max) {
+                                        cfg.instances++
+                                        const instance = new Audio(local)
+                                        if (volumes) {
+                                            const [min, max] = volumes
+                                            instance.volume = nBetween(min, max) / 100
+                                        }
+                                        instance.play()
+                                        instance.onended = () => {
+                                            cfg.instances--
+                                        }
+                                    }
+                                } else {
+                                    if (snd.currentTime === 0 || snd.ended) {
+                                        snd.play()
+                                        if (cfg.unique) delete SOUNDS[name]
+                                    }
+                                }
+                            }
+                        }
+                    }, 1000);
+                },
+                stop: () => {
+                    mainSound.pause()
+                    mainSound.currentTime = 0
+                    clearInterval(interval)
+                    for (const cfg of Object.values(SOUNDS)) {
+                        cfg.snd.pause()
+                        cfg.snd.currentTime = 0
+                    }
+                }
+            }
+        }
+
+        let currTheme = localStorage.getItem("currTheme") || "nightClocks"
+        const Themes = {}
+        Themes.nightClocks = AmbBuilder({ name: 'nightClocks' })
+        Themes.nightClocks.addSound({ name: 'main', local: 'snd/discordant-chime.wav' })
+        Themes.nightClocks.addSound({ name: 'owl1', local: 'snd/owl1.mp3', chance: 2, volumes: [10, 30] })
+        Themes.nightClocks.addSound({ name: 'owl2', local: 'snd/owl2.wav', chance: 2, volumes: [10, 30] })
+        Themes.nightClocks.addSound({ name: 'owl3', local: 'snd/owl3.wav', chance: 2, volumes: [10, 30] })
+        Themes.nightClocks.addSound({ name: 'wolf1', local: 'snd/wolf1.mp3', chance: 9, volumes: [10, 30], max: 2, instances: 0 })
+        Themes.nightClocks.addSound({ name: 'wolf2', local: 'snd/wolf2.mp3', chance: 6, volumes: [10, 30], max: 2, instances: 0 })
+        Themes.nightClocks.addSound({ name: 'wolf3', local: 'snd/wolf3.wav', chance: 5, volumes: [10, 30], max: 2, instances: 0 })
+        Themes.nightClocks.addSound({ name: 'sinisterLaugh1', local: 'snd/sinisterLaugh1.wav', chance: 1, volumes: [10, 30] })
+
+        Themes.witchForest = AmbBuilder({ name: 'witchForest' })
+        Themes.witchForest.addSound({ name: 'main', local: 'snd/witchforest.mp3' })
+        Themes.witchForest.addSound({ name: 'owl1', local: 'snd/owl1.mp3', chance: 2, volumes: [10, 30] })
+        Themes.witchForest.addSound({ name: 'owl2', local: 'snd/owl2.wav', chance: 2, volumes: [10, 30] })
+        Themes.witchForest.addSound({ name: 'owl3', local: 'snd/owl3.wav', chance: 2, volumes: [10, 30] })
+        Themes.witchForest.addSound({ name: 'crow1', local: 'snd/crow1.wav', chance: 25, volumes: [10, 30], max: 5, instances: 0 })
+        Themes.witchForest.addSound({ name: 'wolf1', local: 'snd/wolf1.mp3', chance: 9, volumes: [10, 30], max: 2, instances: 0 })
+        Themes.witchForest.addSound({ name: 'wolf2', local: 'snd/wolf2.mp3', chance: 6, volumes: [10, 30], max: 2, instances: 0 })
+        Themes.witchForest.addSound({ name: 'thunder1', local: 'snd/thunder1.mp3', chance: 1, volumes: [10, 50] })
+        Themes.witchForest.addSound({ name: 'thunder2', local: 'snd/thunder2.ogg', chance: 1, volumes: [10, 100] })
+        Themes.witchForest.addSound({ name: 'female_scream', local: 'snd/female_scream.wav', chance: 5, volumes: [5, 15] })
+
+        Themes.forest1 = AmbBuilder({ name: 'forest1' })
+        Themes.forest1.addSound({ name: 'main', local: 'snd/forestambiance.mp3' })
+        Themes.forest1.addSound({ name: 'frog1', local: 'snd/frog1.mp3', chance: 16, volumes: [10, 50], max: 3, instances: 0 })
+        Themes.forest1.addSound({ name: 'bird1', local: 'snd/bird1.mp3', chance: 5, volumes: [20, 80] })
+        Themes.forest1.addSound({ name: 'bird2', local: 'snd/bird2.mp3', chance: 4, volumes: [25, 80] })
+        Themes.forest1.addSound({ name: 'cardinal1', local: 'snd/cardinal1.mp3', chance: 4, volumes: [25, 80] })
+        Themes.forest1.addSound({ name: 'thunder1', local: 'snd/thunder1.mp3', chance: 1, volumes: [10, 50] })
+
+        function start() {
+            Themes[currTheme].start()
+        }
+        function stop() {
+            Themes[currTheme].stop()
+        }
+        function change() {
+            if (currTheme === 'witchForest') {
+                Themes[currTheme].sounds().crow1.volumes = [100, 100];
+                Themes[currTheme].sounds().crow1.chance = 95;
+            }
+
+        }
+
+        setTimeout(() => {
+
+            for (const name of Object.keys(Themes)) {
+                let tDiv = document.createElement('div')
+                let btn = document.createElement("button")
+                btn.innerText = name
+                btn.onclick = () => {
+                    stop()
+                    localStorage.setItem("currTheme", name)
+                    currTheme = name
+                    start()
+                }
+                tDiv.appendChild(btn)
+                soundsDiv.appendChild(tDiv)
+            }
+        }, 100);
+
+        function nBetween(min, max) {
+            return Math.floor(Math.random() * (max - min + 1) + min);
+        }
+    </script>
+</body>
+
+</html>
