@@ -7,24 +7,182 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
     <title>SndLoop</title>
+    <style>
+        body {
+            font-family: Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+            transition: background-color 0.3s ease;
+            color: #212121;
+        }
+
+        body.dark-theme {
+            background-color: #303030;
+            color: #f5f5f5;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            background-color: #1976D2;
+        }
+
+        #soundsDiv {
+            display: flex;
+            /* flex-direction: column; */
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            width: 80%;
+            margin-top: 20px;
+            column-gap: 20px;
+        }
+
+        #soundsDiv div {
+            margin: 10px 0;
+            width: 25%;
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #fff;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        #soundsDiv div.dark-theme {
+            background-color: #444;
+            border-color: #555;
+        }
+
+        #soundsDiv button {
+            background-color: #2196F3;
+            color: white;
+            transition: background-color 0.3s ease;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        #soundsDiv button:hover {
+            background-color: #1976D2;
+        }
+
+        #currentSound {
+            font-size: 18px;
+            margin-top: 20px;
+            text-align: center;
+            background-color: #e0e0e0;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        #currentSound.dark-theme {
+            background-color: #555;
+        }
+
+        #soundsDiv div,
+        #currentSound {
+            background-color: #fafafa;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        #themeButtons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 80%;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        #themeButtons button {
+            margin: 5px;
+            background-color: #FF9800;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        #themeButtons button:hover {
+            background-color: #EF6C00;
+        }
+    </style>
 </head>
 
 <body>
-    <button onclick="start();" id="play">play</button>
-    <button onclick="stop();" id="stop">stop</button>
-    <button onclick="change();" id="stop">change</button>
+    <div>
+        <button onclick="start();" id="play">Play</button>
+        <button onclick="stop();" id="stop">Stop</button>
+        <button onclick="change();" id="change">Change</button>
+        <button onclick="toggleDarkTheme();" id="darkTheme">Dark Theme</button>
+    </div>
+    <div id="themeButtons"></div>
     <br>
-    <br>
+    <div id="currentSound"></div>
     <div id="soundsDiv"></div>
     <script>
-
         const soundsDiv = document.getElementById("soundsDiv")
+        const currentSoundDiv = document.getElementById("currentSound")
+        const themeButtonsDiv = document.getElementById("themeButtons");
+        const body = document.body;
+
+        let AllSounds = {}
+
+        function controlarVolume(audio) {
+            if (!audio.volume) {
+                audio.volume = 0.5;
+            }
+
+            const volumeAtual = audio.volume;
+            let chanceDeSubir;
+
+            if (volumeAtual >= 0 && volumeAtual <= 1) {
+                chanceDeSubir = 1 - volumeAtual;
+            } else {
+                console.error("Volume atual inválido:", volumeAtual);
+                return audio.volume;
+            }
+
+            const subir = Math.random() < chanceDeSubir;
+
+            if (subir) {
+                audio.volume = Math.min(1, audio.volume + 0.05);
+            } else {
+                audio.volume = Math.max(0, audio.volume - 0.05);
+            }
+            return audio.volume;
+        }
 
         const AmbBuilder = (themeCfg) => {
-            const SOUNDS = {}
+            let themeSounds = {}
             let cfg = themeCfg
             let mainSound = null
             let interval = null
+            let soundStatuses = {}
             return {
                 addSound: (sndCfg) => {
                     const { name, local, loop = false } = sndCfg
@@ -34,36 +192,32 @@
                         snd.volume = .5
                         mainSound = snd
                     } else {
-                        SOUNDS[name] = { ...sndCfg, snd }
+                        themeSounds[name] = { ...sndCfg, snd, instanceCount: 0, playing: false, currentVolume: 0 }
                     }
                 },
-                sounds: () => { return { mainSound, ...SOUNDS } },
-                cfg: () => themeCfg,
+                sounds: () => { return { mainSound, ...themeSounds } },
+                cfg: themeCfg,
                 start: () => {
-                    mainSound.play()
                     let count = 0
                     interval = setInterval(() => {
                         count++
                         if (count % 5 == 0) {
-                            let mainVariance = Math.random() / 10 * (Math.round(Math.random()) ? 1 : -1)
-                            let actualMainVolume = mainSound.volume + mainVariance
-                            if (actualMainVolume > 1) actualMainVolume = 1
-                            if (actualMainVolume < .1) actualMainVolume = .1
-                            mainSound.volume = actualMainVolume
+                            updateMainVolumeDisplay(controlarVolume(mainSound));
                         }
-                        for (const cfg of Object.values(SOUNDS)) {
-                            let { name, local, snd, period = 0, chance = 5, volumes } = cfg
+                        for (const cfg of Object.values(themeSounds)) {
+                            let { name, local, snd, period = 0, chance = 5, volumes, instanceCount, playing, currentVolume } = cfg
                             const time = (period || nBetween(1, 100) > 100 - chance)
 
                             if (count % time == 0) {
                                 if (volumes) {
                                     const [min, max] = volumes
-                                    snd.volume = nBetween(min, max) / 100
+                                    let volume = nBetween(min, max) / 100;
+                                    snd.volume = volume;
+                                    cfg.currentVolume = volume;
                                 }
-
                                 if (cfg.max > 0) {
-                                    if (cfg.instances < cfg.max) {
-                                        cfg.instances++
+                                    if (cfg.instanceCount < cfg.max) {
+                                        cfg.instanceCount++
                                         const instance = new Audio(local)
                                         if (volumes) {
                                             const [min, max] = volumes
@@ -71,41 +225,74 @@
                                         }
                                         instance.play()
                                         instance.onended = () => {
-                                            cfg.instances--
+                                            cfg.instanceCount--
+                                            updateSoundStatus(name, false);
                                         }
+                                        updateSoundStatus(name, true);
                                     }
                                 } else {
                                     if (snd.currentTime === 0 || snd.ended) {
                                         snd.play()
-                                        if (cfg.unique) delete SOUNDS[name]
+                                        snd.onended = () => {
+                                            updateSoundStatus(name, false);
+                                        }
+                                        if (cfg.unique) delete AllSounds[name]
+                                        updateSoundStatus(name, true);
                                     }
                                 }
                             }
                         }
                     }, 1000);
+                    soundsDiv.innerHTML = ""
+                    for (const sound of Object.values(themeSounds)) {
+                        soundStatuses[sound.name] = document.createElement('div');
+                        soundStatuses[sound.name].id = sound.name + '_status';
+                        soundsDiv.appendChild(soundStatuses[sound.name]);
+                    }
+                    mainSound.play()
                 },
                 stop: () => {
                     mainSound.pause()
                     mainSound.currentTime = 0
                     clearInterval(interval)
-                    for (const cfg of Object.values(SOUNDS)) {
+                    for (const cfg of Object.values(AllSounds)) {
                         cfg.snd.pause()
                         cfg.snd.currentTime = 0
+                        updateSoundStatus(cfg.name, false);
                     }
+                    updateMainVolumeDisplay(0);
                 }
             }
         }
 
-        let currTheme = localStorage.getItem("currTheme") || "nightClocks"
+        let currTheme = localStorage.getItem("currTheme") || "allSounds";
         const Themes = {}
+        Themes.allSounds = AmbBuilder({ name: 'allSounds' })
+        Themes.allSounds.addSound({ name: 'main', local: 'snd/lake1.wav' })
+        Themes.allSounds.addSound({ name: 'owl1', local: 'snd/owl1.mp3', chance: 2, volumes: [10, 30] })
+        Themes.allSounds.addSound({ name: 'owl2', local: 'snd/owl2.wav', chance: 2, volumes: [10, 30] })
+        Themes.allSounds.addSound({ name: 'owl3', local: 'snd/owl3.wav', chance: 2, volumes: [10, 30] })
+        Themes.allSounds.addSound({ name: 'wolf1', local: 'snd/wolf1.mp3', chance: 9, volumes: [10, 30], max: 2 })
+        Themes.allSounds.addSound({ name: 'wolf2', local: 'snd/wolf2.mp3', chance: 6, volumes: [10, 30], max: 2 })
+        Themes.allSounds.addSound({ name: 'coyote1', local: 'snd/coyote1.wav', chance: 5, volumes: [10, 30], max: 2 })
+        Themes.allSounds.addSound({ name: 'sinisterLaugh1', local: 'snd/sinisterLaugh1.wav', chance: 1, volumes: [10, 30] })
+        Themes.allSounds.addSound({ name: 'crow1', local: 'snd/crow1.wav', chance: 25, volumes: [10, 30], max: 5 })
+        Themes.allSounds.addSound({ name: 'thunder1', local: 'snd/thunder1.mp3', chance: 1, volumes: [10, 50] })
+        Themes.allSounds.addSound({ name: 'thunder2', local: 'snd/thunder2.ogg', chance: 1, volumes: [10, 100] })
+        Themes.allSounds.addSound({ name: 'female_scream', local: 'snd/female_scream.wav', chance: 5, volumes: [5, 15] })
+        Themes.allSounds.addSound({ name: 'frog1', local: 'snd/frog1.mp3', chance: 16, volumes: [10, 50], max: 3 })
+        Themes.allSounds.addSound({ name: 'bird1', local: 'snd/bird1.mp3', chance: 5, volumes: [20, 80] })
+        Themes.allSounds.addSound({ name: 'bird2', local: 'snd/bird2.mp3', chance: 4, volumes: [25, 80] })
+        Themes.allSounds.addSound({ name: 'cardinal1', local: 'snd/cardinal1.mp3', chance: 4, volumes: [25, 80] })
+
         Themes.nightClocks = AmbBuilder({ name: 'nightClocks' })
         Themes.nightClocks.addSound({ name: 'main', local: 'snd/discordant-chime.wav' })
         Themes.nightClocks.addSound({ name: 'owl1', local: 'snd/owl1.mp3', chance: 2, volumes: [10, 30] })
         Themes.nightClocks.addSound({ name: 'owl2', local: 'snd/owl2.wav', chance: 2, volumes: [10, 30] })
         Themes.nightClocks.addSound({ name: 'owl3', local: 'snd/owl3.wav', chance: 2, volumes: [10, 30] })
-        Themes.nightClocks.addSound({ name: 'wolf1', local: 'snd/wolf1.mp3', chance: 9, volumes: [10, 30], max: 2, instances: 0 })
-        Themes.nightClocks.addSound({ name: 'wolf2', local: 'snd/wolf2.mp3', chance: 6, volumes: [10, 30], max: 2, instances: 0 })
-        Themes.nightClocks.addSound({ name: 'wolf3', local: 'snd/wolf3.wav', chance: 5, volumes: [10, 30], max: 2, instances: 0 })
+        Themes.nightClocks.addSound({ name: 'wolf1', local: 'snd/wolf1.mp3', chance: 9, volumes: [10, 30], max: 2 })
+        Themes.nightClocks.addSound({ name: 'wolf2', local: 'snd/wolf2.mp3', chance: 6, volumes: [10, 30], max: 2 })
+        Themes.nightClocks.addSound({ name: 'coyote1', local: 'snd/coyote1.wav', chance: 5, volumes: [10, 30], max: 2 })
         Themes.nightClocks.addSound({ name: 'sinisterLaugh1', local: 'snd/sinisterLaugh1.wav', chance: 1, volumes: [10, 30] })
 
         Themes.witchForest = AmbBuilder({ name: 'witchForest' })
@@ -113,39 +300,75 @@
         Themes.witchForest.addSound({ name: 'owl1', local: 'snd/owl1.mp3', chance: 2, volumes: [10, 30] })
         Themes.witchForest.addSound({ name: 'owl2', local: 'snd/owl2.wav', chance: 2, volumes: [10, 30] })
         Themes.witchForest.addSound({ name: 'owl3', local: 'snd/owl3.wav', chance: 2, volumes: [10, 30] })
-        Themes.witchForest.addSound({ name: 'crow1', local: 'snd/crow1.wav', chance: 25, volumes: [10, 30], max: 5, instances: 0 })
-        Themes.witchForest.addSound({ name: 'wolf1', local: 'snd/wolf1.mp3', chance: 9, volumes: [10, 30], max: 2, instances: 0 })
-        Themes.witchForest.addSound({ name: 'wolf2', local: 'snd/wolf2.mp3', chance: 6, volumes: [10, 30], max: 2, instances: 0 })
+        Themes.witchForest.addSound({ name: 'crow1', local: 'snd/crow1.wav', chance: 25, volumes: [10, 30], max: 5 })
+        Themes.witchForest.addSound({ name: 'wolf1', local: 'snd/wolf1.mp3', chance: 9, volumes: [10, 30], max: 2 })
+        Themes.witchForest.addSound({ name: 'wolf2', local: 'snd/wolf2.mp3', chance: 6, volumes: [10, 30], max: 2 })
         Themes.witchForest.addSound({ name: 'thunder1', local: 'snd/thunder1.mp3', chance: 1, volumes: [10, 50] })
         Themes.witchForest.addSound({ name: 'thunder2', local: 'snd/thunder2.ogg', chance: 1, volumes: [10, 100] })
         Themes.witchForest.addSound({ name: 'female_scream', local: 'snd/female_scream.wav', chance: 5, volumes: [5, 15] })
 
         Themes.forest1 = AmbBuilder({ name: 'forest1' })
         Themes.forest1.addSound({ name: 'main', local: 'snd/forestambiance.mp3' })
-        Themes.forest1.addSound({ name: 'frog1', local: 'snd/frog1.mp3', chance: 16, volumes: [10, 50], max: 3, instances: 0 })
+        Themes.forest1.addSound({ name: 'frog1', local: 'snd/frog1.mp3', chance: 16, volumes: [10, 50], max: 3 })
         Themes.forest1.addSound({ name: 'bird1', local: 'snd/bird1.mp3', chance: 5, volumes: [20, 80] })
         Themes.forest1.addSound({ name: 'bird2', local: 'snd/bird2.mp3', chance: 4, volumes: [25, 80] })
         Themes.forest1.addSound({ name: 'cardinal1', local: 'snd/cardinal1.mp3', chance: 4, volumes: [25, 80] })
         Themes.forest1.addSound({ name: 'thunder1', local: 'snd/thunder1.mp3', chance: 1, volumes: [10, 50] })
 
-        function start() {
-            Themes[currTheme].start()
-        }
-        function stop() {
-            Themes[currTheme].stop()
-        }
-        function change() {
-            if (currTheme === 'witchForest') {
-                Themes[currTheme].sounds().crow1.volumes = [100, 100];
-                Themes[currTheme].sounds().crow1.chance = 95;
-            }
+        Themes.sinisterPlace = AmbBuilder({ name: 'sinisterPlace' })
+        Themes.sinisterPlace.addSound({ name: 'main', local: 'snd/discordant-chime.wav' })
+        Themes.sinisterPlace.addSound({ name: 'thunder1', local: 'snd/thunder1.mp3', chance: 30, volumes: [30, 80] })
+        Themes.sinisterPlace.addSound({ name: 'thunder2', local: 'snd/thunder2.ogg', chance: 15, volumes: [30, 100] })
 
+        function start() {
+            Themes[currTheme]?.start()
+            currentSoundDiv.textContent = `Current Sound: ${currTheme}`
+            updateTheme();
+        }
+
+        function stop() {
+            Themes[currTheme]?.stop()
+            currentSoundDiv.textContent = "Current Sound: None"
+            updateTheme();
+        }
+
+        function change() {
+            let themeKeys = Object.keys(Themes);
+            let currentIndex = themeKeys.indexOf(currTheme);
+            let nextIndex = (currentIndex + 1) % themeKeys.length;
+            let nextTheme = themeKeys[nextIndex];
+            stop();
+            localStorage.setItem("currTheme", nextTheme);
+            currTheme = nextTheme;
+            start();
+        }
+
+        function updateSoundStatus(soundName, isPlaying) {
+            const statusDiv = document.getElementById(soundName + '_status');
+            const sound = Themes[currTheme].sounds()[soundName];
+            let volumeDisplay = '';
+            if (sound && sound.currentVolume && isPlaying) {
+                volumeDisplay = ` (${Math.round(sound.currentVolume * 100)}%)`;
+            }
+            if (statusDiv) {
+                statusDiv.textContent = `${soundName}: ${isPlaying ? "➡️" : "🟥"} ${volumeDisplay}`;
+                statusDiv.classList.toggle('dark-theme', body.classList.contains('dark-theme'));
+            }
+        }
+
+        function updateMainVolumeDisplay(volume) {
+            currentSoundDiv.textContent = `Current Sound: ${currTheme}, Volume: ${Math.round(volume * 100)}%`;
+            currentSoundDiv.classList.toggle('dark-theme', body.classList.contains('dark-theme'));
+        }
+
+        function updateTheme() {
+            const isDarkTheme = body.classList.contains('dark-theme');
+            const elementsToUpdate = document.querySelectorAll('#soundsDiv div, #currentSound');
+            elementsToUpdate.forEach(element => element.classList.toggle('dark-theme', isDarkTheme));
         }
 
         setTimeout(() => {
-
             for (const name of Object.keys(Themes)) {
-                let tDiv = document.createElement('div')
                 let btn = document.createElement("button")
                 btn.innerText = name
                 btn.onclick = () => {
@@ -154,13 +377,17 @@
                     currTheme = name
                     start()
                 }
-                tDiv.appendChild(btn)
-                soundsDiv.appendChild(tDiv)
+                themeButtonsDiv.appendChild(btn)
             }
         }, 100);
 
         function nBetween(min, max) {
             return Math.floor(Math.random() * (max - min + 1) + min);
+        }
+
+        function toggleDarkTheme() {
+            body.classList.toggle('dark-theme');
+            updateTheme();
         }
     </script>
 </body>
