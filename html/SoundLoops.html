@@ -17,6 +17,7 @@
             background-color: #f5f5f5;
             transition: background-color 0.3s ease;
             color: #212121;
+            position: relative;
         }
 
         body.dark-theme {
@@ -137,6 +138,14 @@
         #exportButton {
             margin-top: 10px;
         }
+
+        #darkTheme {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            font-size: 24px;
+        }
     </style>
 </head>
 
@@ -145,18 +154,20 @@
         <button onclick="start();" id="play">Play</button>
         <button onclick="stop();" id="stop">Stop</button>
         <button onclick="change();" id="change">Change</button>
-        <button onclick="toggleDarkTheme();" id="darkTheme">Dark Theme</button>
         <button id="exportButton" onclick="exportTheme()">Export Theme</button>
+        <button onclick="toggleDarkTheme();" id="darkTheme">☀️</button>
     </div>
     <div id="themeButtons"></div>
     <br>
     <div id="currentSound"></div>
     <div id="soundsDiv"></div>
     <script>
+        const themeSwitchImages = ["☀️", "🌒"]
         const soundsDiv = document.getElementById("soundsDiv")
         const currentSoundDiv = document.getElementById("currentSound")
         const themeButtonsDiv = document.getElementById("themeButtons");
         const body = document.body;
+        const darkThemeButton = document.getElementById("darkTheme");
 
         let AllSounds = {}
 
@@ -187,7 +198,6 @@
 
         const AmbBuilder = (themeCfg) => {
             let themeSounds = {}
-            //let cfg = themeCfg
             let mainSound = null
             let interval = null
             let soundStatuses = {}
@@ -398,6 +408,8 @@
 
         function toggleDarkTheme() {
             body.classList.toggle('dark-theme');
+            const index = body.classList.contains('dark-theme') ? 1 : 0;
+            darkThemeButton.textContent = themeSwitchImages[index];
             updateTheme();
         }
 
@@ -405,7 +417,6 @@
             const themeData = Themes[currTheme];
             console.log(themeData.cfg);
             console.log(themeData.sounds());
-            
             return
             const themeJson = JSON.stringify(prepareThemeForExport(themeData), null, 2);
 
