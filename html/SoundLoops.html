@@ -247,6 +247,7 @@
                     for (const sound of Object.values(themeSounds)) {
                         soundStatuses[sound.name] = document.createElement('div');
                         soundStatuses[sound.name].id = sound.name + '_status';
+                        soundStatuses[sound.name].textContent = sound.name;
                         soundsDiv.appendChild(soundStatuses[sound.name]);
                     }
                     mainSound.play()
