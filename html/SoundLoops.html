@@ -44,7 +44,6 @@
 
         #soundsDiv {
             display: flex;
-            /* flex-direction: column; */
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
@@ -68,6 +67,10 @@
         #soundsDiv div.dark-theme {
             background-color: #444;
             border-color: #555;
+        }
+
+        #soundsDiv div.playing {
+            border-color: blue;
         }
 
         #soundsDiv button {
@@ -353,6 +356,7 @@
             }
             if (statusDiv) {
                 statusDiv.textContent = `${soundName}: ${isPlaying ? "➡️" : "🟥"} ${volumeDisplay}`;
+                statusDiv.classList.toggle('playing', isPlaying);
                 statusDiv.classList.toggle('dark-theme', body.classList.contains('dark-theme'));
             }
         }
