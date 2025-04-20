@@ -133,6 +133,10 @@
         #themeButtons button:hover {
             background-color: #EF6C00;
         }
+
+        #exportButton {
+            margin-top: 10px;
+        }
     </style>
 </head>
 
@@ -142,6 +146,7 @@
         <button onclick="stop();" id="stop">Stop</button>
         <button onclick="change();" id="change">Change</button>
         <button onclick="toggleDarkTheme();" id="darkTheme">Dark Theme</button>
+        <button id="exportButton" onclick="exportTheme()">Export Theme</button>
     </div>
     <div id="themeButtons"></div>
     <br>
@@ -182,7 +187,7 @@
 
         const AmbBuilder = (themeCfg) => {
             let themeSounds = {}
-            let cfg = themeCfg
+            //let cfg = themeCfg
             let mainSound = null
             let interval = null
             let soundStatuses = {}
@@ -190,10 +195,11 @@
                 addSound: (sndCfg) => {
                     const { name, local, loop = false } = sndCfg
                     const snd = new Audio(local)
-                    if (name === 'main') {
+                    if (name === "main") {
                         snd.loop = true
                         snd.volume = .5
                         mainSound = snd
+                        themeSounds["main"] = { ...sndCfg, snd, instanceCount: 0, playing: false, currentVolume: 0 }
                     } else {
                         themeSounds[name] = { ...sndCfg, snd, instanceCount: 0, playing: false, currentVolume: 0 }
                     }
@@ -393,6 +399,50 @@
         function toggleDarkTheme() {
             body.classList.toggle('dark-theme');
             updateTheme();
+        }
+
+        function exportTheme() {
+            const themeData = Themes[currTheme];
+            console.log(themeData.cfg);
+            console.log(themeData.sounds());
+            
+            return
+            const themeJson = JSON.stringify(prepareThemeForExport(themeData), null, 2);
+
+            const blob = new Blob([themeJson], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${currTheme}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function prepareThemeForExport(themeData) {
+            const exportedTheme = {
+                name: themeData.cfg.name,
+                mainSound: {
+                    name: 'main',
+                    local: themeData.sounds().mainSound.src
+                },
+                sounds: []
+            };
+
+            for (const sound of Object.values(themeData.sounds())) {
+                if (sound.name !== 'main') {
+                    exportedTheme.sounds.push({
+                        name: sound.name,
+                        local: sound.local,
+                        loop: sound.loop,
+                        period: sound.period,
+                        chance: sound.chance,
+                        volumes: sound.volumes,
+                        max: sound.max,
+                        unique: sound.unique
+                    });
+                }
+            }
+            return exportedTheme;
         }
     </script>
 </body>
