@@ -355,7 +355,7 @@
                 volumeDisplay = ` (${Math.round(sound.currentVolume * 100)}%)`;
             }
             if (statusDiv) {
-                statusDiv.textContent = `${soundName}: ${isPlaying ? "➡️" : "🟥"} ${volumeDisplay}`;
+                statusDiv.textContent = `${soundName} ${volumeDisplay}`;
                 statusDiv.classList.toggle('playing', isPlaying);
                 statusDiv.classList.toggle('dark-theme', body.classList.contains('dark-theme'));
             }
